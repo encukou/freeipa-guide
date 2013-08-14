@@ -1,0 +1,1157 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
+[
+]>
+<chapter id="sudo">
+    <title>Policy: Using sudo</title>
+    <para>&PROD; provides a mechanism for predictably and consistently apply 
+    <command>sudo</command>policies across the &IPA; domain. The 
+    <command>sudo</command>policies apply to domain users and domain
+    hosts.</para>
+    <section id="about-sudo">
+        <title>About sudo and IPA</title>
+        <para>The 
+        <command>sudo</command>command allows a system administrator to
+        delegate authority to specific users to run specific commands as root
+        or another specified user. 
+        <command>sudo</command>provides an audit trail of the commands and
+        their arguments, so access can be tracked.</para>
+        <section id="abt-sudo2">
+            <title>General sudo Configuration in &PROD;</title>
+            <para>
+            <command>sudo</command>uses a local configuration file, 
+            <filename>/etc/sudoers</filename>, which defines the commands and
+            users with sudo access. While this file can be shared among
+            machines, there's no native way to distribute 
+            <command>sudo</command>configuration files among machines.</para>
+            <para>&PROD; uses its centralized LDAP database to contain the 
+            <command>sudo</command>configuration, which makes it globally
+            available to all domain hosts. &PROD; also has a specialized LDAP
+            schema for 
+            <command>sudo</command>entries that allows a lot more flexible and
+            simpler configuration. This schema adds two key features:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>The &PROD; schema supports host groups in addition to
+                    netgroups for 
+                    <command>sudo</command>, while 
+                    <command>sudo</command>only supports netgroups.</para>
+                    <para>For every host group, &PROD; also creates a
+                    corresponding shadow netgroup. This allows &IPA;
+                    administrators to create 
+                    <command>sudo</command>rules that reference host groups,
+                    while the local 
+                    <command>sudo</command>command uses the corresponding
+                    netgroup.</para>
+                </listitem>
+                <listitem>
+                    <para>&PROD; introduces the concept of a 
+                    <emphasis>sudo command group</emphasis>. The group contains
+                    multiple commands, and then the command group can be
+                    referenced in the 
+                    <command>sudo</command>configuration.</para>
+                </listitem>
+            </itemizedlist>
+            <para>Because 
+            <command>sudo</command>does not support host groups and command
+            groups, &PROD; translates the &IPA; 
+            <command>sudo</command>configuration into native 
+            <command>sudo</command>configuration when the 
+            <command>sudo</command>rules are created.</para>
+            <para condition="five">Because the 
+            <command>sudo</command>information is not available anonymously
+            over LDAP by default, &PROD; defines a default 
+            <command>sudo</command>user, 
+            <systemitem>uid=sudo,cn=sysaccounts,cn=etc,$SUFFIX</systemitem>,
+            which can be set in the LDAP/ 
+            <command>sudo</command>configuration file, 
+            <filename>/etc/ldap.conf</filename>.</para>
+            <para condition="redhat">Because the 
+            <command>sudo</command>information is not available anonymously
+            over LDAP by default, &PROD; defines a default 
+            <command>sudo</command>user, 
+            <systemitem>uid=sudo,cn=sysaccounts,cn=etc,$SUFFIX</systemitem>,
+            which can be set in the LDAP/ 
+            <command>sudo</command>configuration file, 
+            <filename>/etc/sud-ldap.conf</filename>.</para>
+            <para>Both 
+            <command>sudo</command>and &PROD; support user groups as part of
+            the 
+            <command>sudo</command>configuration. User groups can be either
+            Unix or non-POSIX groups. Creating non-POSIX groups can create some
+            access issues because any users in the group inherit non-POSIX
+            rights from the group. Having the choice between Unix and non-POSIX
+            groups allows administrators the choice in group formatting and to
+            avoid problems with inherited permissions or GID
+            information.</para>
+        </section>
+        <section id="sudo-nis">
+            <title>sudo and Netgroups</title>
+            <para>As 
+            <xref linkend="abt-sudo2" />mentions, the LDAP schema used for sudo
+            entries in &PROD; supports host group-style groups in addition to
+            netgroups. Really, &PROD; creates two groups, a visible host group
+            and a shadow netgroup. 
+            <command>sudo</command>itself only supports NIS-style netgroups for
+            group formats.</para>
+            <!-- 
+             work this in
+             bz771765
+SUDO can use LDAP rules. It does this with its own internal LDAP lookup (it doesn't currently go through
+SSSD to accomplish this).
+
+However, SUDO rules can specify netgroups as part of their restrictions
+on who can do what (usually these are used to limit functions to certain
+hosts). In order to do this, SSSD needs to be configured to look up
+netgroups properly so that SUDO can use the 'getnetgrent()' glibc
+command to locate the netgroups.
+
+we recently made changes to
+avoid needing to use the compat tree for netgroup lookups and can
+instead use FreeIPA's native, custom schema for netgroups. 
+
+             -->
+            <para>One important thing to consider is that even though 
+            <command>sudo</command>uses NIS netgroups, 
+            <emphasis>it is not necessary to have a NIS server installed or a
+            NIS client configured</emphasis>. When any group is created for 
+            <command>sudo</command>, the NIS object is created in the &DS;
+            instance, and then the information is retrieved by NSS_LDAP or by
+            SSSD. The client (in this case, 
+            <command>sudo</command>) then extracts the required NIS information
+            from the information provided by &PROD;'s &DS;.</para>
+            <para>In short, 
+            <command>sudo</command>configuration requires NIS-formatted
+            netgroups. It does not require NIS.</para>
+            <para>The &PROD; &DS; instance uses the standard LDAP schema for
+            NIS objects, defined in RFC 2307.</para>
+        </section>
+        <section id="sudo-clients">
+            <title>Supported sudo Clients</title>
+            <para>Any system which is supported as an &IPA; client system can
+            be configured as a 
+            <command>sudo</command>client in &IPA;.</para>
+        </section>
+    </section>
+    <section id="defining-sudocmds">
+        <title>Setting up sudo Commands and Command Groups</title>
+        <para>Just as in regular 
+        <command>sudo</command>configuration, any command which will be
+        governed by 
+        <command>sudo</command>access must be listed in the configuration.
+        &PROD; adds an extra control measure with 
+        <emphasis>sudo command groups</emphasis>, which allow a group of
+        commands to be defined and then applied to the 
+        <command>sudo</command>configuration as one.</para>
+        <para>Adding a command or a command group makes it available to &IPA;
+        to be defined in a 
+        <command>sudo</command>rule; simply adding a command does not
+        automatically include it in a 
+        <command>sudo</command>rule.</para>
+        <section id="adding-sudo-cmds">
+            <title>Adding sudo Commands</title>
+            <section id="adding-sudo-cmds-ui">
+                <title>Adding sudo Commands with the Web UI</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Policy</guilabel>tab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Sudo</guilabel>subtab, and then select the 
+                        <guilabel>Sudo Commands</guilabel>link.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Add</guilabel>link at the top of the list of
+                        commands.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/sudo-cmd-list.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Enter the full system path and name of the
+                        command and, optionally, a description.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/sudo-cmd-new.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Add and Edit</guilabel>button to go
+                        immediately to the edit pages for the command.</para>
+                    </listitem>
+                    <listitem>
+                        <para>In the 
+                        <guilabel>Sudo Command Groups</guilabel>tab, click the 
+                        <guilabel>Add</guilabel>button to add the sudo command
+                        to a command group.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the checkbox by the groups for the command
+                        to join, and click the right arrows button, 
+                        <guibutton>&gt;&gt;</guibutton>, to move the group to
+                        the selection box.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guibutton>Add</guibutton>button.</para>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="adding-sudo-cmds-cmd">
+                <title>Adding sudo Commands with the Command Line</title>
+                <para>To add a single command, use the 
+                <command>sudocmd-add</command>command. This requires the full,
+                local path to the command executable and a description of the
+                command:</para>
+                <programlisting>$ ipa sudocmd-add --desc " 
+                <replaceable>description</replaceable>" 
+                <replaceable>
+                /local/path/to/command</replaceable></programlisting>
+                <para>For example:</para>
+                <screen>$ ipa sudocmd-add --desc 'For reading log files'
+                '/usr/bin/less' ---------------------------------- Added sudo
+                command "/usr/bin/less" ---------------------------------- sudo
+                Command: /usr/bin/less Description: For reading log
+                files</screen>
+            </section>
+        </section>
+        <section id="adding-sudo-cmdgrp">
+            <title>Adding sudo Command Groups</title>
+            <section id="adding-sudo-cmdgrp-ui">
+                <title>Adding sudo Command Groups with the Web UI</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Policy</guilabel>tab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Sudo</guilabel>subtab, and then select the 
+                        <guilabel>Sudo Command Groups</guilabel>link.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Add</guilabel>link at the top of the list of
+                        command groups.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/sudo-cmdgrp-list.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Enter the name and description for the new
+                        command group.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/sudo-cmdgrp-new.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Add and Edit</guilabel>button to go
+                        immediately to the edit pages for the group.</para>
+                    </listitem>
+                    <listitem>
+                        <para>In the 
+                        <guilabel>Sudo Commands</guilabel>tab, click the 
+                        <guilabel>Add</guilabel>button to add a sudo command to
+                        the group.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/sudo-cmdgrp-svc-list.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>In the 
+                        <guilabel>Sudo Commands</guilabel>tab, click the 
+                        <guilabel>Add</guilabel>button to add a sudo command to
+                        the group.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/sudo-cmdgrp-svc-list.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the checkbox by the names of the commands
+                        to add, and click the right arrows button, 
+                        <guibutton>&gt;&gt;</guibutton>, to move the command to
+                        the selection box.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/sudo-cmdgrp-addsvc.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guibutton>Add</guibutton>button.</para>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="adding-sudo-cmdgrp-cmd">
+                <title>Adding sudo Command Groups with the Command Line</title>
+                <para>Creating a command group requires creating two entries,
+                one for the group and one for the command itself:</para>
+                <orderedlist>
+                    <listitem>
+                        <para>Create the command group using the 
+                        <command>sudocmdgroup-add</command>command:</para>
+                        <screen>$ ipa sudocmdgroup-add --desc 'File editing
+                        commands' files -----------------------------------
+                        Added sudo command group "files"
+                        ----------------------------------- sudo Command Group:
+                        files Description: File editing commands</screen>
+                    </listitem>
+                    <listitem>
+                        <para>Create a command entry using the 
+                        <command>sudocmd-add</command>command:</para>
+                        <screen>$ ipa sudocmd-add --desc 'For editing files'
+                        '/usr/bin/vim' ---------------------------------- Added
+                        sudo command "/usr/bin/vim"
+                        ---------------------------------- sudo Command:
+                        /usr/bin/vim Description: For editing files</screen>
+                    </listitem>
+                    <listitem>
+                        <para>Add the command, using its full directory
+                        location as its name, to the command group using the 
+                        <command>sudocmdgroup-add-member</command>command: 
+                        <screen>$ ipa sudocmdgroup-add-member --sudocmds
+                        '/usr/bin/vim' files sudo Command Group: files
+                        Description: File editing commands Member sudo
+                        commands: /usr/bin/vim ------------------------- Number
+                        of members added 1
+                        -------------------------</screen></para>
+                    </listitem>
+                </orderedlist>
+            </section>
+        </section>
+    </section>
+    <section id="defining-sudorules">
+        <title>Defining sudo Rules</title>
+        <para>
+        <command>sudo</command>rules are in a sense similar to access control
+        rules: they define users who are granted access, the commands which are
+        within the scope of the rule, and then the target hosts to which the
+        rule applies. In &IPA;, additional information can be configured in the
+        rule, such as 
+        <command>sudoers</command>options and run-as settings, but the basic
+        elements always define who, what (services), and where (hosts).</para>
+        <section id="about-external-sudo">
+            <title>About External Users and Hosts</title>
+            <para>
+            <command>sudo</command>rules define four elements: 
+            <emphasis>who</emphasis>can do 
+            <emphasis>what</emphasis>, 
+            <emphasis>where</emphasis>, and 
+            <emphasis>as whom</emphasis>. The 
+            <emphasis>who</emphasis>is the regular user, and the 
+            <emphasis>as whom</emphasis>is the system or other user identity
+            which the user uses to perform tasks. Those tasks are system
+            commands that can be run (or specifically not run) on a target
+            machine.</para>
+            <para>Three of those elements &mdash; who, as whom, and where
+            &mdash; are identities. They are uses and hosts. Most of the time,
+            those identities are going to be entities within the &IPA; domain
+            because there will be overlap between the system users and machines
+            in the environment and the users and hosts belonging to the &IPA;
+            domain.</para>
+            <para>However, that is not necessarily the case with all identities
+            that a 
+            <command>sudo</command>policy may realistically cover. For example,
+            
+            <command>sudo</command>rules could be used to grant root access to
+            member of the IT group in &IPA;, and that root user is not a user
+            in &IPA;. Or, for another example, administrators may want to block
+            access to certain hosts that are on a network but are not part of
+            the &IPA; domain.</para>
+            <para>The 
+            <command>sudo</command>rules in &PROD; support the concept of 
+            <emphasis>external</emphasis>users and hosts &mdash; meaning, hosts
+            and users which are stored and exist outside of the &IPA;
+            configuration.</para>
+            <figure id="fig.sudo-external">
+                <title>External Entities</title>
+                <mediaobject>
+                    <imageobject>
+                        <imagedata fileref="images/sudo-external.png" />
+                    </imageobject>
+                </mediaobject>
+            </figure>
+            <para>When configuring a 
+            <command>sudo</command>rule, the user, run-as, and host settings
+            all can point to an external identity to be included and evaluated
+            in the 
+            <command>sudo</command>rule.</para>
+        </section>
+        <section id="about-sudo-options">
+            <title>About sudo Options Format</title>
+            <para>The 
+            <command>sudo</command>rule can be configured to use any supported 
+            <command>sudoers</command>options. (The complete list of options is
+            in the 
+            <command>sudoers</command>manpage and at 
+            <ulink url="http://www.gratisoft.us/sudo/sudoers.man.html#sudoers_options" />.)</para>
+            <para>However, the 
+            <command>sudo</command>rule configuration in &PROD; 
+            <emphasis>does not</emphasis>allow the same formatting as the
+            configuration in the 
+            <filename>/etc/sudoers</filename>file. Specifically, &PROD; does
+            not allow whitespaces in the options parameter, whether it is set
+            in the UI or the CLI.</para>
+            <para>For example, in the 
+            <filename>/etc/sudoers</filename>file, it is permissible to list
+            options in a comma-separate list with spaces between:</para>
+            <screen>mail_badpass, mail_no_host, mail_no_perms, syslog =
+            local2</screen>
+            <para>However, in &PROD;, that same configuration would be
+            interpreted as different arguments &mdash; including the equals
+            sign (=) since it has spaces around it.</para>
+            <para>Likewise, linebreaks that are ignored in the 
+            <filename>/etc/sudoers</filename>file are not allowed in the &PROD;
+            configuration:</para>
+            <screen>env_keep = "COLORS DISPLAY EDITOR HOSTNAME HISTSIZE INPUTRC
+            KDEDIR LESSSECURE LS_COLORS MAIL PATH PS1 PS2 QTDIR USERNAME LANG
+            LC_ADDRESS LC_CTYPE LC_COLLATE LC_IDENTIFICATION LC_MEASUREMENT
+            LC_MESSAGES LC_MONETARY LC_NAME LC_NUMERIC LC_PAPER LC_TELEPHONE
+            LC_TIME LC_ALL LANGUAGE LINGUAS _XKB_CHARSET XAUTHORITY"</screen>
+            <para>To use multiple 
+            <filename>sudoers</filename>options in &PROD;, configure each one
+            as a separate option setting, rather than all on one line, as is
+            allowed in the 
+            <filename>/etc/sudoers</filename>file.</para>
+        </section>
+        <section id="sudo-rules-ui">
+            <title>Defining sudo Rules in the Web UI</title>
+            <orderedlist>
+                <listitem>
+                    <para>Click the 
+                    <guilabel>Policy</guilabel>tab.</para>
+                </listitem>
+                <listitem>
+                    <para>Click the 
+                    <guilabel>Sudo</guilabel>subtab, and then select the 
+                    <guilabel>Sudo Rules</guilabel>link.</para>
+                </listitem>
+                <listitem>
+                    <para>Click the 
+                    <guilabel>Add</guilabel>link at the top of the list of sudo
+                    rules.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/sudo-rules-list.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>Enter the name for the rule.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/sudo-rule-new.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>Click the 
+                    <guilabel>Add and Edit</guilabel>button to go immediately
+                    to set the configuration for the rule.</para>
+                    <para>There are a number of configuration areas for the
+                    rule. The most basic elements are set in the 
+                    <guilabel>Who</guilabel>, 
+                    <guilabel>Access This Host</guilabel>, and 
+                    <guilabel>Run Commands</guilabel>areas; the others are
+                    optional and are used to refine the rule.</para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>Optional.</emphasis>In the 
+                    <guilabel>Options</guilabel>area, add any 
+                    <command>sudoers</command>options. The complete list of
+                    options is in the 
+                    <command>sudoers</command>manpage and at 
+                    <ulink url="http://www.gratisoft.us/sudo/sudoers.man.html#sudoers_options" />.</para>
+                    <note>
+                        <title>NOTE</title>
+                        <para>As described in 
+                        <xref linkend="about-sudo-options" />, do not use
+                        options with whitespace in the values. Rather than
+                        adding a list of options in one line, add a single
+                        option setting for each desired option.</para>
+                    </note>
+                    <orderedlist>
+                        <listitem>
+                            <para>Click the 
+                            <guilabel>+ Add</guilabel>link at the right of the
+                            options list.</para>
+                            <informalfigure>
+                                <mediaobject>
+                                    <imageobject>
+                                        <imagedata fileref="images/sudo-rule-opt.png" />
+                                    </imageobject>
+                                </mediaobject>
+                            </informalfigure>
+                        </listitem>
+                        <listitem>
+                            <para>Enter the 
+                            <command>sudoers</command>option.</para>
+                            <informalfigure>
+                                <mediaobject>
+                                    <imageobject>
+                                        <imagedata fileref="images/sudo-rule-opt-new.png" />
+                                    </imageobject>
+                                </mediaobject>
+                            </informalfigure>
+                        </listitem>
+                        <listitem>
+                            <para>Click 
+                            <guibutton>Add</guibutton>.</para>
+                        </listitem>
+                    </orderedlist>
+                </listitem>
+                <listitem>
+                    <para>In the 
+                    <guilabel>Who</guilabel>area, select the users or user
+                    groups to which the sudo rule is applied.</para>
+                    <orderedlist>
+                        <listitem>
+                            <para>Click the 
+                            <guilabel>+ Add</guilabel>link at the right of the
+                            users list.</para>
+                            <informalfigure>
+                                <mediaobject>
+                                    <imageobject>
+                                        <imagedata fileref="images/sudo-rule-user.png" />
+                                    </imageobject>
+                                </mediaobject>
+                            </informalfigure>
+                        </listitem>
+                        <listitem>
+                            <para>Click the checkbox by the users to add to the
+                            rule, and click the right arrows button, 
+                            <guibutton>&gt;&gt;</guibutton>, to move the users
+                            to the selection box.</para>
+                            <informalfigure>
+                                <mediaobject>
+                                    <imageobject>
+                                        <imagedata fileref="images/sudo-rule-user-add.png" />
+                                    </imageobject>
+                                </mediaobject>
+                            </informalfigure>
+                        </listitem>
+                        <listitem>
+                            <para>Click 
+                            <guibutton>Add</guibutton>.</para>
+                        </listitem>
+                    </orderedlist>
+                    <para>It is possible to configure both &IPA; users and
+                    external system users ( 
+                    <xref linkend="about-external-sudo" />).</para>
+                </listitem>
+                <listitem>
+                    <para>In the 
+                    <guilabel>Access This Host</guilabel>area, select the hosts
+                    on which the sudo rule is in effect.</para>
+                    <orderedlist>
+                        <listitem>
+                            <para>Click the 
+                            <guilabel>+ Add</guilabel>link at the right of the
+                            hosts list.</para>
+                            <informalfigure>
+                                <mediaobject>
+                                    <imageobject>
+                                        <imagedata fileref="images/sudo-rule-host.png" />
+                                    </imageobject>
+                                </mediaobject>
+                            </informalfigure>
+                        </listitem>
+                        <listitem>
+                            <para>Click the checkbox by the hosts to include
+                            with the rule, and click the right arrows button, 
+                            <guibutton>&gt;&gt;</guibutton>, to move the hosts
+                            to the selection box.</para>
+                            <informalfigure>
+                                <mediaobject>
+                                    <imageobject>
+                                        <imagedata fileref="images/sudo-rule-host-add.png" />
+                                    </imageobject>
+                                </mediaobject>
+                            </informalfigure>
+                        </listitem>
+                        <listitem>
+                            <para>Click 
+                            <guibutton>Add</guibutton>.</para>
+                        </listitem>
+                    </orderedlist>
+                    <para>It is possible to configure both &IPA; clients and
+                    external hosts ( 
+                    <xref linkend="about-external-sudo" />).</para>
+                </listitem>
+                <listitem>
+                    <para>In the 
+                    <guilabel>Run Commands</guilabel>area, select the commands
+                    which are included in the sudo rule. The 
+                    <command>sudo</command>rule can grant access or deny access
+                    to commands, and it can grant allow access to one command
+                    and also deny access to another.</para>
+                    <orderedlist>
+                        <listitem>
+                            <para>In the 
+                            <guilabel>Allow/Deny</guilabel>area, click the 
+                            <guilabel>+ Add</guilabel>link at the right of the
+                            commands list.</para>
+                            <informalfigure>
+                                <mediaobject>
+                                    <imageobject>
+                                        <imagedata fileref="images/sudo-rule-allow.png" />
+                                    </imageobject>
+                                </mediaobject>
+                            </informalfigure>
+                        </listitem>
+                        <listitem>
+                            <para>Click the checkbox by the commands or command
+                            groups to include with the rule, and click the
+                            right arrows button, 
+                            <guibutton>&gt;&gt;</guibutton>, to move the
+                            commands to the selection box.</para>
+                            <informalfigure>
+                                <mediaobject>
+                                    <imageobject>
+                                        <imagedata fileref="images/sudo-rule-allow-add.png" />
+                                    </imageobject>
+                                </mediaobject>
+                            </informalfigure>
+                        </listitem>
+                        <listitem>
+                            <para>Click 
+                            <guibutton>Add</guibutton>.</para>
+                        </listitem>
+                    </orderedlist>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>Optional.</emphasis>The sudo rule can be
+                    configured to run the given commands as a specific,
+                    non-root user.</para>
+                    <orderedlist>
+                        <listitem>
+                            <para>In the 
+                            <guilabel>As Whom</guilabel>area, click the 
+                            <guilabel>+ Add</guilabel>link at the right of the
+                            users list.</para>
+                            <informalfigure>
+                                <mediaobject>
+                                    <imageobject>
+                                        <imagedata fileref="images/sudo-rule-runas.png" />
+                                    </imageobject>
+                                </mediaobject>
+                            </informalfigure>
+                        </listitem>
+                        <listitem>
+                            <para>Click the checkbox by the users to run the
+                            command as, and click the right arrows button, 
+                            <guibutton>&gt;&gt;</guibutton>, to move the users
+                            to the selection box.</para>
+                            <informalfigure>
+                                <mediaobject>
+                                    <imageobject>
+                                        <imagedata fileref="images/sudo-rule-runas-add.png" />
+                                    </imageobject>
+                                </mediaobject>
+                            </informalfigure>
+                        </listitem>
+                        <listitem>
+                            <para>Click 
+                            <guibutton>Add</guibutton>.</para>
+                        </listitem>
+                    </orderedlist>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="sudo-rules-cmd">
+            <title>Defining sudo Rules in the Command Line</title>
+            <para>Each element is added to the rule command using a different
+            command (listed in 
+            <xref linkend="tab.sudo-rules-cmds" />).</para>
+            <para>The basic outline of a 
+            <command>sudo</command>rule command is:</para>
+            <screen>$ ipa sudorule-add* 
+            <replaceable>options ruleName</replaceable></screen>
+            <example id="ex.-sudo-basic">
+                <title>Creating Basic sudo Rules</title>
+                <para>In the most basic case, the 
+                <command>sudo</command>configuration is going to grant the
+                right to one user for one command on one host.</para>
+                <para>The first step is to add the initial rule entry.</para>
+                <screen>$ ipa sudorule-add files-commands
+                ----------------------------------- Added sudo rule
+                "files-commands" ----------------------------------- Rule name:
+                files-commands Enabled: TRUE</screen>
+                <para>Next, add the commands to 
+                <emphasis>grant</emphasis>access to. This can be a single
+                command, using 
+                <option>--sudocmd</option>, or a group of commands, using 
+                <option>--sudocmdgroups</option>. 
+                <screen>$ ipa sudorule-add-allow-command --sudocmd
+                "/usr/bin/vim" files-commands Rule name: files-commands
+                Enabled: TRUE sudo Commands: /usr/bin/vim
+                ------------------------- Number of members added 1
+                -------------------------</screen></para>
+                <para>Add a host or a host group to the rule.</para>
+                <screen>$ ipa sudorule-add-host --host server.example.com
+                files-commands Rule name: files-commands Enabled: TRUE Hosts:
+                server.example.com sudo Commands: /usr/bin/vim
+                ------------------------- Number of members added 1
+                -------------------------</screen>
+                <para>Last, add the user or group to the rule. This is the user
+                who is allowed to use 
+                <command>sudo</command>as defined in the rule; if no "run-as"
+                user is given, then this user will run the 
+                <command>sudo</command>commands as root.</para>
+                <screen>$ ipa sudorule-add-user --user jsmith files-commands
+                Rule name: files-commands Enabled: TRUE Users: jsmith Hosts:
+                server.example.com sudo Commands: /usr/bin/vim"
+                ------------------------- Number of members added 1
+                -------------------------</screen>
+            </example>
+            <example id="ex.sudo-allowing-denying">
+                <title>Allowing and Denying Commands</title>
+                <para>The 
+                <command>sudo</command>rule can grant access or deny access to
+                commands. For example, this rule would allow read access to
+                files but prevent editing:</para>
+                <screen>$ ipa sudorule-add-allow-command --sudocmd
+                "/usr/bin/less" readfiles $ ipa sudorule-add-allow-command
+                --sudocmd "/usr/bin/tail" readfiles $ ipa
+                sudorule-add-deny-command --sudocmd "/usr/bin/vim"
+                readfiles</screen>
+            </example>
+            <example id="Ex.sudo-options">
+                <title>Using sudoers Options</title>
+                <para>The 
+                <command>sudoers</command>file has a lot of potential flags
+                that can be set to control the behavior of 
+                <command>sudo</command>users, like requiring (or not requiring)
+                passwords to offer a user to authenticate to 
+                <command>sudo</command>or using fully-qualified domain names in
+                the 
+                <command>sudoers</command>file. The complete list of options is
+                in the 
+                <command>sudoers</command>manpage and at 
+                <ulink url="http://www.gratisoft.us/sudo/sudoers.man.html#sudoers_options" />.</para>
+                <para>Any of these options can be set for the &IPA; 
+                <command>sudo</command>rule using the 
+                <command>sudorule-add-option</command>command. When the command
+                is run, it prompts for the option to add:</para>
+                <screen>$ ipa sudorule-add-option readfiles Sudo Option:
+                !authenticate
+                ----------------------------------------------------- Added
+                option "!authenticate" to Sudo rule "readfiles"
+                -----------------------------------------------------</screen>
+            </example>
+            <note>
+                <title>NOTE</title>
+                <para>As described in 
+                <xref linkend="about-sudo-options" />, do not use options with
+                whitespace in the values. Rather than adding a list of options
+                in one line, add a single option setting for each desired
+                option.</para>
+            </note>
+            <example id="ex.sudo-runas">
+                <title>Running as Other Users</title>
+                <para>The 
+                <command>sudo</command>rule also has the option of specifying a
+                non-root user or group to run the commands as. The initial rule
+                has the user or group specified using the 
+                <option>--sudorule-add-runasuser</option>or 
+                <option>--sudorule-add-runasgroup</option>command,
+                respectively.</para>
+                <screen>$ ipa sudorule-add-runasuser --users=jsmith readfiles $
+                ipa sudorule-add-runasgroup --groups=ITadmins
+                readfiles</screen>
+                <para>When creating a rule, the 
+                <command>sudorule-add-runasuser</command>or 
+                <command>sudorule-add-runasgroup</command>command can only set 
+                <emphasis>specific</emphasis>users or groups. However, when
+                editing a rule, it is possible to run 
+                <command>sudo</command>as all users or all groups by using the 
+                <option>--runasusercat</option>or 
+                <option>--runasgroupcat</option>option. For example:</para>
+                <screen>$ ipa sudorule-mod --runasgroupcat=all 
+                <replaceable>ruleName</replaceable></screen>
+            </example>
+            <note>
+                <title>NOTE</title>
+                <para>The 
+                <option>--sudorule-add-runasuser</option>and 
+                <option>--sudorule-add-runasgroup</option>commands do not
+                support an 
+                <command>all</command>option, only specific user or group
+                names. Specifying all users or all groups can only be used with
+                options with the 
+                <command>sudorule-mod</command>command.</para>
+            </note>
+            <example id="ex.sudo-external">
+                <title>Referencing External Users or Hosts</title>
+                <para>The "who" in a 
+                <command>sudo</command>rule can be &IPAA; user, but there are
+                many logical and useful rules where one of the referents is a
+                system user. Similarly, a rule may need to grant or deny access
+                to a host machine on the network which is not an &IPA;
+                client.</para>
+                <para>In those cases, the 
+                <command>sudo</command>policy can refer to an 
+                <emphasis>external</emphasis>user or host &mdash; an identity
+                created and stored outside of &IPA; ( 
+                <xref linkend="about-external-sudo" />).</para>
+                <para>There are three options to add an external identity to a 
+                <command>sudo</command>rule:</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>--externaluser</para>
+                    </listitem>
+                    <listitem>
+                        <para>--runasexternaluser</para>
+                    </listitem>
+                    <listitem>
+                        <para>--externalhost</para>
+                    </listitem>
+                </itemizedlist>
+                <para>For example:</para>
+                <screen>$ ipa sudorule-add-host
+                --externalhost=external-server.example.com readfiles $ ipa
+                sudorule-add-user --externaluser=ITAdmin readfiles $ ipa
+                sudorule-add-runasuser --runasexternaluser=root
+                readfiles</screen>
+            </example>
+            <table id="tab.sudo-rules-cmds">
+                <title>sudo Commands</title>
+                <tgroup cols="2">
+                    <colspec colname="col1" colnum="1" />
+                    <colspec colname="col2" colnum="2" />
+                    <thead>
+                        <row>
+                            <entry>Command</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>sudorule-add</entry>
+                            <entry>Adds a sudo rule entry.</entry>
+                        </row>
+                        <row>
+                            <entry>sudorule-add-user</entry>
+                            <entry>Adds a user or a user group to the sudo
+                            rule. This user (or every member of the group) is
+                            then entitled to sudo any of the commands in the
+                            rule.</entry>
+                        </row>
+                        <row>
+                            <entry>sudorule-add-host</entry>
+                            <entry>Adds a target host for the rule. These are
+                            the hosts where the users are granted sudo
+                            permissions.</entry>
+                        </row>
+                        <row>
+                            <entry>sudorule-add-runasgroup</entry>
+                            <entry>Sets a group to run the sudo commands as.
+                            This must be a specific user; to specify all users,
+                            modify the rule using 
+                            <command>sudo-rule</command>.</entry>
+                        </row>
+                        <row>
+                            <entry>sudorule-add-runasuser</entry>
+                            <entry>Sets a user to run the sudo commands as.
+                            This must be a specific user; to specify all users,
+                            modify the rule using 
+                            <command>sudo-rule</command>.</entry>
+                        </row>
+                        <row>
+                            <entry>sudorule-add-allow-command</entry>
+                            <entry>Adds a command that users in the rule have
+                            sudo permission to run.</entry>
+                        </row>
+                        <row>
+                            <entry>sudorule-add-deny-command</entry>
+                            <entry>Adds a command that users in the rule are
+                            explicitly 
+                            <emphasis>denied</emphasis>sudo permission to
+                            run.</entry>
+                        </row>
+                        <row>
+                            <entry>sudorule-add-option</entry>
+                            <entry>Adds a sudoers flag to the sudo
+                            rule.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </section>
+    </section>
+    <section id="example-configuring-sudo">
+        <title>Applying the Configured sudo Policies to Hosts</title>
+        <para>Actually implementing 
+        <command>sudo</command>policies is more complicated than simply
+        creating the rules in &IPA;. Those rules need to be applied to every
+        local machine, which means that each system in the &IPA; domain has to
+        be configured to refer to &IPA; (as an LDAP server) for its
+        policies.</para>
+        <para condition="redhat">This example specifically configures a &OS; 6
+        client for sudo rules. The configuration file in step 
+        <xref linkend="step.nslcd" />is different, depending on the
+        platform.</para>
+        <para condition="five">This example specifically configures a &OS; 5
+        client for sudo rules. The configuration file in step 
+        <xref linkend="step.nslcd5" />is different, depending on the
+        platform.</para>
+        <para condition="fedora">This example specifically configures a &OS;
+        &VER; client for sudo rules. The configuration file in step 
+        <xref linkend="step.nslcdf" />is different, depending on the
+        platform.</para>
+        <orderedlist>
+            <listitem>
+                <para>
+                <emphasis>Optional.</emphasis>Set up a host group, as described
+                in 
+                <xref linkend="host-groups" />.</para>
+            </listitem>
+            <listitem>
+                <para>
+                <emphasis>Optional.</emphasis>Create a user group and add the
+                users, as described in 
+                <xref linkend="Configuring_IPA_Groups-Creating_IPA_Groups" />.</para>
+            </listitem>
+            <listitem>
+                <para>Set up a bind (authenticated) user by setting a password
+                for the default &IPA; 
+                <command>sudo</command>user. The user must be able to
+                authenticate to the server; anonymous access is not supported
+                for 
+                <command>sudo</command>policies.</para>
+                <para>Using LDAP tools, set the password for the 
+                <command>sudo</command>user, 
+                <command>
+                uid=sudo,cn=sysaccounts,cn=etc,dc=example,dc=com</command>. For
+                example:</para>
+                <screen>$ ldappasswd -Y GSSAPI -S -h ipaserver.ipadocs.org
+                uid=sudo,cn=sysaccounts,cn=etc,dc=example,dc=com New password:
+                Re-enter new password: Enter LDAP Password:</screen>
+            </listitem>
+            <listitem>
+                <para>Set up the sudo commands and command groups, as described
+                in 
+                <xref linkend="defining-sudocmds" />.</para>
+            </listitem>
+            <listitem>
+                <para>Set up the sudo rules, as described in 
+                <xref linkend="defining-sudorules" />.</para>
+            </listitem>
+            <listitem>
+                <para>Configure every system in the &IPA; domain.</para>
+                <orderedlist>
+                    <listitem>
+                        <para>Configure 
+                        <command>sudo</command>to look to LDAP for the 
+                        <filename>sudoers</filename>file. 
+                        <programlisting>vim /etc/nsswitch.conf sudoers: files
+                        ldap</programlisting></para>
+                        <para>Leaving the 
+                        <option>files</option>option in place allows 
+                        <command>sudo</command>to check its local configuration
+                        before checking the LDAP-based &IPA;
+                        configuration.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Enable debug logging for 
+                        <command>sudo</command>operations in the 
+                        <filename>/etc/ldap.conf</filename>file. If this file
+                        does not exist, it can be created. 
+                        <programlisting>vim /etc/ldap.conf sudoers_debug:
+                        1</programlisting></para>
+                        <note>
+                            <title>TIP</title>
+                            <para>Adding the 
+                            <parameter>sudoers_debug</parameter>parameter helps
+                            with troubleshooting. Valid values for this
+                            parameter are 0, 1, and 2. The 
+                            <command>sudo</command>documentation at 
+                            <ulink url="http://www.gratisoft.us/sudo/readme_ldap.html">
+                            http://www.gratisoft.us/sudo/readme_ldap.html</ulink>has
+                            more information on debugging the process.</para>
+                        </note>
+                    </listitem>
+                    <listitem>
+                        <para>Optionally, enable debugging in SSSD to show what
+                        LDAP settings it is using.</para>
+                        <programlisting>vim /etc/sssd/sssd.conf
+                        [domain/IPADOMAIN] debug_level = 6
+                        ....</programlisting>
+                        <para>The LDAP search base used by SSSD for operations
+                        is recorded in the 
+                        <filename>sssd_</filename>
+                        <emphasis>DOMAINNAME</emphasis>
+                        <filename>.log</filename>log.</para>
+                    </listitem>
+                    <listitem id="step.nslcd" condition="redhat">
+                        <para>Edit the NSS/LDAP configuration file and add the
+                        following 
+                        <command>sudo</command>-related lines to the 
+                        <filename>/etc/sudo-ldap.conf</filename>file: 
+                        <programlisting>binddn
+                        uid=sudo,cn=sysaccounts,cn=etc,dc=example,dc=com bindpw
+                        
+                        <replaceable>sudo_password</replaceable>ssl start_tls
+                        tls_cacertfile /etc/ipa/ca.crt tls_checkpeer yes
+                        bind_timelimit 5 timelimit 15 uri
+                        ldap://ipaserver.example.com
+                        ldap://backup.example.com:3890 sudoers_base
+                        ou=SUDOers,dc=example,dc=com</programlisting></para>
+                        <para>Multiple LDAP servers can be configured in a
+                        space-separated list, and other options (like SSL and
+                        non-standard ports) can be used with the LDAP URL. The 
+                        <command>sudo</command>LDAP configuration is covered in
+                        the 
+                        <command>sudo</command>manpages, 
+                        <ulink url="http://www.sudo.ws/sudo/man/1.8.2/sudoers.ldap.man.html" />.</para>
+                        <important>
+                            <title>IMPORTANT</title>
+                            <para>The 
+                            <parameter>uri</parameter>directive must give the
+                            fully-qualified domain name of the LDAP server, not
+                            an IP address. Otherwise, 
+                            <command>sudo</command>fails to connect to the LDAP
+                            server.</para>
+                        </important>
+                    </listitem>
+                    <listitem id="step.nslcd5" condition="five">
+                        <para>Edit the NSS/LDAP configuration file and add the
+                        following 
+                        <command>sudo</command>-related lines to the 
+                        <filename>/etc/ldap.conf</filename>file: 
+                        <programlisting>sudoers_base
+                        ou=SUDOers,dc=example,dc=com binddn
+                        uid=sudo,cn=sysaccounts,cn=etc,dc=example,dc=com bindpw
+                        
+                        <replaceable>sudo_password</replaceable>ssl start_tls
+                        tls_cacertfile /etc/ipa/ca.crt tls_checkpeer yes
+                        bind_timelimit 5 timelimit 15 uri
+                        ldap://ipaserver.example.com
+                        ldap://backup.example.com:3890</programlisting></para>
+                        <para>Multiple LDAP servers can be configured in a
+                        space-separated list, and other options (like SSL and
+                        non-standard ports) can be used with the LDAP URL. The 
+                        <command>sudo</command>LDAP configuration is covered in
+                        the 
+                        <command>sudo</command>manpages, 
+                        <ulink url="http://www.sudo.ws/sudo/man/1.8.2/sudoers.ldap.man.html" />.</para>
+                        <important>
+                            <title>IMPORTANT</title>
+                            <para>The 
+                            <parameter>uri</parameter>directive must give the
+                            fully-qualified domain name of the LDAP server, not
+                            an IP address. Otherwise, 
+                            <command>sudo</command>fails to connect to the LDAP
+                            server.</para>
+                        </important>
+                    </listitem>
+                    <listitem id="step.nslcdf" condition="fedora">
+                        <para>Edit the NSS/LDAP configuration file and add the
+                        following 
+                        <command>sudo</command>-related lines to the 
+                        <filename>/etc/sudo-ldap.conf</filename>file: 
+                        <programlisting>binddn
+                        uid=sudo,cn=sysaccounts,cn=etc,dc=example,dc=com bindpw
+                        
+                        <replaceable>sudo_password</replaceable>ssl start_tls
+                        tls_cacertfile /etc/ipa/ca.crt tls_checkpeer yes
+                        bind_timelimit 5 timelimit 15 uri
+                        ldap://ipaserver.example.com
+                        ldap://backup.example.com:3890 sudoers_base
+                        ou=SUDOers,dc=example,dc=com</programlisting></para>
+                        <para>Multiple LDAP servers can be configured in a
+                        space-separated list, and other options (like SSL and
+                        non-standard ports) can be used with the LDAP URL. The 
+                        <command>sudo</command>LDAP configuration is covered in
+                        the 
+                        <command>sudo</command>manpages, 
+                        <ulink url="http://www.sudo.ws/sudo/man/1.8.2/sudoers.ldap.man.html" />.</para>
+                        <important>
+                            <title>IMPORTANT</title>
+                            <para>The 
+                            <parameter>uri</parameter>directive must give the
+                            fully-qualified domain name of the LDAP server, not
+                            an IP address. Otherwise, 
+                            <command>sudo</command>fails to connect to the LDAP
+                            server.</para>
+                        </important>
+                    </listitem>
+                    <listitem>
+                        <para>Set a name for the NIS domain in the 
+                        <command>sudo</command>configuration. 
+                        <command>sudo</command>uses NIS-style netgroups, so the
+                        NIS domain name must be set in the system configuration
+                        for 
+                        <command>sudo</command>to be able to find the host
+                        groups used in the &IPA; 
+                        <command>sudo</command>configuration. 
+                        <orderedlist>
+                            <listitem>
+                                <para>Open the 
+                                <filename>/etc/rc.d/rc.local</filename>file.
+                                Setting the NIS domain name in this file allows
+                                the value to persist between reboots.</para>
+                                <screen># vim /etc/rc.d/rc.local</screen>
+                            </listitem>
+                            <listitem>
+                                <para>Add the command to set the NIS domain
+                                name.</para>
+                                <screen>nisdomainname example.com</screen>
+                            </listitem>
+                        </orderedlist></para>
+                        <important>
+                            <title>IMPORTANT</title>
+                            <para>Even though 
+                            <command>sudo</command>uses NIS-style netgroups, 
+                            <emphasis role="bold">it is not necessary to have a
+                            NIS server installed</emphasis>. Netgroups require
+                            that a NIS domain be named in their configuration,
+                            so 
+                            <command>sudo</command>requires that a NIS domain
+                            be named for netgroups. However, that NIS domain
+                            does not actually need to exist.</para>
+                        </important>
+                    </listitem>
+                </orderedlist>
+            </listitem>
+        </orderedlist>
+    </section>
+</chapter>

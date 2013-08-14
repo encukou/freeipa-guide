@@ -1,0 +1,1353 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
+[
+]>
+<chapter id="basic-usage">
+    <title>Basic Usage</title>
+    <para>All of the access to &PROD;, both through the web UI and through the
+    command line, is done by a user authenticating to the &IPA; domain. This
+    chapter covers the basics of setting up browsers to handle Kerberos
+    authentication, logging into &PROD;, and troubleshooting some common
+    connection issues.</para>
+    <section id="about-client-tools" revision="2.1.3">
+        <title>About the &IPA; Client Tools</title>
+        <para>&IPA; creates a domain of recognized services, host machines, and
+        users with universally-applied authentication sources and common
+        policies. From the perspective of a client machine and &IPAA; user, the
+        domain itself is fairly transparent after the initial configuration.
+        All users need to do is log into the domain using Kerberos, and that's
+        it.</para>
+        <para>However, an administrator has two ongoing tasks: add principals
+        to the &IPA; Kerberos domain and set the domain policies and server
+        configuration that govern domain interactions. &PROD; has both
+        command-line and web-based interfaces for administrators to use to
+        manage the domain, services, and &IPA; entries.</para>
+        <section id="about-cli-tools">
+            <title>About the &IPA; Command-Line Tools</title>
+            <para>The most common method to maintain the domain is using the
+            command-line tools. &PROD; has an incredibly broad set of scripts
+            and commands that are available to administrators. The entry
+            management functions of the domain are carried out with a single
+            script: 
+            <command>ipa</command>. This script is a parent or control script
+            for associated subcommands; each subcommand relates to a specific
+            entry type.</para>
+            <para>The command-line scripts offer a number of benefits:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>The scripts allow management tasks to be automated
+                    and performed repeatedly in a consistent way without manual
+                    intervention.</para>
+                </listitem>
+                <listitem>
+                    <para>Entries can be added with all possible attributes
+                    configured (or a desired subset of attributes) in a single
+                    step. The web UI frequently requires two steps to fully
+                    configure an entry: the first to create the entry and the
+                    next to add optional attributes.</para>
+                </listitem>
+                <listitem>
+                    <para>The command-line scripts support adding additional
+                    attributes which may not be available in the UI or even
+                    custom attributes to entries, if the schema is
+                    configured.</para>
+                </listitem>
+            </itemizedlist>
+            <section id="ipa-command-structure">
+                <title>The Structure of the ipa Command</title>
+                <para>The 
+                <command>ipa</command>command is essentially a big plug-in
+                container. It supports dozens of subcommands; these subcommands
+                are actually plug-ins which manage specific types of objects in
+                &PROD;.</para>
+                <para>The first type of a subcommand identifies the object type
+                (such as user, sudo, group, host, or dns), and the second part
+                identifies the operation being performed on that object.</para>
+                <screen>ipa 
+                <replaceable>objectType-operation objectName
+                --option=value</replaceable></screen>
+                <para>For example, adding a user is done using the 
+                <command>user-add</command>subcommand:</para>
+                <screen>ipa user-add 
+                <replaceable>entryName options</replaceable></screen>
+                <para>Related subcommands are grouped together into 
+                <emphasis>plug-in modules</emphasis>. Commands for managing DNS
+                entries like 
+                <command>dnszone-add</command>and 
+                <command>dnsrecord-add</command>all belong to the 
+                <emphasis>dns</emphasis>module or 
+                <emphasis>topic</emphasis>. All of the information for managing
+                a specific area, with all of the supported commands and
+                examples for each, are available by viewing the help for that
+                topic:</para>
+                <screen>ipa help 
+                <replaceable>topic</replaceable></screen>
+                <note>
+                    <title>TIP</title>
+                    <para>To get a list of all available topics, run the 
+                    <command>help</command>command without a topic name:</para>
+                    <screen>ipa help</screen>
+                </note>
+                <para>All topic or command areas follow a consistent pattern
+                for how entries are managed.</para>
+                <section id="ipa-command-adding">
+                    <title>Adding, Editing, and Deleting Entries with
+                    ipa</title>
+                    <para>New entries are added using an 
+                    <emphasis>*-add</emphasis>command. For example:</para>
+                    <screen>$ ipa user-add jsmith</screen>
+                    <para>For 
+                    <command>add</command>operations, commands usually prompt
+                    for any required configuration attributes, which can be
+                    passed as command-line options or using 
+                    <option>--set/addattr</option>options ( 
+                    <xref linkend="using-setattr-addattr" />).</para>
+                    <screen>$ ipa user-add First name: John Last name: Smith
+                    User login [jsmith]: jsmith -------------------- Added user
+                    "jsmith" -------------------- ...</screen>
+                    <para>Likewise, entries are usually edited through a 
+                    <command>*-mod</command>commands, and then any new or
+                    edited attributes are listed as options after it.</para>
+                    <screen>$ ipa user-mod jsmith --title="Editor III"</screen>
+                    <para>Last, entries can be deleted using the 
+                    <command>*-del</command>command and the entry's
+                    name.</para>
+                    <screen>$ ipa user-del jsmith</screen>
+                </section>
+                <section id="ipa-command-displaying">
+                    <title>Finding and Displaying Entries with ipa</title>
+                    <para>Entries for an entire type are searched for using the
+                    
+                    <command>*-find</command>command and an optional search
+                    criterion. The criterion is a string which can either be an
+                    exact match or use an asterisk (*) as a wildcard.</para>
+                    <screen>ipa user-find *smith</screen>
+                    <para>With no search criterion, every entry of that type is
+                    displayed.</para>
+                    <para>Searches (any 
+                    <command>*-find</command>command) have certain limits
+                    imposed as part of the server configuration, specifically
+                    how many entries are returned (size limits) and how long a
+                    search will run (time limits). This is covered in 
+                    <xref linkend="search-limits" />. Part of the server
+                    configuration is setting global defaults for size and time
+                    limits on searches. While these limits are always enforced
+                    in the web UI, they can be overridden with any 
+                    <command>*-find</command>command with the 
+                    <option>--sizelimit</option>and 
+                    <option>--timelimit</option>options. For example, if the
+                    default time limit is 60 seconds and a search is going to
+                    take longer, the time limit can be increased to 120
+                    seconds:</para>
+                    <screen>[jsmith@ipaserver ~]$ ipa user-find *sen
+                    --timelimit=120</screen>
+                    <para>Not every possible attribute in an entry type can be
+                    searched for. A certain subset of attributes are predefined
+                    and indexed for searches. (This list is configurable for
+                    users and groups, but not for other types of
+                    entries.)</para>
+                    <para>When entries are returned, only certain default
+                    attributes are displayed with the entry; to return all
+                    attributes currently set for entries, use the 
+                    <option>--all</option>option.</para>
+                    <para>To display a specific entry, use the 
+                    <command>*-show</command>command and the entry name. As
+                    with searches, only a subset of attributes are displayed
+                    with the entry unless the 
+                    <option>--all</option>option is used.</para>
+                </section>
+                <section id="ipa-command-members">
+                    <title>Adding Members to Groups and Containers with
+                    ipa</title>
+                    <para>Group members are added and removed with separate
+                    commands, apart from simply modifying an entry. Member
+                    commands essentially create a relationship between
+                    different &IPA; entries. While this is obvious in
+                    traditional group-member roles, it is also true for some
+                    policy entries (like SELinux and sudo policies) where
+                    entries are associated with another entry.</para>
+                    <para>Most commonly, the command format for adding a member
+                    entry is 
+                    <command>*-add-member</command>, although the command may
+                    specify an entry type, such as 
+                    <command>*-add-user</command>.</para>
+                    <para>Likewise, entries are removed as members (not
+                    deleted) using a 
+                    <command>*-remove-member</command>or 
+                    <command>*-remove-</command>
+                    <emphasis>type</emphasis>command.</para>
+                </section>
+            </section>
+            <section id="ipa-positional-arguments">
+                <title>Positional Elements in ipa Commands</title>
+                <para>Usually, 
+                <command>ipa</command>subcommands have only two elements: the
+                name of the entry being modified (the 
+                <emphasis>object</emphasis>) and then any options available for
+                the subcommand:</para>
+                <screen>ipa 
+                <replaceable>command entryName
+                --options=values</replaceable></screen>
+                <para>With a few types of entries, however, not only the entry
+                name itself needs to be specified; the entry's 
+                <emphasis>parent</emphasis>must also be specified. This is the
+                case with 
+                <command>automount</command>commands, for example. With
+                automount, the location must be included whenever a new key or
+                map is created.</para>
+                <para>The parent entry name is given first, and then the child
+                entry name. For example, for automount, the location is given
+                first, and then the map or key entry name.</para>
+                <screen>ipa 
+                <replaceable>command parentEntryName chidlEntryName
+                --childOptions=childValues</replaceable></screen>
+            </section>
+            <section id="using-setattr-addattr">
+                <title>Managing Entry Attributes with --setattr, --addattr, and
+                --delattr</title>
+                <para>All identities and configuration in &PROD; are stored as
+                LDAP entries, with standard attribute-value assertions (AVAs).
+                Whether an entry is created through the UI or the CLI, there
+                are certain attributes which are required and others which are
+                available, depending on the default and custom object classes
+                for that entry type.</para>
+                <para>For the most common attributes, the 
+                <command>ipa</command>use specified command-line arguments to
+                set values. For example, adding a mail attribute to a user can
+                be done with the 
+                <option>--mail</option>argument; enabling dynamic updates for a
+                DNS zone can be done with the 
+                <option>--allow-dynupdate</option>option with zone commands;
+                and a map key for an automount map is given in the 
+                <option>--key</option>option.</para>
+                <para>However, entries can also allow attributes that may not
+                have command-line (or UI) options for setting them. Partially,
+                this is because the underlying LDAP schema is very rich,
+                particularly for user entries, with many possible allowed
+                attributes. Additionally, &PROD; allows schema extensions for
+                users and groups, and those custom schema elements are not
+                necessarily reflected in the UI or command-line tools.</para>
+                <para>Any supported attribute can be added or edited to an
+                entry using the 
+                <option>--setattr</option>and 
+                <option>--addattr</option>options.</para>
+                <para>Both options have this format:</para>
+                <screen>--setattr= 
+                <replaceable>attribute=value</replaceable></screen>
+                <para>The 
+                <option>--setattr</option>option sets one value for the given
+                attribute; any existing values are overwritten, even for
+                multi-valued attributes.</para>
+                <para>The 
+                <option>--addattr</option>option adds a new value for an
+                attribute; for a multi-valued attribute, it adds the new value
+                while preserving any existing values.</para>
+                <para>Both 
+                <option>--setattr</option>option and 
+                <option>--addattr</option>can be used multiple times in the
+                same command invocation. For example:</para>
+                <screen>$ ipa user-mod jsmith --addattr=mail=johnnys@me.com
+                --addattr=mail=jsmith@example.com --setattr=description="backup
+                IT manager for the east coast branch"</screen>
+                <para>Likewise, an attribute or specific attribute value can be
+                removed from an entry using the 
+                <option>--delattr</option>option. For a single-valued
+                attribute, this removes the attribute; for a multi-valued
+                attribute, it removes only the specified value. For
+                example:</para>
+                <screen>$ ipa user-mod jsmith
+                --delattr=mail=johnnys@me.com</screen>
+                <note>
+                    <title>NOTE</title>
+                    <para>Deleting attributes is evaluated last, after adding
+                    or editing attributes. If the same attribute is added and
+                    deleted in the same modify operation, it is a no-op.</para>
+                    <screen>$ ipa user-mod jsmith --addattr=mail=johnnys@me.com
+                    --delattr=mail=johnnys@me.com</screen>
+                </note>
+            </section>
+            <section id="running-scripts">
+                <title>Using Special Characters with &IPA; Tools</title>
+                <para>The &IPA; command-line tools are run as any other
+                utilities in a shell. If there are special characters in the
+                command &mdash; such as angle brackets (&gt; and &lt;),
+                ampersands (&amp;), asterisks (*), and pipes (|) &mdash; the
+                characters must be escaped. Otherwise, the command fails
+                because the shell cannot properly parse the unescaped
+                characters.</para>
+            </section>
+            <section id="cmd-usage-kinit">
+                <title>Logging into the &IPA; Domain Before Running</title>
+                <para>Before running any &IPA; commands (with the exception of
+                the installation scripts, such as 
+                <command>ipa-server-install</command>), the user must first
+                authenticate to the &IPA; domain by obtaining a Kerberos
+                ticket. This is done using 
+                <command>kinit</command>:</para>
+                <screen>[jsmith@ipaserver ~]$ kinit admin</screen>
+                <para>Different login options are described in 
+                <xref linkend="logging-in" />.</para>
+            </section>
+        </section>
+        <section id="ipa-ui">
+            <title>Looking at the &IPA; UI</title>
+            <para>The &PROD; web UI is designed for simplicity. This was the
+            primary design goal, and this means that the web UI offers benefits
+            that make using &IPA; simpler and clearer:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>It shows instant, visual relationships between
+                    entries (such as a user and all the groups, sudo rules,
+                    netgroups, and policies which are associated with that
+                    user).</para>
+                </listitem>
+                <listitem>
+                    <para>All entries are listed immediately without having to
+                    run a search. This makes it possible to browse entries. The
+                    UI also has a simple search box which quickly filters the
+                    list of entries.</para>
+                </listitem>
+                <listitem>
+                    <para>The interface is intuitive to use, without having to
+                    learn the command-line tools.</para>
+                </listitem>
+                <listitem>
+                    <para>The web UI can be accessed from machines outside the
+                    &IPA; domain, so the domain can be managed from
+                    anywhere.</para>
+                    <para>Using the web UI requires a valid Kerberos ticket for
+                    the &IPA; domain (by default), meaning that it can only be
+                    accessed from a machine within the &IPA; domain.
+                    Alternatively, the web UI can be configured to allow
+                    password authentication along with Kerberos authentication,
+                    or a machine outside the &IPA; can be configured to work
+                    with Kerberos ( 
+                    <xref linkend="Using_a_Browser_on_Another_System" />).</para>
+                </listitem>
+            </itemizedlist>
+            <section id="ui-layout">
+                <title>The UI Layout</title>
+                <para>The web UI has three major functional areas which
+                correspond to each of the major functions of &IPA;: identity
+                management, policy management, and domain configuration.</para>
+                <table id="tab.ui-tasks">
+                    <title>Configuration Areas Per Tab</title>
+                    <tgroup cols="2">
+                        <thead>
+                            <row>
+                                <entry>Main Menu Tab</entry>
+                                <entry>Configuration Areas</entry>
+                            </row>
+                        </thead>
+                        <tbody>
+                            <row>
+                                <entry>Identity</entry>
+                                <entry>
+                                    <itemizedlist>
+                                        <listitem>
+                                            <para>User entries</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>User groups entries</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>Host/client entries</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>Host group entries</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>Netgroups entries</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>Domain services
+                                            entries</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>DNS (if configured)</para>
+                                        </listitem>
+                                    </itemizedlist>
+                                </entry>
+                            </row>
+                            <row>
+                                <entry>Policy</entry>
+                                <entry>
+                                    <itemizedlist>
+                                        <listitem>
+                                            <para>Host-based access
+                                            control</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>Sudo rules</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>Automount</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>User password policies</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>Kerberos ticket policy</para>
+                                        </listitem>
+                                    </itemizedlist>
+                                </entry>
+                            </row>
+                            <row>
+                                <entry>&IPA; Server (access controls within
+                                &PROD;)</entry>
+                                <entry>
+                                    <itemizedlist>
+                                        <listitem>
+                                            <para>Role-based access control
+                                            (permissions based on group
+                                            membership)</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>Self permissions</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>Delegations (user access
+                                            control over other users)</para>
+                                        </listitem>
+                                    </itemizedlist>
+                                </entry>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </table>
+                <para>The 
+                <emphasis>main menu</emphasis>at the top of every page has
+                three tabs which correspond to the functional areas listed in 
+                <xref linkend="tab.ui-tasks" />. When a tab is selected, there
+                is a submenu of the different configuration areas. Some
+                configuration areas may have multiple possible entries; for
+                example, role-based access controls define user roles/groups,
+                the areas that access can be granted or denied (privileges),
+                and then the permissions granted to those areas. Each separate
+                configuration entry has its own task area beneath the primary
+                configuration area.</para>
+                <figure id="fig.ui-tabs">
+                    <title>The Main Menu</title>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata fileref="images/ui-tabs.png" />
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+                <para>All entries for a configuration area are listed together
+                on the main page for that area. This page provides direct links
+                to individual entry pages, as well as basic information (the 
+                <emphasis>attributes</emphasis>) about the entry. (This is
+                usually just the description, but user entries show a lot more
+                information.)</para>
+                <para>The page also has some tasks that can be performed on it.
+                For a list page that shows entries, this can be creating or
+                deleting an entry. For a list page for groups, the tasks are
+                for establishing relationships between entities, either by
+                adding ( 
+                <emphasis>enrolling</emphasis>) or removing an entity from that
+                group. Both individual entries and groups can be searched for
+                through the list page.</para>
+                <figure id="fig.ui-list">
+                    <title>List View</title>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata fileref="images/ui-full-list.png" />
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+                <para>Each entry page is a form which allows that entry to be
+                edited. This is done by editing text 
+                <emphasis>fields</emphasis>or by selecting items from drop-down
+                menus.</para>
+                <figure id="fig.ui-form">
+                    <title>Form/Entry View</title>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata fileref="images/ui-full-form.png" />
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+            </section>
+            <section id="page-elements">
+                <title>Page Elements</title>
+                <para>The web UI uses common elements on all pages.</para>
+                <para>The most basic is that all blue text is a link to an
+                entry or to an action.</para>
+                <para>When a task like adding an entry or saving a change is
+                possible, the task link is blue. When it is not possible (such
+                as no items have been selected to be deleted) then the task is
+                grayed out.</para>
+                <figure id="fig.ui-task-links">
+                    <title>Active Task Link</title>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata fileref="images/update-link.png" />
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+                <para>All list pages display direct links to entry pages.
+                However, some entries are essentially nested. For example, in
+                automount configuration, the primary entry is the location, and
+                then keys, mount points, and maps are associated with that
+                location as children entries. This hierarchy is reflected in
+                breadcrumb navigation near the top of the page, so it is easy
+                to identify where you are in the UI and how this entry relates
+                to any other related entries.</para>
+                <figure id="fig.ui-breadcrumbs">
+                    <title>Entry Breadcrumbs</title>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata fileref="images/automount-breadcrumbs.png" />
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+                <para>Most entries have a variety of different configuration
+                areas. A simple user entry has account activity settings,
+                personal information, address information, organizational
+                information, and other contact information. Related attributes
+                are grouped together logically in the UI. These entry form
+                areas can be collapsed or expanded using the arrows to control
+                the amount of information displayed on the page.</para>
+                <figure id="fig.ui-arrows">
+                    <title>Collapsing and Expanding Form Elements</title>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata fileref="images/collapse-arrows.png" />
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+                <para>When entries are created, they are added with only the
+                required attributes. Additional attributes can be added
+                manually. Some attributes have default values added to the
+                entry and simply need to be edited; other attributes may not
+                exist at all in the new entry and need to be added.</para>
+                <figure id="fig.ui-add-attr">
+                    <title>Add an Attribute</title>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata fileref="images/user-addcontact.png" />
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+                <para>Any changes to any attribute can be undone. A single
+                attribute change can be undone by clicking the dynamic 
+                <guibutton>undo</guibutton>button; all changes can be undone by
+                clicking the 
+                <guilabel>Reset</guilabel>link at the top of the entry details
+                page.</para>
+                <figure id="fig.ui-undo">
+                    <title>Undo Edits</title>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata fileref="images/undo-button.png" />
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+            </section>
+            <section id="abt-members">
+                <title>Showing and Changing Group Members</title>
+                <para>Members can be added to a group through the group
+                configuration. There are tabs for all the member types which
+                can belong to the group, and an administrator picks all of the
+                marching entries and adds them as members.</para>
+                <para>However, it is also possible for an entity to be added to
+                a group through its own configuration. Each entry has a list of
+                tabs that displays group types that the entry can join. The
+                list of all groups of that type are displayed, and the entity
+                can be added to multiple groups at the same time.</para>
+                <figure id="fig.ui-member-menu">
+                    <title>Member Of...</title>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata fileref="images/groups-menu2.png" />
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+            </section>
+        </section>
+    </section>
+    <section id="logging-in">
+        <title>Logging into &IPA;</title>
+        <para>Users are authenticated to &IPA; services, including the
+        command-line tools and the web UI, using Kerberos authentication. This
+        means that logging into &PROD; requires running 
+        <command>kinit</command>.</para>
+        <para>Running 
+        <command>kinit</command>issues the user a Kerberos 
+        <emphasis>ticket</emphasis>. This ticket is checked by any &IPA; or
+        Kerberos-aware service, so that a user only needs to log in once to
+        access all domain services. Domain services include the &IPA; web UI,
+        mounted file shares, wikis, or any other application which uses &IPA;
+        as its identity/authentication store.</para>
+        <section id="logging-in-kinit">
+            <title>Logging into &IPA;</title>
+            <para>Logging into &PROD; requires running 
+            <command>kinit</command>on a client within the &IPA; domain.</para>
+            <screen>$ kinit</screen>
+            <para>The 
+            <command>kinit</command>command must be run from a machine which
+            has been configured as a client within the &IPA; domain, so that
+            the client retrieves authenticates with the &IPA; KDC.</para>
+            <para>Simply running 
+            <command>kinit</command>logs into &IPA; as the currently logged-in
+            user account. This user account must also be an &IPA; user for them
+            to authenticate to the &IPA; Kerberos domain successfully. For
+            example, if you are logged into the machine as 
+            <command>jsmith</command>:</para>
+            <screen>$ kinit Password for jsmith@EXAMPLE.COM:</screen>
+            <note>
+                <title>NOTE</title>
+                <para>If SSSD or 
+                <systemitem class="library">pam_krb5</systemitem>is configured
+                on the &IPA; client machine, then when a user logs into the
+                machine, a ticket is created which can be used for machine
+                services which require authentication, such as 
+                <command>sudo</command>.</para>
+            </note>
+        </section>
+        <section id="switching-users">
+            <title>Logging in When an &IPA; User Is Different Than the System
+            User</title>
+            <para>To specify an &IPA; username &mdash; because a person's
+            system username is different then the &IPA; username or to switch
+            &IPA; user accounts &mdash; simply rerun the 
+            <command>kinit</command>command, specifying the new user. For
+            example:</para>
+            <screen>$ kinit 
+            <replaceable>userName</replaceable>Password for 
+            <replaceable>userName</replaceable>@EXAMPLE.COM:</screen>
+            <para>When the server was first set up, an administrative user, 
+            <systemitem>admin</systemitem>, is created to perform normal
+            administrative activities. To authenticate as the admin user, use
+            the name admin when running 
+            <command>kinit</command>:</para>
+            <screen>$ kinit admin</screen>
+            <note>
+                <title>NOTE</title>
+                <para>Only one set of tickets can be stored per logged-in user.
+                The current stored credentials are the ones that will be used
+                when accessing &IPA; services.</para>
+                <para>If you were already connected to the &IPA; web UI as
+                another user, refresh the browser to display the updated
+                details for the new user.</para>
+            </note>
+        </section>
+        <section id="checking-current-creds">
+            <title>Checking the Current Logged in User</title>
+            <para>Use the 
+            <command>klist</command>command to verify the identity and the
+            ticket granting ticket (TGT) from the server:</para>
+            <screen>$ klist Ticket cache: FILE:/tmp/krb5cc_500 Default
+            principal: ipaUser@EXAMPLE.COM Valid starting Expires Service
+            principal 11/10/08 15:35:45 11/11/08 15:35:45
+            krbtgt/EXAMPLE.COM@EXAMPLE.COM Kerberos 4 ticket cache: /tmp/tkt500
+            klist: You have no tickets cached</screen>
+            <para>It's important to know who the authenticated user is because
+            the currently-authenticated user is the only one who can access the
+            &IPA; services. The Kerberos client libraries for 
+            <command>kinit</command>have some limitation, one of them being
+            that the current ticket is overwritten with any new invocation of 
+            <command>kinit</command>. Authenticating as User A and then
+            authenticating as User B overwrites User A's ticket.</para>
+            <para>To allow there to be multiple authenticated users on a
+            machine, set the 
+            <varname>KRB5CCNAME</varname>environment variable. This variable
+            keeps credential caches separate in different shells.</para>
+        </section>
+        <section id="caching-tickets">
+            <title>Caching User Kerberos Tickets</title>
+            <indexterm>
+                <primary>users</primary>
+                <secondary>separate credentials cache</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>logging in</primary>
+                <secondary>separate credentials cache</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>Kerberos</primary>
+                <secondary>separate credentials cache</secondary>
+            </indexterm>
+            <para>Only one set of tickets can be stored per logged-in user. The
+            current stored credentials are the ones that will be used when
+            accessing &IPA; services.</para>
+            <para>For example, if you authenticated as 
+            <command>admin</command>, added a new user, set the password, and
+            then tried to authenticate as that user, the administrator's ticket
+            is lost.</para>
+            <para>To keep separate credential caches in different shells, a
+            special environment variable, 
+            <varname>KRB5CCNAME</varname>, can be used.</para>
+        </section>
+    </section>
+    <section id="using-the-ui">
+        <title>Using the &IPA; Web UI</title>
+        <para>In order to use the web UI, the user must be authenticated with
+        the &IPA; Kerberos domain and have an active Kerberos ticket ( 
+        <xref linkend="logging-in" />). Generally, the web UI can only be
+        accessed from &IPAA; server or client machine and the user must be
+        locally authenticated. There are a couple of ways to work around this,
+        either by configuring Kerberos on a non-domain machine to connect to
+        the Kerberos domain ( 
+        <xref linkend="Using_a_Browser_on_Another_System" />) or by password
+        authentication to the UI.</para>
+        <section id="supported-browsers2">
+            <title>Supported Web Browsers</title>
+            <para>These browsers are supported for connecting to the web
+            UI:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Firefox 15.x</para>
+                </listitem>
+                <listitem>
+                    <para>Firefox 10.x</para>
+                </listitem>
+                <listitem>
+                    <para>Firefox 3.6</para>
+                </listitem>
+                <listitem condition="redhat">
+                    <para>Internet Explorer (self-service management
+                    only)</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+        <section id="opening-the-web-ui">
+            <title>Opening the &IPA; Web UI</title>
+            <para>The browser must be properly configured, as described in 
+            <xref linkend="config-browser" />, to support Kerberos
+            authentication so that the user can connect to the UI.</para>
+            <para>To open the web UI:</para>
+            <orderedlist>
+                <listitem>
+                    <para>Get a valid Kerberos ticket using 
+                    <command>kinit</command>, as in 
+                    <xref linkend="logging-in" />.</para>
+                </listitem>
+                <listitem>
+                    <para>Open the &IPA; URL. The full URL is 
+                    <command>https://</command>
+                    <emphasis>IPAserver-FQDN</emphasis>
+                    <command>/ipa/ui</command>, but this service is also
+                    accessed simply by opening 
+                    <command>https://</command>
+                    <emphasis>IPAserver-FQDN</emphasis>. For example:</para>
+                    <screen>https://server.example.com
+                    https://server.example.com/ipa/ui</screen>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="config-browser">
+            <title>Configuring the Browser</title>
+            <para>Firefox can use Kerberos credentials to authenticate to the
+            &IPA; UI, but Kerberos negotiation needs to be configured to use
+            the &IPA; domain. At the first log-in attempt, if Firefox has not
+            been configured to support Kerberos authentication, then an error
+            message appears.</para>
+            <figure id="fig.kerb-error-browser">
+                <title>Kerberos Authentication Error</title>
+                <mediaobject>
+                    <imageobject>
+                        <imagedata fileref="images/browser-kinit-rhel.png" />
+                    </imageobject>
+                </mediaobject>
+            </figure>
+            <para>If you see that error, then the &IPA; web UI can perform the
+            required configuration:</para>
+            <orderedlist>
+                <listitem>
+                    <para>Click the 
+                    <guilabel>follow these directions</guilabel>link.</para>
+                </listitem>
+                <listitem>
+                    <para>Click the link to import the CA certificate for the
+                    &IPA; server.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/configuring-browser1.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>Set the web site and software developer (first and
+                    last) trust bits for the CA certificate.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/Accept_CA_No_Exception.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>Click the 
+                    <guilabel>Configure Firefox</guilabel>button. This
+                    automatically fills out all the 
+                    <command>negotiate</command>settings in the Firefox
+                    configuration to use the &IPA; domain settings.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/configuring-browser2.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                    <para>When the process is complete, a success box pops up
+                    saying that Firefox has been configured for single sign-on.
+                    For there, you are redirected to the &IPA; web UI.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/configuring-browser3.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+            </orderedlist>
+            <para>This can also be done manually:</para>
+            <orderedlist>
+                <listitem>
+                    <para>Open Firefox.</para>
+                </listitem>
+                <listitem>
+                    <para>Type 
+                    <command>about:config</command>in the address bar.</para>
+                </listitem>
+                <listitem>
+                    <para>In the 
+                    <guilabel>Search</guilabel>field, type 
+                    <command>negotiate</command>to filter out the
+                    Kerberos-related parameters.</para>
+                </listitem>
+                <listitem>
+                    <para>On &OS;, enter the domain name for the URI
+                    parameters, including the preceding period (.) and set the 
+                    <command>gsslib</command>parameter to true: 
+                    <programlisting>network.negotiate-auth.trusted-uris
+                    .example.com network.negotiate-auth.using-native-gsslib
+                    true</programlisting></para>
+                    <para>On Windows, set the trusted URIs and library path,
+                    and disable the built-in Microsoft Kerberos for
+                    authentication:</para>
+                    <programlisting>network.negotiate-auth.trusted-uris
+                    .example.com network.auth.use-sspi false
+                    network.negotiate-auth.gsslib: C:\Program
+                    Files\MIT\Kerberos\bin\gssapi32.dll</programlisting>
+                    <para>On a 64-bit system, the library location is in 
+                    <filename>C:\Program
+                    Files(x86)\MIT\Kerberos\bin\gssapi32.dll</filename>.</para>
+                </listitem>
+                <listitem>
+                    <para>Open the web UI by going to the fully-qualified
+                    domain name of the &IPA; server such as 
+                    <systemitem>http://ipaserver.example.com</systemitem>. Make
+                    sure that you can open the web UI and that there are no
+                    Kerberos authentication errors.</para>
+                </listitem>
+                <listitem>
+                    <para>Next, download the &IPA; server's CA certificate from
+                    
+                    <systemitem>
+                    http://ipa.example.com/ipa/config/ca.crt</systemitem>.</para>
+                </listitem>
+                <listitem>
+                    <para>Select the first ( 
+                    <guilabel>Trust this CA to identify web sites</guilabel>)
+                    and third ( 
+                    <guilabel>Trust this CA to identify software
+                    developers</guilabel>) check boxes.</para>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="Using_a_Browser_on_Another_System">
+            <title>Using a Browser on Another System</title>
+            <para>It is possible to connect to the &PROD; web UI from a system
+            which is 
+            <emphasis>not</emphasis>a member of the &IPA; domain. In this case,
+            it is possible to specify &IPAA;-specific Kerberos configuration
+            file on the external (non-&IPA;) machine before running 
+            <command>kinit</command>, and then the user can authenticate
+            against the &IPA; server domain.</para>
+            <para>This is especially useful there are multiple realms or
+            overlapping domains across your infrastructure.</para>
+            <orderedlist>
+                <listitem>
+                    <para>Copy the 
+                    <filename>/etc/krb5.conf</filename>file from the &IPA;
+                    server.</para>
+                    <para>
+                        <screen># scp /etc/krb5.conf
+                        root@externalmachine.example.com:/etc/krb5_ipa.conf</screen>
+                    </para>
+                    <warning>
+                        <title>WARNING</title>
+                        <para>Do not overwrite the existing 
+                        <filename>krb5.conf</filename>file.</para>
+                    </warning>
+                </listitem>
+                <listitem>
+                    <para>On the external machine, set the terminal session to
+                    use the copied &IPA; Kerberos configuration file: 
+                    <screen>$ export
+                    KRB5_CONFIG=/etc/krb5_ipa.conf</screen></para>
+                </listitem>
+                <listitem>
+                    <para>Configure Firefox on the external machine as in 
+                    <xref linkend="config-browser" />.</para>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="form-based-auth">
+            <title>Logging in with Simple Username/Password Credentials</title>
+            <para>If Kerberos authentication fails, then browser login also
+            fails. That prevents access to the &IPA; web UI. Simple
+            authentication for the UI allows users to log in even if there are
+            problems with the Kerberos service or if the system is outside the
+            &IPA; domain.</para>
+            <para>When the &IPA; server cannot find a valid Kerberos ticket for
+            the user attempting to log into the web UI, it splashes an error
+            message. Since the preferred method of connecting to &IPA; domain
+            services (including the UI) is using Kerberos authentication, the
+            error first says to renew the Kerberos credentials or to configure
+            the browser to support Kerberos authentication.</para>
+            <para>The second part of the message offers the alternative of
+            using simple authentication. The 
+            <guilabel>form-based authentication</guilabel>link opens a login
+            page.</para>
+            <figure>
+                <title>&IPA; Form-Based Login Option</title>
+                <mediaobject>
+                    <imageobject>
+                        <imagedata fileref="images/login-alt2.png" />
+                    </imageobject>
+                </mediaobject>
+            </figure>
+            <para>Then simply supply the UID and password for a configured
+            &IPA; user.</para>
+            <figure>
+                <title>&IPA; Password Prompt</title>
+                <mediaobject>
+                    <imageobject>
+                        <imagedata fileref="images/login-alt.png" />
+                    </imageobject>
+                </mediaobject>
+            </figure>
+        </section>
+        <section id="ui-and-proxies">
+            <title>Using the UI with Proxy Servers</title>
+            <indexterm>
+                <primary>port forwarding</primary>
+                <secondary>for the UI</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>web UI</primary>
+                <secondary>port forwarding</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>web UI</primary>
+                <secondary>proxy servers</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>proxy servers</primary>
+                <secondary>for the UI</secondary>
+            </indexterm>
+            <para>Proxy servers can be used to access the web UI without any
+            additional configuration in &IPA;.</para>
+            <para>Port forwarding is not supported with the &IPA; server.
+            However, because it is possible to use proxy servers with &IPA;, an
+            operation similar to port forwarding can be configured using proxy
+            forwarding with OpenSSH and the SOCKS option. This is described in 
+            <ulink url="http://www.meadowy.org/~gotoh/ssh/openssh-socks.html" />.</para>
+        </section>
+        <section id="Troubleshooting-UI">
+            <title>Troubleshooting UI Connection Problems</title>
+            <para>If negotiate authentication is not working, turn on verbose
+            logging for the authentication process to help diagnose the
+            issue:</para>
+            <orderedlist>
+                <listitem>
+                    <para>Close all browser windows.</para>
+                </listitem>
+                <listitem>
+                    <para>In a terminal, set the new log levels for Firefox: 
+                    <screen>export NSPR_LOG_MODULES=negotiateauth:5 export
+                    NSPR_LOG_FILE=/tmp/moz.log</screen></para>
+                    <para>This enables verbose logging and logs all information
+                    to 
+                    <filename>/tmp/moz.log</filename>.</para>
+                </listitem>
+                <listitem>
+                    <para>Restart the browser from the same terminal window and
+                    attempt t .</para>
+                </listitem>
+            </orderedlist>
+            <para>Some of the common error messages and workarounds are in 
+            <xref linkend="tab.ui-troubleshooting" />.</para>
+            <table id="tab.ui-troubleshooting">
+                <title>UI Error Log Messages</title>
+                <tgroup cols="2">
+                    <thead>
+                        <row>
+                            <entry>Error Log Message</entry>
+                            <entry>Description and Fix</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>
+                                <screen>-1208550944[90039d0]: entering
+                                nsNegotiateAuth::GetNextToken()
+                                -1208550944[90039d0]: gss_init_sec_context()
+                                failed: Miscellaneous failure No credentials
+                                cache found</screen>
+                            </entry>
+                            <entry>There are no Kerberos tickets. Run 
+                            <command>kinit</command>.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <screen>-1208994096[8d683d8]: entering
+                                nsAuthGSSAPI::GetNextToken()
+                                -1208994096[8d683d8]: gss_init_sec_context()
+                                failed: Miscellaneous failure Server not found
+                                in Kerberos database</screen>
+                            </entry>
+                            <entry>This can occur when you have successfully
+                            obtained Kerberos tickets but are still unable to
+                            authenticate to the UI. This indicates that there
+                            is a problem with the Kerberos configuration. The
+                            first place to check is the 
+                            <command>[domain_realm]</command>section in the 
+                            <filename>/etc/krb5.conf</filename>file. Make sure
+                            that the &IPA; Kerberos domain entry is correct and
+                            matches the configuration in the Firefox
+                            negotiation parameters. For example: 
+                            <screen>.example.com = EXAMPLE.COM example.com =
+                            EXAMPLE.COM</screen></entry>
+                        </row>
+                        <row>
+                            <entry>Nothing is in the log file.</entry>
+                            <entry>It is possible that you are behind a proxy
+                            which is removing the HTTP headers required for
+                            negotiate authentication. Try to connect to the
+                            server using HTTPS instead, which allows the
+                            request to pass through unmodified. Then check the
+                            log file again.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </section>
+    </section>
+    <section id="searches">
+        <title>Understanding Search Limits and Settings</title>
+        <para>Some searches can result in a large number of entries being
+        returned, possibly even all entries. Search limits improve overall
+        server performance by limiting how long the server spends in a search
+        and how many entries are returned.</para>
+        <section id="types-of-search-limits">
+            <title>Types of Search Limits and Where They Apply</title>
+            <para>Search limits have a dual purpose to improve server
+            performance by reducing the search load and to improve usability by
+            returning a smaller &mdash; and therefore easier to browse &mdash;
+            set of entries.</para>
+            <para>The &IPA; server has several different limits imposed on
+            searches:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                    <emphasis>The search limit configuration for the &IPA;
+                    server.</emphasis>This is a setting for the &IPA; server
+                    itself, which is applied to all requests sent to the server
+                    from all &IPA; clients, the &IPA; CLI tools, and the &IPA;
+                    web UI for normal page display.</para>
+                    <para>By default, this limit is 100 entries.</para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>The time limit configuration for the &IPA;
+                    server.</emphasis>Much like the search size limit, the time
+                    limit sets a maximum amount of time that the &IPA; server,
+                    itself, waits for searches to run. Once it reaches that
+                    limit, the server stops the search and returns whatever
+                    entries were returned in that time.</para>
+                    <para>By default, this limit is two seconds.</para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>The page size limit.</emphasis>Although not
+                    strictly a search limit, the page size limit does limit how
+                    many entries are returned per page. The server returns the
+                    set of entries, up to the search limit, and then randomly
+                    selects up to 20 entries per page for display. Paging
+                    results makes the results more understandable and more
+                    viewable.</para>
+                    <para>This is hard-coded to 20 for all searches.</para>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>The LDAP search limit (--pkey
+                    option).</emphasis>All searches performed in the UI, and
+                    CLI searches which use the 
+                    <option>--pkey</option>option, override the search limit
+                    set in the &IPA; server configuration and use the search
+                    limit set in the underlying LDAP directory.</para>
+                    <para>By default, this limit is 2000 entries. It can be
+                    edited by editing the &DSF; configuration.</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+        <section id="search-limits">
+            <title>Setting &IPA; Search Limits</title>
+            <para>
+            <emphasis>Search limits</emphasis>set caps on the number of records
+            returned or the time spent searching when querying the database for
+            user or group entries. There are two types of search limits: time
+            limits and size (number) limits.</para>
+            <para>With the default settings, users are limited to two-second
+            searches and no more than 100 records returned per search.</para>
+            <important>
+                <title>IMPORTANT</title>
+                <para>Setting search size or time limits too high can
+                negatively affect &IPA; server performance.</para>
+            </important>
+            <section id="search-limits-ui">
+                <title>With the Web UI</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Open the 
+                        <guilabel>IPA Server</guilabel>tab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Select the 
+                        <guilabel>Configuration</guilabel>subtab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Scroll to the 
+                        <guilabel>Search Options</guilabel>area.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/server-config.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Change the search limit settings.</para>
+                        <itemizedlist>
+                            <listitem>
+                                <para>
+                                <emphasis>Search size limit</emphasis>, the
+                                maximum number of records to return in a
+                                search.</para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                <emphasis>Search time limit</emphasis>, the
+                                maximum amount of time, in seconds, to spend on
+                                a search before the server returns
+                                results.</para>
+                            </listitem>
+                        </itemizedlist>
+                        <note>
+                            <title>TIP</title>
+                            <para>Setting the time limit or size limit value to
+                            -1 means that there are no limits on
+                            searches.</para>
+                        </note>
+                    </listitem>
+                    <listitem>
+                        <para>When the changes are complete, click the 
+                        <guilabel>Update</guilabel>link at the top of the 
+                        <guilabel>Configuration</guilabel>page.</para>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="search-limits-cmd">
+                <title>With the Command Line</title>
+                <para>The search limits can be changed using the 
+                <command>config-mod</command>command.</para>
+                <screen>$ ipa config-mod --searchtimelimit=5
+                --searchrecordslimit=500 Max. username length: 32 Home
+                directory base: /home Default shell: /bin/sh Default users
+                group: ipausers Default e-mail domain for new users:
+                example.com Search time limit: 5 Search size limit: 50 User
+                search fields: uid,givenname,sn,telephonenumber,ou,title Group
+                search fields: cn,description Enable migration mode: FALSE
+                Certificate Subject base: O=EXAMPLE.COM Password Expiration
+                Notification (days): 4</screen>
+                <note>
+                    <title>TIP</title>
+                    <para>Setting the time limit or size limit value to -1
+                    means that there are no limits on searches.</para>
+                </note>
+            </section>
+        </section>
+        <section id="overriding-defaults">
+            <title>Overriding the Search Defaults</title>
+            <para>Part of the server configuration is setting global defaults
+            for size and time limits on searches. While these limits are always
+            enforced in the web UI, they can be overridden with any 
+            <command>*-find</command>command run through the command
+            line.</para>
+            <para>The 
+            <option>--sizelimit</option>and 
+            <option>--timelimit</option>options set alternative size and time
+            limits, respectively, for that specific command run. The limits can
+            be higher or lower, depending on the kinds of results you
+            need.</para>
+            <para>For example, if the default time limit is 60 seconds and a
+            search is going to take longer, the time limit can be increased to
+            120 seconds:</para>
+            <screen>[jsmith@ipaserver ~]$ ipa user-find *sen
+            --timelimit=120</screen>
+        </section>
+        <section id="search-fields">
+            <title>Setting Search Attributes</title>
+            <para>A search for users or groups does not automatically search
+            every possible attribute for that attribute. Rather, it searches a
+            specific subset of attributes, and that list is
+            configurable.</para>
+            <para>When adding attributes to the user or group search fields,
+            make sure that there is a corresponding index within the LDAP
+            directory for that attribute. Searches are performed based on
+            indexes. Most standard LDAP attributes have indexes, but any custom
+            attributes must have indexes created for them. Creating indexes is
+            described in the 
+            <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Directory_Server/9.0/html/Administration_Guide/Managing_Indexes-Creating_Indexes.html">
+            indexes chapter in the &DS; &AG;</ulink>.</para>
+            <section id="user-search-fields">
+                <title>Setting User Search Attributes</title>
+                <section id="search-fields-ui">
+                    <title>From the Web UI</title>
+                    <orderedlist>
+                        <listitem>
+                            <para>Open the 
+                            <guilabel>IPA Server</guilabel>tab.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Select the 
+                            <guilabel>Configuration</guilabel>subtab.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Scroll to the 
+                            <guilabel>User Options</guilabel>area.</para>
+                            <informalfigure>
+                                <mediaobject>
+                                    <imageobject>
+                                        <imagedata fileref="images/server-config-users.png" />
+                                    </imageobject>
+                                </mediaobject>
+                            </informalfigure>
+                        </listitem>
+                        <listitem>
+                            <para>Add any additional search attributes, in a
+                            comma-separated list, in the 
+                            <guilabel>User search
+                            fields</guilabel>field.</para>
+                        </listitem>
+                        <listitem>
+                            <para>When the changes are complete, click the 
+                            <guilabel>Update</guilabel>link at the top of the 
+                            <guilabel>Configuration</guilabel>page.</para>
+                        </listitem>
+                    </orderedlist>
+                </section>
+                <section id="search-fields-cmd">
+                    <title>From the Web UI</title>
+                    <para>To change the search attributes, use the 
+                    <option>--usersearch</option>option to set the attributes
+                    for user searches.</para>
+                    <screen>$ ipa config-mod
+                    --usersearch=uid,givenname,sn,telephonenumber,ou,title</screen>
+                    <note>
+                        <title>NOTE</title>
+                        <para>Always give the complete list of search
+                        attributes. Whatever values are passed with the
+                        configuration argument overwrite the previous
+                        settings.</para>
+                    </note>
+                </section>
+            </section>
+            <section id="search-fields-groups">
+                <title>Setting Group Search Attributes</title>
+                <para>A search for users or groups does not automatically
+                search every possible attribute for that attribute. Rather, it
+                searches a specific subset of attributes, and that list is
+                configurable.</para>
+                <para>When adding attributes to the user or group search
+                fields, make sure that there is a corresponding index within
+                the LDAP directory for that attribute. Searches are performed
+                based on indexes. Most standard LDAP attributes have indexes,
+                but any custom attributes must have indexes created for them.
+                Creating indexes is described in the 
+                <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Directory_Server/9.0/html/Administration_Guide/Managing_Indexes-Creating_Indexes.html">
+                indexes chapter in the &DS; &AG;</ulink>.</para>
+                <section id="search-fields-groups-ui">
+                    <title>From the Web UI</title>
+                    <orderedlist>
+                        <listitem>
+                            <para>Open the 
+                            <guilabel>IPA Server</guilabel>tab.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Select the 
+                            <guilabel>Configuration</guilabel>subtab.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Scroll to the 
+                            <guilabel>Group Options</guilabel>area.</para>
+                            <informalfigure>
+                                <mediaobject>
+                                    <imageobject>
+                                        <imagedata fileref="images/group-config.png" />
+                                    </imageobject>
+                                </mediaobject>
+                            </informalfigure>
+                        </listitem>
+                        <listitem>
+                            <para>Add any additional search attributes, in a
+                            comma-separated list, in the 
+                            <guilabel>Group search
+                            fields</guilabel>field.</para>
+                        </listitem>
+                        <listitem>
+                            <para>When the changes are complete, click the 
+                            <guilabel>Update</guilabel>link at the top of the 
+                            <guilabel>Configuration</guilabel>page.</para>
+                        </listitem>
+                    </orderedlist>
+                </section>
+                <section id="search-fields-groups-cmd">
+                    <title>From the Command Line</title>
+                    <para>To change the search attributes, use the 
+                    <option>--groupsearch</option>options to set the attributes
+                    for group searches.</para>
+                    <screen>$ ipa config-mod
+                    --groupsearch=cn,description</screen>
+                    <note>
+                        <title>NOTE</title>
+                        <para>Always give the complete list of search
+                        attributes. Whatever values are passed with the
+                        configuration argument overwrite the previous
+                        settings.</para>
+                    </note>
+                </section>
+            </section>
+        </section>
+        <section id="search-results">
+            <title>Attributes Returned in Search Results</title>
+            <!-- known issue -->
+            <para>Searches can be performed on attributes that are not
+            displayed in the UI. This means that entries can be returned in a
+            search that do not appear to match the given filter. This is
+            especially common if the search information is very short, which
+            increases the likelihood of a match.</para>
+            <!-- known issue -->
+        </section>
+    </section>
+</chapter>

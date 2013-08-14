@@ -1,0 +1,2435 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
+[
+]>
+<chapter id="users">
+    <title>Identity: Managing Users and User Groups</title>
+    <para>Users in &PROD; are able to access services and servers within the
+    domain through Kerberos authentication. This chapter covers general
+    management tasks for users, groups, password policies, and other
+    configuration for users.</para>
+    <section id="home-directories">
+        <title>Setting up User Home Directories</title>
+        <para>A home directory is required for any &IPA; user. Without a home
+        directory in the expected location, a user may be unable to log into
+        the domain. While systems administrators can manage home directories
+        outside of &IPA;, it is also possible to use a PAM module to create
+        home directories automatically on both &IPA; servers and
+        clients.</para>
+        <section id="homedir-reqs">
+            <title>About Home Directories</title>
+            <para>&IPA;, as part of managing users, can manage user home
+            directories. However, &IPA; has certain defined parameters for any
+            managed home directories:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>The default prefix for users' home directories is 
+                    <filename>/home</filename>.</para>
+                </listitem>
+                <listitem>
+                    <para>&IPA; does not automatically create home directories
+                    when users log in. Automatically creating home directories
+                    requires either the 
+                    <systemitem>pam_oddjob_mkhomedir</systemitem>module or the 
+                    <systemitem>pam_mkhomedir</systemitem>module. This module
+                    can be configured as part of client installation or after
+                    installation, as described in 
+                    <xref linkend="homedir-pammod" />.</para>
+                    <para>The home directory process for &IPA; first attempts
+                    to use the 
+                    <systemitem role="module">
+                    pam_oddjob_mkhomedir</systemitem>module because this
+                    requires fewer user privileges and access to create the
+                    home directories, as well as integrating smoothly with
+                    SELinux. If this module is not available, then the process
+                    falls back to the 
+                    <systemitem role="module">
+                    pam_mkhomedir</systemitem>module.</para>
+                    <note>
+                        <title>NOTE</title>
+                        <para>On &RHEL; 5 clients, the client installation
+                        script uses the 
+                        <systemitem>pam_mkhomedir</systemitem>module even if
+                        the 
+                        <systemitem role="module">
+                        pam_oddjob_mkhomedir</systemitem>module is available.
+                        To use the 
+                        <systemitem role="module">
+                        pam_oddjob_mkhomedir</systemitem>module on &RHEL; 5,
+                        edit the PAM configuration manually.</para>
+                    </note>
+                </listitem>
+                <listitem>
+                    <para>It is possible to use an NFS file server that
+                    provides 
+                    <filename>/home</filename>that can be made available to all
+                    machines in the domain and then automounted on the &IPA;
+                    server.</para>
+                    <para>There are potential issues when using NFS, such as
+                    security issues related to granting root access to the NFS
+                    user, performance issues with loading the entire 
+                    <filename>/home</filename>tree, and network performance
+                    issues for using remote servers for home directories. There
+                    are some general guidelines for using NFS with
+                    &PROD;:</para>
+                    <itemizedlist>
+                        <listitem>
+                            <para>Use automount to mount only the user's home
+                            directory and only when the user logs in, rather
+                            than loading the entire 
+                            <filename>/home</filename>tree.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Use a remote user who has limited permissions
+                            to create home directories and mount the share on
+                            the &IPA; server as that user. Since the &IPA;
+                            server runs as an 
+                            <command>httpd</command>process, it is possible to
+                            use 
+                            <command>sudo</command>or a similar program to
+                            grant limited access to the &IPA; server to create
+                            home directories on the NFS server.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Use a mechanism, such as the 
+                            <systemitem>
+                            pam_oddjob_mkhomedir</systemitem>module, to create
+                            the home directory as that user.</para>
+                        </listitem>
+                    </itemizedlist>
+                    <para>Using automounts for home directories is described in
+                    
+                    <xref linkend="automounting-home-dirs" />.</para>
+                </listitem>
+                <listitem>
+                    <para>If a suitable directory and mechanism are not
+                    available for to create home directories, users may not be
+                    able to log in.</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+        <section id="homedir-pammod">
+            <title>Enabling the PAM Home Directory Module</title>
+            <para>For a home directory to be created automatically when a user
+            logs in, &IPA; can use either the 
+            <systemitem role="module">pam_oddjob_mkhomedir</systemitem>module
+            or the 
+            <systemitem role="module">pam_mkhomedir</systemitem>module. Because
+            it requires fewer permissions and works well with SELinux, &IPA;
+            preferentially uses the 
+            <systemitem role="module">pam_oddjob_mkhomedir</systemitem>module.
+            If that module is not installed, then it falls back to the 
+            <systemitem role="module">pam_mkhomedir</systemitem>module.</para>
+            <note>
+                <title>NOTE</title>
+                <para>&IPA; does not require the 
+                <systemitem role="module">
+                pam_oddjob_mkhomedir</systemitem>module or 
+                <systemitem role="module">pam_mkhomedir</systemitem>module.
+                This is because the 
+                <systemitem>*_mkhomedir</systemitem>module may try to create
+                home directories even when the shared storage is not available.
+                If the module is unable to create the home directory, then
+                users can be blocked from logging into the &IPA; domain.</para>
+                <para>The system administrator must activate this module on
+                each client or server as needed.</para>
+            </note>
+            <para>There are two ways to enable the 
+            <systemitem role="module">pam_oddjob_mkhomedir</systemitem>(or 
+            <systemitem role="module">pam_mkhomedir</systemitem>)
+            module:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>The 
+                    <option>--mkhomedir</option>option can be used with the 
+                    <command>ipa-client-install</command>command. While this is
+                    possible for clients, this option is not available to
+                    servers when they are set up.</para>
+                </listitem>
+                <listitem>
+                    <para>The 
+                    <systemitem role="module">
+                    pam_oddjob_mkhomedir</systemitem>module can be enabled
+                    using the system's 
+                    <command>authconfig</command>command. For example:</para>
+                    <programlisting language="Bash">authconfig
+                    --enablemkhomedir --update</programlisting>
+                    <para>This option can be used for both server and client
+                    machines post-installation.</para>
+                </listitem>
+            </itemizedlist>
+            <note>
+                <title>NOTE</title>
+                <para>On &RHEL; 5 clients, the client installation script uses
+                the 
+                <systemitem>pam_mkhomedir</systemitem>module even if the 
+                <systemitem role="module">
+                pam_oddjob_mkhomedir</systemitem>module is available. To use
+                the 
+                <systemitem role="module">
+                pam_oddjob_mkhomedir</systemitem>module on &RHEL; 5, edit the
+                PAM configuration manually.</para>
+            </note>
+        </section>
+        <section id="automounting-home-dirs">
+            <title>Manually Mounting Home Directories</title>
+            <para>While PAM modules can be used to create home directories for
+            users automatically, this may not be desirable behavior in every
+            environment. In that case, home directories can be manually added
+            to the &IPA; server from separate locations using NFS shares and 
+            <command>automount</command>.</para>
+            <orderedlist>
+                <listitem>
+                    <para>Create a new location for the user directory
+                    maps:</para>
+                    <screen>$ ipa automountlocation-add userdirs Location:
+                    userdirs</screen>
+                </listitem>
+                <listitem>
+                    <para>Add a direct map to the new location's 
+                    <filename>auto.direct</filename>file. In this example, the
+                    mount point is 
+                    <filename>/share</filename>:</para>
+                    <screen>$ ipa automountkey-add userdirs auto.direct
+                    --key=/share --info="-ro,soft,
+                    ipaserver.example.com:/home/share" Key: /share Mount
+                    information: -ro,soft,
+                    ipaserver.example.com:/home/share</screen>
+                </listitem>
+            </orderedlist>
+            <para>Using automounts with &IPA; is described in detail in 
+            <xref linkend="automount" />.</para>
+        </section>
+    </section>
+    <section id="managing-users">
+        <title>Managing User Entries</title>
+        <section id="username-format">
+            <title>About Username Formats</title>
+            <para>The default length for usernames is 32 characters.</para>
+            <para>&IPA; supports a wide range of username formats, based on
+            this regular expression:</para>
+            <screen>[a-zA-Z0-9_.][a-zA-Z0-9_.-]{0,252}[a-zA-Z0-9_.$-]?</screen>
+            <note>
+                <title>TIP</title>
+                <para>The trailing $ symbol is permitted for Samba 3.x machine
+                support.</para>
+            </note>
+            <para>Any system limits &mdash; such as starting a username with a
+            number on Unix systems &mdash; apply to the usernames in
+            &IPA;.</para>
+        </section>
+        <section id="adding-users">
+            <title>Adding Users</title>
+            <section id="adding-users-ui">
+                <title>From the Web UI</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Open the 
+                        <guilabel>Identity</guilabel>tab, and select the 
+                        <guilabel>Users</guilabel>subtab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Add</guilabel>link at the top of the users
+                        list.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/user-list.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Fill in the user's first and last names. The user
+                        login (UID) is automatically generated based on the
+                        user's full name, but this can be set manually by
+                        clicking the 
+                        <guilabel>Optional field</guilabel>link.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/user-new.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Add and Edit</guilabel>button to go directly
+                        to the expanded entry page and fill in more attribute
+                        information, as in 
+                        <xref linkend="editing-users-ui" />. The user entry is
+                        created with some basic information already filled in,
+                        based on the given user information and the user entry
+                        template.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/user-attr.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="adding-users-cmd">
+                <title>From the Command Line</title>
+                <para>New user entries are added with the 
+                <command>user-add</command>command. Attributes (listed in 
+                <xref linkend="tab.default-attrs" />) can be added to the entry
+                with specific values or the command can be run with no
+                arguments.</para>
+                <screen>$ ipa user-add [ 
+                <replaceable>username</replaceable>] [ 
+                <replaceable>attributes</replaceable>]</screen>
+                <para>When no arguments are used, the command prompts for the
+                required user account information and uses the defaults for the
+                other attributes, with the defaults printed below. For
+                example:</para>
+                <screen>$ ipa user-add First name: John Last name: Smith User
+                login [jsmith]: jsmith -------------------- Added user "jsmith"
+                -------------------- User login: jsmith First name: John Last
+                name: Smith Home directory: /home/jsmith GECOS field: jsmith
+                Login shell: /bin/sh Kerberos principal: jsmith@EXAMPLE.COM
+                UID: 387115841</screen>
+                <para>Any of the user attributes can be passed with the
+                command. This will either set values for optional attributes or
+                override the default values for default attributes.</para>
+                <screen>$ ipa user-add jsmith --first=John --last=Smith
+                --manager=bjensen --email=johnls@example.com
+                --homedir=/home/work/johns --password</screen>
+                <important>
+                    <title>IMPORTANT</title>
+                    <para>When a user is created without specifying a UID or
+                    GID number, then the user account is automatically assigned
+                    an ID number that is next available in the server or
+                    replica range. (Number ranges are described more in 
+                    <xref linkend="Managing-Unique_UID_and_GID_Attributes" />.)
+                    This means that a user always has a unique number for its
+                    UID number and, if configured, for its private
+                    group.</para>
+                    <para>If a number is 
+                    <emphasis>manually</emphasis>assigned to a user entry, the
+                    server does not validate that the 
+                    <parameter>uidNumber</parameter>is unique. It will allow
+                    duplicate IDs; this is expected (though discouraged)
+                    behavior for POSIX entries.</para>
+                    <para>If two entries are assigned the same ID number, only
+                    the first entry is returned in a search for that ID number.
+                    However, both entries will be returned in searches for
+                    other attributes or with 
+                    <command>ipa user-find --all</command>.</para>
+                </important>
+            </section>
+        </section>
+        <section id="editing-users">
+            <title>Editing Users</title>
+            <section id="editing-users-ui">
+                <title>From the Web UI</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Open the 
+                        <guilabel>Identity</guilabel>tab, and select the 
+                        <guilabel>Users</guilabel>subtab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the name of the user to edit.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/user-list.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>There are a number of different types of
+                        attributes that can be edited for the user. All of the
+                        default attributes are listed in 
+                        <xref linkend="tab.default-attrs" />. Most of the
+                        attributes in the 
+                        <guilabel>Identity Settings</guilabel>and 
+                        <guilabel>Account Settings</guilabel>areas have default
+                        values filled in for them, based on the user
+                        information or on the user entry template.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/user-additional-attr.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Edit the fields or, if necessary, click the 
+                        <guilabel>Add</guilabel>link by an attribute to create
+                        the attribute on the entry.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/user-addcontact.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>When the edits are done, click the 
+                        <guilabel>Update</guilabel>link at the top of the
+                        page.</para>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="editing-users-cmd">
+                <title>From the Command Line</title>
+                <para>The 
+                <command>user-mod</command>command edits user accounts by
+                adding or changing attributes. At its most basic, the 
+                <command>user-mod</command>specifies the user account by login
+                ID, the attribute to edit, and the new value:</para>
+                <screen>$ ipa user-mod 
+                <replaceable>loginID</replaceable>-- 
+                <replaceable>attributeName=newValue</replaceable></screen>
+                <para>For example, to change a user's work title from 
+                <emphasis>Editor II</emphasis>to 
+                <emphasis>Editor III</emphasis>:</para>
+                <screen>$ ipa user-mod jsmith --title="Editor III"</screen>
+                <indexterm>
+                    <primary>attributes</primary>
+                    <secondary>setting multi-valued</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>users</primary>
+                    <secondary>multi-valued attributes</secondary>
+                </indexterm>
+                <para>&PROD; allows 
+                <emphasis>multi-valued</emphasis>attributes, based on
+                attributes in LDAP that are allowed to have multiple values.
+                For example, a person may have two email addresses, one for
+                work and one for personal, that are both stored in the mail
+                attribute. Managing multi-valued attributes can be done using
+                the 
+                <option>--addattr</option>option.</para>
+                <para>If an attribute allows multiple values &mdash; like mail
+                &mdash; simply using the command-line argument will overwrite
+                the value with the new value. This is also true for using 
+                <option>--setattr</option>. However, using 
+                <option>--addattr</option>will add a new attribute; for a
+                multi-valued attribute, it adds the new value in addition to
+                any existing values.</para>
+                <example id="ex.multi-valued">
+                    <title>Multiple Mail Attributes</title>
+                    <para>A user is created first using his work email
+                    account.</para>
+                    <screen>$ ipa user-add jsmith --first=John --last=Smith
+                    --email=johnls@example.com</screen>
+                    <para>Then, his personal email account is added.</para>
+                    <screen>$ ipa user-mod jsmith
+                    --addattr=mail=johnnys@me.com</screen>
+                    <para>Both email addresses are listed for the user.</para>
+                    <screen>$ ipa user-find jsmith --all -------------- 1 user
+                    matched -------------- dn:
+                    uid=jsmith,cn=users,cn=accounts,dc=example,dc=com User
+                    login: jsmith ..... 
+                    <userinput>Email address: jsmith@example.com,
+                    jsmith@new.com</userinput></screen>
+                    <para>To set two values at the same time, use the 
+                    <option>--addattr</option>option twice:</para>
+                    <screen>$ ipa user-add jsmith --first=John --last=Smith
+                    --email=johnls@example.com --addattr=mail=johnnys@me.com
+                    --addattr=mail=admin@example.com</screen>
+                </example>
+            </section>
+        </section>
+        <section id="Activating_and_Deactivating_User_Accounts">
+            <title>Activating and Deactivating User Accounts</title>
+            <para>User accounts can be 
+            <emphasis>deactivated</emphasis>. A deactivated user cannot log
+            into &IPA; or its related services (like Kerberos) and he cannot
+            perform any tasks. However, the user account still exists within
+            &PROD; and all of the associated information remains
+            unchanged.</para>
+            <note>
+                <title>NOTE</title>
+                <para>Any existing connections remain valid until the Kerberos
+                TGT and other tickets expire. Once the ticket expires, the user
+                cannot renew the ticket.</para>
+            </note>
+            <section id="Activating_and_Deactivating_User_Accounts-ui">
+                <title>From the Web UI</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Open the 
+                        <guilabel>Identity</guilabel>tab, and select the 
+                        <guilabel>Users</guilabel>subtab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the name of the user for whom to deactivate
+                        or activate.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/user-list.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Scroll to the 
+                        <guilabel>Account Settings</guilabel>area.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Deactivate</guilabel>link.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/user-acctsettings.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Update</guilabel>link at the top of the
+                        page.</para>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="Activating_and_Deactivating_User_Accounts-cmd">
+                <title>From the Command Line</title>
+                <para>Users are activated and disabled using 
+                <command>user-enable</command>and 
+                <command>user-disable</command>commands. All that is required
+                is the user login. For example:</para>
+                <screen>$ ipa user-disable jsmith</screen>
+            </section>
+        </section>
+        <section id="Deleting_IPA_Users">
+            <title>Deleting Users</title>
+            <para>Deleting a user account permanently removes the user entry
+            and all its information from &IPA;, including group memberships and
+            passwords. External configuration &mdash; like a system account and
+            home directory &mdash; will still exist on any server or local
+            machine where they were created, but they cannot be accessed
+            through &IPA;.</para>
+            <para>Deleting a user account is permanent. The information cannot
+            be recovered; a new account must be created.</para>
+            <note>
+                <title>NOTE</title>
+                <para>If all admin users are deleted, then you must use the
+                Directory Manager account to create a new administrative
+                user.</para>
+                <para>Alternatively, any user who belongs in the group
+                management role can also add a new admin user.</para>
+            </note>
+            <section id="Deleting_IPA_Users-ui">
+                <title>With the Web UI</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Open the 
+                        <guilabel>Identity</guilabel>tab, and select the 
+                        <guilabel>Users</guilabel>subtab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Select the checkboxes by the names of the users
+                        to delete.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/user-list.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Delete</guilabel>link at the top of the task
+                        area.</para>
+                    </listitem>
+                    <listitem>
+                        <para>When prompted, confirm the delete action.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/user-delete.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="Deleting_IPA_Users-cmd">
+                <title>From the Command Line</title>
+                <para>Users are deleted using the 
+                <command>user-del</command>command and then the user login. For
+                example, a single user:</para>
+                <screen>$ ipa user-del jsmith</screen>
+                <para>To delete multiple users, simply list the users,
+                separated by spaces.</para>
+                <screen>$ ipa user-del jsmith bjensen mreynolds
+                cdickens</screen>
+                <para>When deleting multiple users, use the 
+                <option>--continue</option>option to force the command to
+                continue regardless of errors. A summary of the successful and
+                failed operations is printed to stdout when the command
+                completes. If 
+                <option>--continue</option>is not used, then the command
+                proceeds with deleting users 
+                <emphasis>until</emphasis>it encounters an error, and then it
+                exits.</para>
+            </section>
+        </section>
+    </section>
+    <section id="user-keys">
+        <title>Managing Public SSH Keys for Users</title>
+        <para>OpenSSH uses 
+        <emphasis>public-private key pairs</emphasis>to authenticate users. A
+        user attempts to access some network resource and presents its key
+        pair. The first time the user authenticates, the administrator on the
+        target machine has to approve the request manually. The machine then
+        stores the user's public key in an 
+        <filename>authorized_keys</filename>file. Any time that the user
+        attempts to access the resource again, the machine simply checks its 
+        <filename>authorized_keys</filename>file and then grants access
+        automatically to approved users.</para>
+        <para>There are a couple of problems with this system:</para>
+        <itemizedlist>
+            <listitem>
+                <para>SSH keys have to be distributed manually and separately
+                to all machines in an environment.</para>
+            </listitem>
+            <listitem>
+                <para>Administrators have to approve user keys to add them to
+                the configuration, but it is difficult to verify either the
+                user or key issuer properly, which can create security
+                problems.</para>
+            </listitem>
+        </itemizedlist>
+        <para>On &OS;, the System Security Services Daemon (SSSD) can be
+        configured to cache and retrieve user SSH keys so that applications and
+        services only have to look in one location for user keys. Because SSSD
+        can use &PROD; as one of its identity information providers, &PROD;
+        provides a universal and centralized repository of keys. Administrators
+        do not need to worry about distributing, updating, or verifying user
+        SSH keys.</para>
+        <section id="user-keys-format">
+            <title>About the SSH Key Format</title>
+            <para>When keys are uploaded to the &IPA; entry, the key format can
+            be either an 
+            <ulink url="http://openssh.com/txt/rfc4716.txt">OpenSSH-style
+            key</ulink>or a raw 
+            <ulink url="http://www.ietf.org/rfc/rfc4253.txt">RFC 4253-style
+            blob</ulink>. Any RFC 4253-style key is automatically converted
+            into an OpenSSH-style key before it is imported and saved into the
+            &IPA; LDAP server.</para>
+            <para>The &IPA; server can identify the type of key, such as an RSA
+            or DSA key, from the uploaded key blob. However, in a key file such
+            as 
+            <filename>id_rsa.pub</filename>, a key entry is identified by its
+            type, then the key itself, and then an additional comment or
+            identifier. For example, for an RSA key associated with a specific
+            hostname:</para>
+            <screen>"ssh-rsa ABCD1234...== ipaclient.example.com"</screen>
+            <para>All three parts from the key file can be uploaded to and
+            viewed for the user entry, or only the key itself can be
+            uploaded.</para>
+        </section>
+        <section id="uploading-user-keys-ui">
+            <title>Uploading User SSH Keys Through the Web UI</title>
+            <orderedlist>
+                <listitem>
+                    <para>Generate a user key. For example, using the OpenSSH
+                    tools:</para>
+                    <screen>[jsmith@server ~]$ ssh-keygen -t rsa -C
+                    jsmith@example.com Generating public/private rsa key pair.
+                    Enter file in which to save the key
+                    (/home/jsmith/.ssh/id_rsa): Created directory
+                    '/home/jsmith/.ssh'. Enter passphrase (empty for no
+                    passphrase): Enter same passphrase again: Your
+                    identification has been saved in /home/jsmith/.ssh/id_rsa.
+                    Your public key has been saved in
+                    /home/jsmith/.ssh/id_rsa.pub. The key fingerprint is:
+                    a5:fd:ac:d3:9b:39:29:d0:ab:0e:9a:44:d1:78:9c:f2
+                    jsmith@example.com The key's randomart image is: +--[ RSA
+                    2048]----+ | | | + . | | + = . | | = + | | . E S.. | | . .
+                    .o | | . . . oo. | | . o . +.+o | | o .o..o+o |
+                    +-----------------+</screen>
+                </listitem>
+                <listitem>
+                    <para>Copy the public key from the key file. The full key
+                    entry has the form 
+                    <emphasis>type key== comment</emphasis>. Only the 
+                    <emphasis>key==</emphasis>is required, but the entire entry
+                    can be stored.</para>
+                    <screen>[jsmith@server ~]$ cat /home/jsmith/.ssh/id_rsa.pub
+                    ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ==
+                    jsmith@example.com</screen>
+                </listitem>
+                <listitem>
+                    <para>Open the 
+                    <guilabel>Identity</guilabel>tab, and select the 
+                    <guilabel>Users</guilabel>subtab.</para>
+                </listitem>
+                <listitem>
+                    <para>Click the name of the user to edit.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/user-list.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>In the 
+                    <guilabel>Account Settings</guilabel>area of the 
+                    <guilabel>Settings</guilabel>tab, click the 
+                    <guilabel>SSH public keys: Add</guilabel>link.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/sshkeys-user1.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>The UI opens a new link, 
+                    <guilabel>New: key not set Show/Set key</guilabel>. Click
+                    the 
+                    <guilabel>Show/Set key</guilabel>link.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/sshkeys-user2.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>Paste in the public key for the user, and click the 
+                    <guibutton>Set</guibutton>button.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/sshkeys-user3.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                    <para>The 
+                    <guilabel>SSH public keys</guilabel>field now shows 
+                    <guilabel>New: key set</guilabel>. Clicking the 
+                    <guilabel>Show/Set key</guilabel>link opens the submitted
+                    key.</para>
+                </listitem>
+                <listitem>
+                    <para>To upload multiple keys, click the 
+                    <guilabel>Add</guilabel>link below the list of public keys,
+                    and upload the other keys.</para>
+                </listitem>
+                <listitem>
+                    <para>When all the keys have been submitted, click the 
+                    <guilabel>Update</guilabel>link at the top of the user's
+                    page to save the changes.</para>
+                </listitem>
+            </orderedlist>
+            <para>When the public key is saved, the entry is displayed as the
+            key fingerprint, the comment (if one was included), and the key
+            type 
+            <footnote>
+                <para>The key type is determined automatically from the key
+                itself, if it is not included in the uploaded key.</para>
+            </footnote>.</para>
+            <figure>
+                <title>Saved Public Key</title>
+                <mediaobject>
+                    <imageobject>
+                        <imagedata fileref="images/sshkeys-user4.png" />
+                    </imageobject>
+                </mediaobject>
+            </figure>
+            <para condition="fedora">After uploading the user keys, configure
+            SSSD to use &PROD; as one of its identity domains and set up
+            OpenSSH to use the SSSD tooling for managing user keys.</para>
+            <para condition="redhat">After uploading the user keys, configure
+            SSSD to use &PROD; as one of its identity domains and set up
+            OpenSSH to use the SSSD tooling for managing user keys. This is
+            covered in the 
+            <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/openssh-sssd.html">
+            &OS; Deployment Guide</ulink>.</para>
+        </section>
+        <section id="uploading-user-keys">
+            <title>Uploading User SSH Keys Through the Command Line</title>
+            <para>The 
+            <option>--sshpubkey</option>option uploads the 64 bit-encoded
+            public key to the user entry. For example:</para>
+            <screen>[jsmith@server ~]$ ipa user-mod jsmith --sshpubkey="ssh-rsa
+            12345abcde= ipaclient.example.com"</screen>
+            <para>With a real key, the key is longer and usually ends with an
+            equals sign (=).</para>
+            <para>To upload multiple keys, pass a comma-separated list of keys
+            with a single 
+            <option>--sshpubkey</option>option:</para>
+            <screen>--sshpubkey="12345abcde==,key2==,key3=="</screen>
+            <para condition="fedora">After uploading the user keys, configure
+            SSSD to use &PROD; as one of its identity domains and set up
+            OpenSSH to use the SSSD tooling for managing user keys.</para>
+            <para condition="redhat">After uploading the user keys, configure
+            SSSD to use &PROD; as one of its identity domains and set up
+            OpenSSH to use the SSSD tooling for managing user keys. This is
+            covered in the 
+            <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/openssh-sssd.html">
+            &OS; Deployment Guide</ulink>.</para>
+        </section>
+        <section id="deleting-user-keys">
+            <title>Deleting User Keys</title>
+            <orderedlist>
+                <listitem>
+                    <para>Open the 
+                    <guilabel>Identity</guilabel>tab, and select the 
+                    <guilabel>Users</guilabel>subtab.</para>
+                </listitem>
+                <listitem>
+                    <para>Click the name of the user to edit.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/user-list.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>Open the 
+                    <guilabel>Account Settings</guilabel>area of the 
+                    <guilabel>Settings</guilabel>tab.</para>
+                </listitem>
+                <listitem>
+                    <para>Click the 
+                    <guilabel>Delete</guilabel>link by the fingerprint of the
+                    key to remove.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/sshkeys-user4.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>Click the 
+                    <guilabel>Update</guilabel>link at the top of the user's
+                    page to save the changes.</para>
+                </listitem>
+            </orderedlist>
+            <para>The command-line tools can be used to remove all keys. This
+            is done by running 
+            <command>ipa user-mod</command>with the 
+            <option>--sshpubkey=</option>set to a blank value; this removes 
+            <emphasis>all</emphasis>public keys for the user. For
+            example:</para>
+            <screen>[jsmith@server ~]$ kinit admin [jsmith@server ~]$ ipa
+            user-mod --sshpubkey= jsmith</screen>
+        </section>
+    </section>
+    <section id="changing-pwds">
+        <title>Changing Passwords</title>
+        <para>Password policies ( 
+        <xref linkend="user-pwdpolicy" />) and minimal access restrictions can
+        be applied to a password change operation:</para>
+        <itemizedlist>
+            <listitem>
+                <para>Regular, non-administrative users can change only their
+                personal passwords, and all passwords are constrained by the
+                &IPA; password policies.</para>
+                <para>This allows administrators to create intro passwords or
+                to reset passwords easily, while still keeping the final
+                password confidential. Since any password sent by an
+                administrator to the user is temporary, there is little
+                security risk.</para>
+            </listitem>
+            <listitem>
+                <para>Changing a password as the &IPA; admin user overrides any
+                &IPA; password policies, but the password expires immediately.
+                This requires the user to change the password at the next
+                login. Similarly, any user who has password change rights can
+                change a password and no password policies are applied, but the
+                other user must reset the password at the next log in.</para>
+            </listitem>
+            <listitem>
+                <para>Changing a password as the LDAP Directory Manager user, 
+                <emphasis>using LDAP tools</emphasis>, overrides any &IPA;
+                password policies.</para>
+            </listitem>
+        </itemizedlist>
+        <section id="pwd-reset-ui">
+            <title>From the Web UI</title>
+            <orderedlist>
+                <listitem>
+                    <para>Open the 
+                    <guilabel>Identity</guilabel>tab, and select the 
+                    <guilabel>Users</guilabel>subtab.</para>
+                </listitem>
+                <listitem>
+                    <para>Click the name of the user for whom to reset the
+                    password. All users can change their own password; only
+                    administrators or users with delegated permissions can
+                    change other user's passwords.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/user-list.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>Scroll to the 
+                    <guilabel>Account Settings</guilabel>area.</para>
+                </listitem>
+                <listitem>
+                    <para>Click the 
+                    <guilabel>Reset Password</guilabel>link.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/pwd-reset1.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>In the pop-up box, enter and confirm the new
+                    password.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/pwd-reset2.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="pwd-reset-cmd">
+            <title>From the Command Line</title>
+            <para>Changing a password &mdash; your own or another user's
+            &mdash; is done using the 
+            <command>user-mod</command>command, as with other user account
+            changes.</para>
+            <screen>[bjensen@ipaserver ~]$ kinit admin [bjensen@ipaserver ~]$
+            ipa user-mod jsmith --password</screen>
+        </section>
+    </section>
+    <section id="user-unlock">
+        <title>Unlocking User Accounts After Password Failures</title>
+        <para>If a user attempts to log in and uses the wrong password a
+        certain number of times, then that user account is locked. The exact
+        number of failed attempts that locks and account and the duration of
+        the lockout is defined as part of the password policy ( 
+        <xref linkend="Setting_Account-lockout_Policies" />).</para>
+        <para>A password policy can implicitly define a reset period, where the
+        account unlocks naturally after a certain amount of time lapses.
+        However, if the duration is fairly long or if the deployment requires
+        stronger security checks before unlocking an account, then an
+        administrator can unlock an account manually.</para>
+        <para>An account is unlocked using the 
+        <command>user-unlock</command>command. For example:</para>
+        <screen>[bjensen@ipaserver ~]$ kinit admin [bjensen@ipaserver ~]$ ipa
+        user-unlock jsmith</screen>
+    </section>
+    <section id="user-private-groups">
+        <title>Managing User Private Groups</title>
+        <!-- XXXXXXXXXXXXXXXXX FIX ME XXXXXXXXXXXXXXXXXXX
+            does this have a ui procedure?
+            -->
+        <para>On &OS; systems, every time a user is created, a corresponding,
+        secret user group is automatically created with that new user as its
+        only member. This is a 
+        <emphasis>user private group</emphasis>. Using user private groups
+        makes it simpler and safer to manage file and directory permissions
+        because 
+        <command>umask</command>defaults only have to restrict user access, not
+        group access.</para>
+        <para>When a new user is created in the &IPA; domain, it is also
+        created with a corresponding private group, following the &OS;
+        convention. For most environments, this is an acceptable default
+        behavior, but there may be certain users or types of users which do not
+        require a private group or the environment may already have those GIDs 
+        <footnote>
+            <para>See 
+            <xref linkend="Managing-Unique_UID_and_GID_Attributes" />for
+            information on changing GID/UID assignment ranges.</para>
+        </footnote>assigned to NIS groups or other system groups.</para>
+        <section id="disabling-managed-entries-users">
+            <title>Disabling Private Groups for a Specific User</title>
+            <para>Private group creation can be disabled when the user is
+            created by using the 
+            <option>--noprivate</option>option.</para>
+            <screen>[jsmith@server ~]$ ipa user-add jsmith --first=John
+            --last=Smith 
+            <userinput>--noprivate</userinput></screen>
+        </section>
+        <section id="disabling-managed-entries-globally">
+            <title>Disabling Private Groups Globally</title>
+            <para>User private groups are managed through the Managed Entries
+            Plug-in in &DSF;. This plug-in can be disabled, which effectively
+            disables private group creation for all new users.</para>
+            <para>This is done using the 
+            <command>ipa-managed-entries</command>command.</para>
+            <orderedlist>
+                <listitem>
+                    <para>Use the 
+                    <command>ipa-managed-entries</command>command to list
+                    possible Managed Entries Plug-in definitions. By default,
+                    there are two, one for new users (UPG) and one for
+                    netgroups (NGP).</para>
+                    <screen>[root@ipaserver ~]# ipa-managed-entries --list -p
+                    DMpassword Available Managed Entry Definitions: UPG
+                    Definition NGP Definition</screen>
+                </listitem>
+                <listitem>
+                    <para>Disable the desired Managed Entries Plug-in instance.
+                    For example:</para>
+                    <screen>[root@ipaserver ~]# ipa-managed-entries -e "UPG
+                    Definition" -p DMpassword disable Disabling Plugin</screen>
+                </listitem>
+                <listitem>
+                    <para>Restart the &DSF; to load the new plug-in
+                    configuration.</para>
+                    <screen>[root@ipaserver ~]# service dirsrv restart</screen>
+                </listitem>
+            </orderedlist>
+            <para>Managed Entries Plug-in instances can be re-enabled with the 
+            <command>enable</command>option.</para>
+        </section>
+    </section>
+    <section id="sssd-system-uids">
+        <title>Repairing Changed UID and GID Numbers</title>
+        <para>When a user is created, the user is automatically assigned a user
+        ID number and a group ID number.</para>
+        <para>When the user logs into &IPAA; system or service, SSSD on that
+        system caches that username with the associated UID/GID numbers. The
+        UID number is then used as the identifying key for the user. If a user
+        with the same name but a different UID attempts to log into the system,
+        then SSSD treats it as two different users with a name
+        collision.</para>
+        <para>What this means is that SSSD does not recognize UID number
+        changes. It interprets it as a different and new user, not an existing
+        user with a different UID number. If an existing user changes the UID
+        number, that user is prevented from logging into SSSD and associated
+        services and domains. This also has an impact on any client
+        applications which use SSSD for identity information; the user with the
+        conflict will not be found or accessible to those applications.</para>
+        <important>
+            <para>UID/GID changes are not supported in &PROD; or in
+            SSSD.</para>
+        </important>
+        <para>If a user for some reason has a changed UID/GID number, then the
+        SSSD cache must be cleared for that user before that user can log in
+        again. For example:</para>
+        <programlisting language="Bash">[root@server ~]# sss_cache -u
+        jsmith</programlisting>
+    </section>
+    <section id="Managing-Unique_UID_and_GID_Attributes">
+        <title>Managing Unique UID and GID Number Assignments</title>
+        <para>&IPAB; server must generate random UID and GID values and
+        simultaneously ensure that replicas never generate the same UID or GID
+        value. The need for unique UID and GID numbers might even cross &IPA;
+        domains, if a single organization has multiple disparate
+        domains.</para>
+        <para>The UID and GID numbers are divided into 
+        <emphasis>ranges</emphasis>. By keeping separate numeric ranges for
+        individual servers and replicas, the chances are minimal that any
+        numbers issued by one server or replica will duplicate those from
+        another. Ranges are updated and shared intelligently between servers
+        and replicas through the Dynamic Numeric Assignment (DNA) Plug-in, as
+        part of the backend &DSF; instance for the domain. The same range is
+        used for user IDs ( 
+        <parameter>uidNumber</parameter>) and group IDs ( 
+        <parameter>gidNumber</parameter>). A user and a group may have the same
+        ID, but since the ID is set in different attributes, there is no
+        conflict. Using the same ID number for both a user and a group also
+        allows an administrator to configure user private groups, where a
+        unique system group is created for each user and the ID number is the
+        same for both the user and the group.</para>
+        <important>
+            <title>IMPORTANT</title>
+            <para>When a user is created interactively or without specifying a
+            UID or GID number, then the user account is created with an ID
+            number that is next available in the server or replica range. This
+            means that a user always has a unique number for its UID number
+            and, if configured, for its private group.</para>
+            <para>If a number is 
+            <emphasis>manually</emphasis>assigned to a user entry, the server
+            does not validate that the 
+            <parameter>uidNumber</parameter>is unique. It will allow duplicate
+            IDs; this is expected (though discouraged) behavior for POSIX
+            entries. The same is true for group entries: a duplicate 
+            <parameter>gidNumber</parameter>can be manually assigned to the
+            entry.</para>
+            <para>If two entries are assigned the same ID number, only the
+            first entry is returned in a search for that ID number. However,
+            both entries will be returned in searches for other attributes or
+            with 
+            <command>ipa user-find --all</command>.</para>
+        </important>
+        <section id="id-ranges-at-install">
+            <title>About ID Range Assignments During Installation</title>
+            <para>The &IPA; administrator can initially define a range during
+            server installation, using the 
+            <option>--idstart</option>and 
+            <option>--idmax</option>options with 
+            <command>ipa-server-install</command>. These options are not
+            required, so the setup script can assign random ranges during
+            installation.</para>
+            <para>If no range is set manually when the first &IPA; server is
+            installed, a range of 200,000 IDs is randomly selected. There are
+            10,000 possible ranges. Selecting a random range from that number
+            provides a high probability of non-conflicting IDs if two separate
+            &IPA; domains are ever merged in the future.</para>
+            <para>With a single &IPA; server, IDs are assigned to entries in
+            order through the range. With replicas, the initial server ID range
+            is split and distributed.</para>
+            <para>When a replica is installed, it is configured with an invalid
+            range. It also has a directory entry (that is shared among
+            replicas) that instructs the replica where it can request a valid
+            range. When the replica starts, or as its current range is depleted
+            so that less than 100 IDs are available, it can contact one of the
+            available servers for a new range allotment. A special extended
+            operation splits the range in two, so that the original server and
+            the replica each have half of the available range.</para>
+        </section>
+        <section id="Assigning_UIDs_and_GIDs-Adding_New_Ranges">
+            <title>Adding New Ranges</title>
+            <para>If the range for the entire domain is close to depletion, a
+            new range can be manually selected and assigned to one of the
+            master servers. All replicas then request ID ranges from the master
+            as necessary.</para>
+            <para>The changes to the range are done by editing the &DSF;
+            configuration to change the DNA Plug-in instance. The range is
+            defined in the 
+            <parameter>dnaNextRange</parameter>parameter. For example:</para>
+            <screen>ldapmodify -x -D "cn=Directory Manager" -W -h
+            server.example.com -p 389 Enter LDAP Password: ******* dn: cn=Posix
+            IDs,cn=Distributed Numeric Assignment Plugin,cn=plugins,cn=config
+            changetype: modify add: dnaNextRange dnaNextRange:
+            123400000-123500000</screen>
+            <note>
+                <title>NOTE</title>
+                <para>This command only adds the specified range of values; it
+                does not check that the values in that range are actually
+                available. This check is performed when an attempt is made to
+                allocate those values. If a range is added that contains mostly
+                values that were already allocated, the system will cycle
+                through the entire range searching for unallocated values, and
+                then the operation ultimately fails if none are
+                available.</para>
+            </note>
+        </section>
+    </section>
+    <section id="user-schema">
+        <title>Managing User and Group Schema</title>
+        <para>When a user entry is created, it is automatically assigned
+        certain LDAP object classes which, in turn, make available certain
+        attributes. LDAP attributes are the way that information is stored in
+        the directory. (This is discussed in detail in the 
+        <citetitle>&DS; &DPG;</citetitle>and the 
+        <citetitle>&DS; Schema Reference</citetitle>.)</para>
+        <table id="tab.default-objclasses">
+            <title>Default &PROD; User Object Classes</title>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry>Description</entry>
+                        <entry>Object Classes</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>&IPA; object classes</entry>
+                        <entry>ipaobject</entry>
+                    </row>
+                    <row>
+                        <entry>Person object classes</entry>
+                        <entry>
+                            <simplelist>
+                                <member>person</member>
+                                <member>organizationalperson</member>
+                                <member>inetorgperson</member>
+                                <member>inetuser</member>
+                                <member>posixaccount</member>
+                            </simplelist>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Kerberos object classes</entry>
+                        <entry>
+                            <simplelist>
+                                <member>krbprincipalaux</member>
+                                <member>krbticketpolicyaux</member>
+                            </simplelist>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Managed entries (template) object
+                        classes</entry>
+                        <entry>mepOriginEntry</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <para>A number of attributes are available to user entries. Some are
+        set manually and some are set based on defaults if a specific value is
+        not set. There is also an option to add any attributes available in the
+        object classes in 
+        <xref linkend="tab.default-objclasses" />, even if there is not a UI or
+        command-line argument for that attribute. Additionally, the values
+        generated or used by the default attributes can be configured, as in 
+        <xref linkend="Configuring_IPA_Users-Specifying_Default_User_Settings" />.</para>
+        <table id="tab.default-attrs">
+            <title>Default &PROD; User Attributes</title>
+            <tgroup cols="3">
+                <thead>
+                    <row>
+                        <entry>UI Field</entry>
+                        <entry>Command-Line Option</entry>
+                        <entry>Required, Optional, or Default 
+                        <footnote>
+                            <para>Required attributes must be set for every
+                            entry. Optional attributes may be set, while
+                            default attributes are automatically added with a
+                            pre-defined value unless a specific value is
+                            given.</para>
+                        </footnote></entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>User login</entry>
+                        <entry>
+                            <emphasis>username</emphasis>
+                        </entry>
+                        <entry>Required</entry>
+                    </row>
+                    <row>
+                        <entry>First name</entry>
+                        <entry>--first</entry>
+                        <entry>Required</entry>
+                    </row>
+                    <row>
+                        <entry>Last name</entry>
+                        <entry>--last</entry>
+                        <entry>Required</entry>
+                    </row>
+                    <row>
+                        <entry>Full name</entry>
+                        <entry>--cn</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>Display name</entry>
+                        <entry>--displayname</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>Initials</entry>
+                        <entry>--initials</entry>
+                        <entry>Default</entry>
+                    </row>
+                    <row>
+                        <entry>Home directory</entry>
+                        <entry>--homedir</entry>
+                        <entry>Default</entry>
+                    </row>
+                    <row>
+                        <entry>GECOS field</entry>
+                        <entry>--gecos</entry>
+                        <entry>Default</entry>
+                    </row>
+                    <row>
+                        <entry>Shell</entry>
+                        <entry>--shell</entry>
+                        <entry>Default</entry>
+                    </row>
+                    <row>
+                        <entry>Kerberos principal</entry>
+                        <entry>--principal</entry>
+                        <entry>Default</entry>
+                    </row>
+                    <row>
+                        <entry>Email address</entry>
+                        <entry>--email</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>Password</entry>
+                        <entry>--password 
+                        <para>Unlike the other options, this accepts no value.
+                        The script prompts for the new password.</para></entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>User ID number 
+                        <footnote id="user-uid-note">
+                            <para>When a user is created without specifying a
+                            UID number, then the user account is automatically
+                            assigned an ID number that is next available in the
+                            server or replica range. (Number ranges are
+                            described more in 
+                            <xref linkend="Managing-Unique_UID_and_GID_Attributes" />.)
+                            This means that a user always has a unique number
+                            for its UID number and, if configured, for its
+                            private group.</para>
+                            <para>If a number is 
+                            <emphasis>manually</emphasis>assigned to a user
+                            entry, the server does not validate that the 
+                            <parameter>uidNumber</parameter>is unique. It will
+                            allow duplicate IDs; this is expected (though
+                            discouraged) behavior for POSIX entries.</para>
+                            <para>If two entries are assigned the same ID
+                            number, only the first entry is returned in a
+                            search for that ID number. However, both entries
+                            will be returned in searches for other attributes
+                            or with 
+                            <command>ipa user-find --all</command>.</para>
+                        </footnote></entry>
+                        <entry>--uid</entry>
+                        <entry>Default</entry>
+                    </row>
+                    <row>
+                        <entry>Group ID number 
+                        <footnoteref linkend="user-uid-note" /></entry>
+                        <entry>--gidnumber</entry>
+                        <entry>Default</entry>
+                    </row>
+                    <row>
+                        <entry>Street address</entry>
+                        <entry>--street</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>City</entry>
+                        <entry>--city</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>State/Province</entry>
+                        <entry>--state</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>Zip code</entry>
+                        <entry>--postalcode</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>Telephone number</entry>
+                        <entry>--phone</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>Mobile telephone number</entry>
+                        <entry>--mobile</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>Pager number</entry>
+                        <entry>--pager</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>Fax number</entry>
+                        <entry>--fax</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>Organizational unit</entry>
+                        <entry>--orgunit</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>Job title</entry>
+                        <entry>--title</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>Manager</entry>
+                        <entry>--manager</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>Car license</entry>
+                        <entry>--carlicense</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <!-- XXXXXXXXXXXXXXX FIX ME 
+                                No Private Group
+                                -->
+                        </entry>
+                        <entry>--noprivate</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>SSH Keys</entry>
+                        <entry>--sshpubkey</entry>
+                        <entry>Optional</entry>
+                    </row>
+                    <row>
+                        <entry>Additional attributes</entry>
+                        <entry>--addattr</entry>
+                        <entry>Optional</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <section id="using-custom-oc">
+            <title>About Changing the Default User and Group Schema</title>
+            <para>It is possible to add or change the object classes and
+            attributes used for user and group entries ( 
+            <xref linkend="user-schema" />).</para>
+            <para>The &IPA; configuration provides some validation when object
+            classes are changed:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>All of the object classes and their specified
+                    attributes must be known to the LDAP server.</para>
+                </listitem>
+                <listitem>
+                    <para>All default attributes that are configured for the
+                    entry must be supported by the configured object
+                    classes.</para>
+                </listitem>
+            </itemizedlist>
+            <para>There are limits to the &IPA; schema validation, however.
+            Most important, the &IPA; server does not check that the defined
+            user or group object classes contain all of the required object
+            classes for &IPA; entries. For example, all &IPA; entries require
+            the 
+            <command>ipaobject</command>object class. However, when the user or
+            group schema is changed, the server does not check to make sure
+            that this object class is included; if the object class is
+            accidentally deleted, then future entry add operations will
+            fail.</para>
+            <para>Also, all object class changes are atomic, not incremental.
+            The entire list of default object classes has to be defined every
+            time there is a change. For example, a company may create a custom
+            object class to store employee information like birthdays and
+            employment start dates. The administrator cannot simply add the
+            custom object class to the list; he must set the entire list of
+            current default object classes 
+            <emphasis>plus</emphasis>the new object class. The 
+            <emphasis>existing</emphasis>default object classes must always be
+            included when the configuration is updated. Otherwise, the current
+            settings will be overwritten, which causes serious performance
+            problems.</para>
+        </section>
+        <section id="adding-custom-objclasses">
+            <title>Applying Custom Object Classes to New User Entries</title>
+            <para>User and group accounts are created with a pre-defined set of
+            LDAP object classes applied to the entry. Any attributes which
+            belong to the object class can be added to the user entry.</para>
+            <para>While the standard and &IPA;-specific LDAP object classes
+            will cover most deployment scenarios, administrators may have
+            custom object classes with custom attributes which should be
+            applied to user entries.</para>
+            <section id="adding-custom-objclasses-ui">
+                <title>From the Web UI</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Add all of the custom schema elements to the
+                        &DSF; instance used by &PROD;. Adding schema elements
+                        is described in 
+                        <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Directory_Server/9.0/html/Administration_Guide/Extending_the_Directory_Schema.html">
+                        the schema chapter of the &DS; &AG;</ulink>.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Open the 
+                        <guilabel>IPA Server</guilabel>tab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Select the 
+                        <guilabel>Configuration</guilabel>subtab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Scroll to the 
+                        <guilabel>User Options</guilabel>area.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/server-config-users.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>At the bottom of the users area, click the 
+                        <guilabel>Add</guilabel>link to add a new field for
+                        another object class.</para>
+                        <important>
+                            <title>IMPORTANT</title>
+                            <para>Always include the 
+                            <emphasis>existing</emphasis>default object classes
+                            when the configuration is updated. Otherwise, the
+                            current settings will be overwritten. If any object
+                            classes required by &PROD; are not included, then
+                            subsequent attempts to add an entry will fail with
+                            object class violations.</para>
+                        </important>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/user-objectclass-change.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>When the changes are complete, click the 
+                        <guilabel>Update</guilabel>link at the top of the 
+                        <guilabel>Configuration</guilabel>page.</para>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="adding-custom-objclasses-cmd">
+                <title>From the Command Line</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Add all of the custom schema elements to the
+                        &DSF; instance used by &PROD;. Adding schema elements
+                        is described in 
+                        <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Directory_Server/9.0/html/Administration_Guide/Extending_the_Directory_Schema.html">
+                        the schema chapter of the &DS; &AG;</ulink>.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Add the new object class to the list of object
+                        classes added to entries. The option for user object
+                        classes is 
+                        <option>--userobjectclasses</option>.</para>
+                        <important>
+                            <title>IMPORTANT</title>
+                            <para>Always include the 
+                            <emphasis>existing</emphasis>default object classes
+                            when the configuration is updated. Otherwise, the
+                            current settings will be overwritten. If any object
+                            classes required by &PROD; are not included, then
+                            subsequent attempts to add an entry will fail with
+                            object class violations.</para>
+                        </important>
+                        <para>For example:</para>
+                        <screen>$ ipa config-mod 
+                        <userinput>
+                        --userobjectclasses=</userinput>top,person,organizationalperson,inetorgperson,inetuser,posixaccount,
+                        krbprincipalaux,krbticketpolicyaux,ipaobject, 
+                        <userinput>employeeinfo</userinput></screen>
+                    </listitem>
+                </orderedlist>
+            </section>
+        </section>
+        <section id="adding-custom-objclasses-groups">
+            <title>Applying Custom Object Classes to New Group Entries</title>
+            <para>As with user entries, administrators may have custom object
+            classes with custom attributes which should be applied to group
+            entries. These can be added automatically by adding the object
+            classes to the &IPA; server configuration.</para>
+            <section id="adding-custom-objclasses-group-ui">
+                <title>From the Web UI</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Add all of the custom schema elements to the
+                        &DSF; instance used by &PROD;. Adding schema elements
+                        is described in 
+                        <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Directory_Server/9.0/html/Administration_Guide/Extending_the_Directory_Schema.html">
+                        the schema chapter of the &DS; &AG;</ulink>.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Open the 
+                        <guilabel>IPA Server</guilabel>tab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Select the 
+                        <guilabel>Configuration</guilabel>subtab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Scroll to the 
+                        <guilabel>Group Options</guilabel>area.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/group-config.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Add</guilabel>link to add a new field for
+                        another object class.</para>
+                        <important>
+                            <title>IMPORTANT</title>
+                            <para>Always include the 
+                            <emphasis>existing</emphasis>default object classes
+                            when the configuration is updated. Otherwise, the
+                            current settings will be overwritten. If any object
+                            classes required by &PROD; are not included, then
+                            subsequent attempts to add an entry will fail with
+                            object class violations.</para>
+                        </important>
+                    </listitem>
+                    <listitem>
+                        <para>When the changes are complete, click the 
+                        <guilabel>Update</guilabel>link at the top of the 
+                        <guilabel>Configuration</guilabel>page.</para>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="adding-custom-objclasses-group-cmd">
+                <title>From the Command Line</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Add all of the custom schema elements to the
+                        &DSF; instance used by &PROD;. Adding schema elements
+                        is described in 
+                        <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Directory_Server/9.0/html/Administration_Guide/Extending_the_Directory_Schema.html">
+                        the schema chapter of the &DS; &AG;</ulink>.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Add the new object class to the list of object
+                        classes added to entries. The option for group object
+                        classes is 
+                        <option>--groupobjectclasses</option>.</para>
+                        <important>
+                            <title>IMPORTANT</title>
+                            <para>Always include the 
+                            <emphasis>existing</emphasis>default object classes
+                            when the configuration is updated. Otherwise, the
+                            current settings will be overwritten. If any object
+                            classes required by &PROD; are not included, then
+                            subsequent attempts to add an entry will fail with
+                            object class violations.</para>
+                        </important>
+                        <para>For example:</para>
+                        <screen>$ ipa config-mod 
+                        <userinput>
+                        --groupobjectclasses=</userinput>top,groupofnames,nestedgroup,ipausergroup,ipaobject,
+                        
+                        <userinput>employeegroup</userinput></screen>
+                    </listitem>
+                </orderedlist>
+            </section>
+        </section>
+    </section>
+    <section id="user-groups">
+        <title>Managing User Groups</title>
+        <para>User groups are a way of centralizing control over important
+        management tasks, particularly access control and password policies.
+        Three groups are created during the installation, specifically for use
+        by &IPA; operations:</para>
+        <itemizedlist>
+            <listitem>
+                <para>ipausers, which contains all users.</para>
+            </listitem>
+            <listitem>
+                <para>admins, which contains administrative users. The initial 
+                <command>admin</command>user belongs to this group.</para>
+            </listitem>
+            <listitem>
+                <para>editors, which is a special group for users working
+                through the web UI. This group allows users to 
+                <emphasis>edit</emphasis>other users' entries, though without
+                all of the rights of the admin user.</para>
+            </listitem>
+        </itemizedlist>
+        <para>All groups in &PROD; are essentially 
+        <emphasis>static</emphasis>groups, meaning that the members of the
+        group are manually and explicitly added to the group. Tangentially,
+        &IPA; allows 
+        <emphasis>nested groups</emphasis>, where a group is a member of
+        another group. In that case, all of the group members of the member
+        group automatically belong to the parent group, as well.</para>
+        <para>Because groups are easy to create, it is possible to be very
+        flexible in what groups to create and how they are organized. Groups
+        can be defined around organizational divisions like departments,
+        physical locations, or &IPA; or infrastructure usage guidelines for
+        access controls.</para>
+        <note>
+            <title>NOTE</title>
+            <para>Some operating systems limit the number of groups that can be
+            assigned to system users. For example, Solaris and AIX systems both
+            limit users to 16 groups per user. This can be an issue when using
+            nested groups, when a user may be automatically added to multiple
+            groups.</para>
+        </note>
+        <para>When a group entry is created, it is automatically assigned
+        certain LDAP object classes. (LDAP object classes and attributes are
+        discussed in detail in the 
+        <citetitle>&DS; &DPG;</citetitle>and the 
+        <citetitle>&DS; Schema Reference</citetitle>.) For groups, only two
+        attributes truly matter: the name and the description.</para>
+        <table id="tab.default-group-objclasses">
+            <title>Default &PROD; Group Object Classes</title>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry>Description</entry>
+                        <entry>Object Classes</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>&IPA; object classes</entry>
+                        <entry>
+                            <simplelist>
+                                <member>ipaobject</member>
+                                <member>ipausergroup</member>
+                                <member>nestedgroup</member>
+                            </simplelist>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Group object classes</entry>
+                        <entry>
+                            <simplelist>
+                                <member>groupofnames</member>
+                                <member>posixgroup</member>
+                            </simplelist>
+                        </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <section id="Configuring_IPA_Groups-Creating_IPA_Groups">
+            <title>Creating User Groups</title>
+            <section id="new-group-ui">
+                <title>With the Web UI</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Open the 
+                        <guilabel>Identity</guilabel>tab, and select the 
+                        <guilabel>User Groups</guilabel>subtab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Add</guilabel>link at the top of the groups
+                        list.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/group-list.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Enter all of the information for the
+                        group.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/group-add.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                        <itemizedlist>
+                            <listitem>
+                                <para>A unique name. This is the identifier
+                                used for the group in the &IPA; domain, and it
+                                cannot be changed after it is created. The name
+                                cannot contain spaces, but other separators
+                                like an underscore (_) are allowed.</para>
+                            </listitem>
+                            <listitem>
+                                <para>A text description of the group.</para>
+                            </listitem>
+                            <listitem>
+                                <para>Whether the group is a Posix group, which
+                                adds Linux-specific information to the entry.
+                                By default, all groups are Posix groups unless
+                                they are explicitly configured not to be.
+                                Non-Posix groups can be created for
+                                interoperability with Windows or Samba.</para>
+                            </listitem>
+                            <listitem>
+                                <para>Optionally, the GID number for the group.
+                                All Posix groups require a GID number, but
+                                &IPA; automatically assigns the GID
+                                number.</para>
+                                <para>Setting a GID number is not necessary
+                                because of the risk of collisions. If a GID
+                                number is given manually, &IPA; will not
+                                override the specified GID number, even if it
+                                is not unique.</para>
+                            </listitem>
+                        </itemizedlist>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guibutton>Add and Edit</guibutton>button to go
+                        immediately to the member selection page.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Select the members, as described in 
+                        <xref linkend="group-members-ui" />.</para>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="new-group-cmd">
+                <title>With the Command Line</title>
+                <para>New groups are created using the 
+                <command>group-add</command>command. (This adds only the group;
+                members are added separately.)</para>
+                <para>Two attributes are always required: the group name and
+                the group description. If those attributes are not given as
+                arguments, then the script prompts for them.</para>
+                <screen>$ ipa group-add 
+                <replaceable>groupName</replaceable>--desc=" 
+                <replaceable>description</replaceable>" [--nonposix]</screen>
+                <para>Additionally, there is one other configuration option, 
+                <option>--nonposix</option>. (By default, all groups are
+                created as POSIX groups.) To enable interoperability with
+                Windows users and groups and programs like Samba, it is
+                possible to create non-POSIX groups by using the 
+                <option>--nonposix</option>option. This option tells the script
+                not to add the 
+                <command>posixGroup</command>object class to the entry.</para>
+                <para>For example:</para>
+                <screen>$ ipa group-add examplegroup --desc="for examples"
+                --nonposix ---------------------- Added group "examplegroup"
+                ---------------------- Group name: examplegroup Description:
+                for examples GID: 855800010</screen>
+                <para>When no arguments are used, the command prompts for the
+                required group account information:</para>
+                <screen>$ ipa group-add Group name: engineering Description:
+                for engineers ------------------------- Added group
+                "engineering" ------------------------- Group name: engineering
+                Description: for engineers GID: 387115842</screen>
+                <important>
+                    <title>IMPORTANT</title>
+                    <para>When a group is created without specifying a GID
+                    number, then the group entry is assigned the ID number that
+                    is next available in the server or replica range. (Number
+                    ranges are described more in 
+                    <xref linkend="Managing-Unique_UID_and_GID_Attributes" />.)
+                    This means that a group always has a unique number for its
+                    GID number.</para>
+                    <para>If a number is 
+                    <emphasis>manually</emphasis>assigned to a group entry, the
+                    server does not validate that the 
+                    <parameter>gidNumber</parameter>is unique. It will allow
+                    duplicate IDs; this is expected (though discouraged)
+                    behavior for POSIX entries.</para>
+                    <para>If two entries are assigned the same ID number, only
+                    the first entry is returned in a search for that ID number.
+                    However, both entries will be returned in searches for
+                    other attributes or with 
+                    <command>ipa group-find --all</command>.</para>
+                </important>
+                <note>
+                    <title>NOTE</title>
+                    <para>You cannot edit the group name. The group name is the
+                    primary key, so changing it is the equivalent of deleting
+                    the group and creating a new one.</para>
+                </note>
+            </section>
+        </section>
+        <section id="adding-members">
+            <title>Adding Group Members</title>
+            <section id="group-members-ui">
+                <title>With the Web UI (Group Page)</title>
+                <note>
+                    <title>NOTE</title>
+                    <para>This procedure adds a user to a group. User groups
+                    can contain other user groups as their members. These are 
+                    <emphasis>nested</emphasis>groups.</para>
+                    <para>It can take up to several minutes for the members of
+                    the child group to show up as members of the parent group.
+                    This is especially true on virtual machines where the
+                    nested groups have more than 500 members.</para>
+                    <para>When creating nested groups, be careful not to create
+                    
+                    <emphasis>recursive</emphasis>groups. For example, if
+                    GroupA is a member of GroupB, do not add GroupB as a member
+                    of GroupA. Recursive groups are not supported and can cause
+                    unpredictable behavior.</para>
+                </note>
+                <orderedlist>
+                    <listitem>
+                        <para>Open the 
+                        <guilabel>Identity</guilabel>tab, and select the 
+                        <guilabel>User Groups</guilabel>subtab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the name of the group to which to add
+                        members.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/group-list.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Add</guilabel>link at the top of the task
+                        area.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/groups-menu.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the checkbox by the names of the users to
+                        add, and click the right arrows button, 
+                        <guibutton>&gt;&gt;</guibutton>, to move the names to
+                        the selection box.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/groups-addmembers.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guibutton>Add</guibutton>button.</para>
+                    </listitem>
+                </orderedlist>
+                <para>Group members can be users or other user groups. It can
+                take up to several minutes for the members of the child group
+                to show up as members of the parent group. This is especially
+                true on virtual machines where the nested groups have more than
+                500 members.</para>
+            </section>
+            <section id="groups-ui-users">
+                <title>With the Web UI (User's Page)</title>
+                <para>Users can also be added to a group through the user's
+                page.</para>
+                <orderedlist>
+                    <listitem>
+                        <para>Open the 
+                        <guilabel>Identity</guilabel>tab, and select the 
+                        <guilabel>Users</guilabel>subtab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the name of the user to edit.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/user-list.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Open the 
+                        <guilabel>User Groups</guilabel>tab on the user entry
+                        page.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Add</guilabel>link at the top of the task
+                        area.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/group-links.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the checkbox by the names of the groups for
+                        the user to join, and click the right arrows button, 
+                        <guibutton>&gt;&gt;</guibutton>, to move the groups to
+                        the selection box.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/group-addmembers-user.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guibutton>Add</guibutton>button.</para>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="group-members-cmd">
+                <title>With the Command Line</title>
+                <para>Members are added to a group using the 
+                <command>group-add-member</command>command. This command can
+                add both users as group members and other groups as group
+                members.</para>
+                <para>The syntax of the 
+                <command>group-add-member</command>command requires only the
+                group name and a comma-separated list of users to add:</para>
+                <screen>$ ipa group-add-member 
+                <replaceable>groupName</replaceable>[--users= 
+                <replaceable>list</replaceable>] [--groups= 
+                <replaceable>list</replaceable>]</screen>
+                <para>For example, this adds three users to the 
+                <command>engineering</command>group:</para>
+                <screen>$ ipa group-add-member engineering
+                --users=jsmith,bjensen,mreynolds Group name: engineering
+                Description: for engineers GID: 387115842 Member users:
+                jsmith,bjensen,mreynolds ------------------------- Number of
+                members added 3 -------------------------</screen>
+                <para>Likewise, other groups can be added as members, which
+                creates nested groups:</para>
+                <screen>$ ipa group-add-member engineering
+                --groups=dev,qe1,dev2 Group name: engineering Description: for
+                engineers GID: 387115842 Member groups: dev,qe1,dev2
+                ------------------------- Number of members added 3
+                -------------------------</screen>
+                <!-- ticket 1533 -->
+                <para>When displaying nested groups, members are listed as
+                members and the members of any member groups are listed as
+                indirect members. For example:</para>
+                <screen>$ ipa group-show examplegroup Group name: examplegroup
+                Description: for examples GID: 93200002 Member users:
+                jsmith,bjensen,mreynolds Member groups: californiausers
+                Indirect Member users: sbeckett,acalavicci</screen>
+                <para>It can take up to several minutes for the members of the
+                child group to show up as members of the parent group. This is
+                especially true on virtual machines where the nested groups
+                have more than 500 members.</para>
+                <note>
+                    <title>NOTE</title>
+                    <para>When creating nested groups, be careful not to create
+                    
+                    <emphasis>recursive</emphasis>groups. For example, if
+                    GroupA is a member of GroupB, do not add GroupB as a member
+                    of GroupA. Recursive groups are not supported and can cause
+                    unpredictable behavior.</para>
+                </note>
+                <para>A group member is removed using the 
+                <command>group-remove-member</command>command.</para>
+                <screen>$ ipa group-remove-member engineering --users=jsmith
+                Group name: engineering Description: for engineers GID:
+                855800009 Member users: bjensen,mreynolds
+                --------------------------- Number of members removed 1
+                ---------------------------</screen>
+            </section>
+            <section id="viewing-group-members">
+                <title>Viewing Direct and Indirect Members of a Group</title>
+                <para>User groups can contain other user groups as members.
+                This is called a 
+                <emphasis>nested group</emphasis>. This also means that a group
+                has two types of members:</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                        <emphasis>Direct members</emphasis>, which are added
+                        explicitly to the group</para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                        <emphasis>Indirect members</emphasis>, which are
+                        members of the group because they are members of
+                        another user group which is a member of the
+                        group</para>
+                    </listitem>
+                </itemizedlist>
+                <para>The &IPA; web UI has an easy way to view direct and
+                indirect members of a group. The members list is filtered by
+                member type, and this can be toggled by selecting the 
+                <guilabel>Direct</guilabel>and 
+                <guilabel>Indirect</guilabel>radio buttons at the top right
+                corner of the members list.</para>
+                <figure>
+                    <title>Indirect and Direct Members</title>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata fileref="images/groups-menu.png" />
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+                <para>Being able to track indirect members makes it easier to
+                assign group membership properly, without duplicating
+                membership.</para>
+            </section>
+        </section>
+        <section id="Configuring_IPA_Groups-Deleting_IPA_Groups">
+            <title>Deleting User Groups</title>
+            <para>When a user group is deleted, only the group is removed. The
+            user accounts of group members (including nested groups) are not
+            affected. Additionally, any access control delegations that apply
+            to that group are removed.</para>
+            <warning>
+                <title>WARNING</title>
+                <para>Deleting a group is immediate and permanent. If any group
+                configuration (such as delegations) is required, it must be
+                assigned to another group or a new group created.</para>
+            </warning>
+            <section id="deleting-group-ui">
+                <title>With the Web UI</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Open the 
+                        <guilabel>Identity</guilabel>tab, and select the 
+                        <guilabel>User Groups</guilabel>subtab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Select the checkbox by the name of the group to
+                        delete.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/group-list.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Delete</guilabel>link at the top of the task
+                        area.</para>
+                    </listitem>
+                    <listitem>
+                        <para>When prompted, confirm the delete action.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/group-delete.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="deleting-group-cmd">
+                <title>With the Command Line</title>
+                <para>The 
+                <command>group-del</command>command to deletes the specified
+                group. For example:</para>
+                <screen>$ ipa group-del examplegroup</screen>
+            </section>
+        </section>
+    </section>
+    <section id="searching">
+        <title>Searching for Users and Groups</title>
+        <para>The user searches in &IPA; can be run against simple (full word)
+        or partial search strings. The range of attributes that are searched is
+        configured as part of the default &IPA; configuration, as in 
+        <xref linkend="Configuring_IPA_Users-Specifying_Default_User_Settings" />.</para>
+        <para>By default, there are six attributes that are indexed for user
+        searches and two that are indexed for group searches. These are listed
+        in 
+        <xref linkend="tab.search-attrs" />. All search attributes are searched
+        in a user/group search.</para>
+        <table id="tab.search-attrs">
+            <title>Default Search Attributes</title>
+            <tgroup cols="2">
+                <colspec colnum="1" colname="col1" />
+                <colspec colnum="2" colname="col2" />
+                <tbody>
+                    <row>
+                        <entry namest="col1" nameend="col2">
+                            <emphasis role="bold">User Search
+                            Attributes</emphasis>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>First name</entry>
+                        <entry>Last name</entry>
+                    </row>
+                    <row>
+                        <entry>Login ID</entry>
+                        <entry>Job title</entry>
+                    </row>
+                    <row>
+                        <entry>Organizational unit</entry>
+                        <entry>Phone number</entry>
+                    </row>
+                    <row>
+                        <entry namest="col1" nameend="col2">
+                            <emphasis role="bold">Group Search
+                            Attributes</emphasis>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Description</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <para>The attributes which are searched in user and group searches can
+        be changed, as described in 
+        <xref linkend="search-fields" />and 
+        <xref linkend="search-fields-groups" />.</para>
+        <section id="user-search-ui">
+            <title>With the UI</title>
+            <para>Both user and group main pages have a search bar in the upper
+            right corner of the task area. This search box searches against all
+            of the fields listed in 
+            <xref linkend="tab.search-attrs" />. Type in any string, even a
+            single letter, and click the magnifying glass icon. The UI filters
+            the displayed list to match the search string.</para>
+            <figure id="fig.user-search">
+                <title>User Search Box</title>
+                <mediaobject>
+                    <imageobject>
+                        <imagedata fileref="images/user-search.png" />
+                    </imageobject>
+                </mediaobject>
+            </figure>
+        </section>
+        <section id="user-search-cmd">
+            <title>With the Command Line</title>
+            <para>Searches are simple:</para>
+            <screen>$ ipa user-find|group-find 
+            <replaceable>string</replaceable>
+            <replaceable>options</replaceable></screen>
+            <para>There are a few general rules with searches:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>If there is no 
+                    <emphasis>string</emphasis>, then the search returns every
+                    entry in &IPA;, up to the search limit.</para>
+                </listitem>
+                <listitem>
+                    <para>With the command-line tools, only a single search
+                    string can be used for user and group searches. With the
+                    UI, multiple strings can be used.</para>
+                </listitem>
+                <listitem>
+                    <para>Searches are case insensitive.</para>
+                </listitem>
+                <listitem>
+                    <para>Search results are displayed alphabetically, with
+                    exact matches listed first, followed by partial
+                    matches.</para>
+                </listitem>
+                <listitem>
+                    <para>Wildcards cannot be used in searches. The search
+                    string must include at least one character that appears in
+                    one of the indexed search fields.</para>
+                </listitem>
+            </itemizedlist>
+            <example id="ex.user-search">
+                <title>User Search for John</title>
+                <para>The basic search looks for the string 
+                <emphasis>john</emphasis>, which can appear in any of the
+                search indexes.</para>
+                <screen>$ ipa user-find john --------------- 2 users matched
+                --------------- User login: jpeterson First name: john Last
+                name: peterson Home directory: /home/jpeterson Login shell:
+                /bin/sh UID: 855800007 GID: 855800007 Account disabled: False
+                User login: jsmith First name: john Last name: smith Home
+                directory: /home/jsmith Login shell: /bin/sh UID: 855800004
+                GID: 855800004 Account disabled: False
+                ---------------------------- Number of entries returned 2
+                ----------------------------</screen>
+                <para>A search can also accept options like 
+                <option>--raw</option>. 
+                <option>--raw</option>prints the LDAP attributes for the user
+                account rather than the reading-friendly field names.</para>
+                <screen>$ ipa user-find john --raw --------------- 2 users
+                matched --------------- uid: jpeterson givenname: john sn:
+                peterson homedirectory: /home/jpeterson loginshell: /bin/sh
+                uidnumber: 855800007 gidnumber: 855800007 nsaccountlock: False
+                uid: jsmith givenname: john sn: smith homedirectory:
+                /home/jsmith loginshell: /bin/sh uidnumber: 855800004
+                gidnumber: 855800004 nsaccountlock: False
+                ---------------------------- Number of entries returned 2
+                ----------------------------</screen>
+            </example>
+            <note>
+                <title>TIP</title>
+                <para>If the desired entry is not listed, it is possible that
+                the search hit the preset search size limit before the entry
+                was found. Change the search record or time limits, as in 
+                <xref linkend="search-limits" />, to allow more entries to be
+                returned.</para>
+            </note>
+        </section>
+    </section>
+    <section id="Configuring_IPA_Users-Specifying_Default_User_Settings">
+        <title>Specifying Default User and Group Settings</title>
+        <para>&PROD; uses a template when it creates new entries.</para>
+        <para>For users, the template is very specific. &PROD; uses default
+        values for several core attributes for &IPA; user accounts. These
+        defaults can define actual values for user account attributes (such as
+        the home directory location) or it can define the format of attribute
+        values, such as the username length. These settings also define the
+        object classes assigned to users.</para>
+        <para>For groups, the template only defines the assigned object
+        classes.</para>
+        <para>These default definitions are all contained in a single
+        configuration entry for the &IPA; server, 
+        <command>cn=ipaconfig,cn=etc,dc=example,dc=com</command>.</para>
+        <para>The configuration can be changed using the 
+        <command>ipa config-mod</command>command.</para>
+        <para condition="reviewing">The configuration can be changed using the 
+        <command>ipa config-mod</command>command, which is covered in 
+        <xref linkend="" />.</para>
+        <table id="tab.user-config-defaults">
+            <title>Default User Parameters</title>
+            <tgroup cols="3">
+                <thead>
+                    <row>
+                        <entry>Field</entry>
+                        <entry>Command-Line Option</entry>
+                        <entry>Descriptions</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>Maximum username length</entry>
+                        <entry>--maxusername</entry>
+                        <entry>Sets the maximum number of characters for
+                        usernames. The default value is eight.</entry>
+                    </row>
+                    <row>
+                        <entry>Root for home directories</entry>
+                        <entry>--homedirectory</entry>
+                        <entry>Sets the default directory to use for user home
+                        directories. The default value is 
+                        <filename>/home</filename>.</entry>
+                    </row>
+                    <row>
+                        <entry>Default shell</entry>
+                        <entry>--defaultshell</entry>
+                        <entry>Sets the default shell to use for users. The
+                        default value is 
+                        <filename>/bin/sh</filename>.</entry>
+                    </row>
+                    <row>
+                        <entry>Default user group</entry>
+                        <entry>--defaultgroup</entry>
+                        <entry>Sets the default group to which all newly
+                        created accounts are added. The default value is 
+                        <systemitem class="groupname">ipausers</systemitem>,
+                        which is automatically created during the &IPA; server
+                        installation process.</entry>
+                    </row>
+                    <row>
+                        <entry>Default e-mail domain</entry>
+                        <entry>--emaildomain</entry>
+                        <entry>Sets the email domain to use to create email
+                        addressed based on the new accounts. The default is the
+                        &IPA; server domain.</entry>
+                    </row>
+                    <row>
+                        <entry>Search time limit</entry>
+                        <entry>--searchtimelimit</entry>
+                        <entry>Sets the maximum amount of time, in seconds, to
+                        spend on a search before the server returns
+                        results.</entry>
+                    </row>
+                    <row>
+                        <entry>Search size limit</entry>
+                        <entry>--searchrecordslimit</entry>
+                        <entry>Sets the maximum number of records to return in
+                        a search.</entry>
+                    </row>
+                    <row>
+                        <entry>User search fields</entry>
+                        <entry>--usersearch</entry>
+                        <entry>Sets the fields in a user entry that can be used
+                        as a search string. Any attribute listed has an index
+                        kept for that attribute, so setting too many attributes
+                        could affect server performance.</entry>
+                    </row>
+                    <row>
+                        <entry>Group search fields</entry>
+                        <entry>--groupsearch</entry>
+                        <entry>Sets the fields in a group entry that can be
+                        used as a search string.</entry>
+                    </row>
+                    <row>
+                        <entry>Certificate subject base</entry>
+                        <entry></entry>
+                        <entry>Sets the base DN to use when creating subject
+                        DNs for client certificates. This is configured when
+                        the server is set up.</entry>
+                    </row>
+                    <row>
+                        <entry>Default user object classes</entry>
+                        <entry>--userobjectclasses</entry>
+                        <entry>Sets a list of object classes that are used to
+                        create &IPA; user accounts.</entry>
+                    </row>
+                    <row>
+                        <entry>Default group object classes</entry>
+                        <entry>--groupobjectclasses</entry>
+                        <entry>Sets a list of object classes that are used to
+                        create &IPA; group accounts.</entry>
+                    </row>
+                    <row>
+                        <entry>Password expiration notification</entry>
+                        <entry>--pwdexpnotify</entry>
+                        <entry>Sets how long, in days, before a password
+                        expires for the server to send a notification.</entry>
+                    </row>
+                    <row>
+                        <entry>Password plug-in features</entry>
+                        <entry></entry>
+                        <entry>Sets the format of passwords that are allowed
+                        for users.</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <section id="show-config-ui">
+            <title>Viewing Settings from the Web UI</title>
+            <orderedlist>
+                <listitem>
+                    <para>Open the 
+                    <guilabel>IPA Server</guilabel>tab.</para>
+                </listitem>
+                <listitem>
+                    <para>Select the 
+                    <guilabel>Configuration</guilabel>subtab.</para>
+                </listitem>
+                <listitem>
+                    <para>The complete configuration entry is shown in three
+                    sections, one for all search limits, one for user
+                    templates, and one for group templates.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/server-config.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="show-config-cmd">
+            <title>Viewing Settings from the Command Line</title>
+            <para>The 
+            <command>config-show</command>command shows the current
+            configuration which applies to all new user accounts. By default,
+            only the most common attributes are displayed; use the 
+            <option>--all</option>option to show the complete
+            configuration.</para>
+            <screen># ipa config-show --all dn:
+            cn=ipaconfig,cn=etc,dc=example,dc=com Max. username length: 32 Home
+            directory base: /home Default shell: /bin/sh Default users group:
+            ipausers Default e-mail domain for new users: example.com Search
+            time limit: 2 Search size limit: 100 User search fields:
+            uid,givenname,sn,telephonenumber,ou,title Group search fields:
+            cn,description Enable migration mode: FALSE Certificate Subject
+            base: O=EXAMPLE.COM Default group objectclasses: top, groupofnames,
+            nestedgroup, ipausergroup, ipaobject Default user objectclasses:
+            top, person, organizationalperson, inetorgperson, inetuser,
+            posixaccount, krbprincipalaux, krbticketpolicyaux, ipaobject
+            Password Expiration Notification (days): 4 Password plugin
+            features: AllowNThash cn: ipaConfig objectclass: nsContainer, top,
+            ipaGuiConfig, ipaConfigObject</screen>
+        </section>
+    </section>
+</chapter>

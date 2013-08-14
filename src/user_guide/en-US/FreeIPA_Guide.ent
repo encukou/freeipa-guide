@@ -1,0 +1,31 @@
+<!ENTITY RHEL "Red Hat Enterprise Linux">
+<!ENTITY RH "Red Hat">
+<!ENTITY PROD "FreeIPA">
+<!ENTITY FULL "FreeIPA">
+<!ENTITY BOOKID "doc-Enterprise_Identity_Management_Guide">
+<!ENTITY YEAR "2012">
+<!ENTITY HOLDER "Red Hat">
+<!ENTITY VER "2.2">
+<!ENTITY RVER "16">
+<!ENTITY OVER "16">
+<!ENTITY DS "Directory Server">
+<!ENTITY RHDS "389 Directory Server">
+<!ENTITY DSF "389 Directory Server">
+<!ENTITY FCRTS "Dogtag Certificate System">
+<!ENTITY CRTS "Certificate System">
+<!ENTITY AD "Active Directory">
+<!ENTITY IPA "FreeIPA">
+<!ENTITY IPAA "a FreeIPA">
+<!ENTITY IPAB "A FreeIPA">
+<!ENTITY OS "Fedora">
+<!ENTITY TITLE_TPREVIEW "">
+
+<!-- directory locations -->
+<!ENTITY SBIN "/usr/sbin">
+<!ENTITY BIN "/usr/bin">
+
+<!ENTITY SSSDF "/etc/sssd/sssd.conf">
+
+<!-- titles -->
+<!ENTITY DPG "Deployment Guide">
+<!ENTITY AG "Administrator's Guide">

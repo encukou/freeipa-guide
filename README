@@ -1,0 +1,47 @@
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                         FreeIPA Documentation Project
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. Introduction
+===============
+
+The target of this repository is to hold User Guide, Tutorials or other
+documentation resources for the FreeIPA project. It only contains documentation
+which is not shipped directly with the product or a documentation which, for
+the sake of FreeIPA git tree size, is moved to this specialized git repo.
+
+For more information about FreeIPA, please visit www.freeipa.org.
+
+
+2. The Latest Version
+=====================
+
+FreeIPA team plans to release user documentation to it's website, www.freeipa.org
+In future, this repo will become a specialized documentation portal published
+in docs.freeipa.org site.
+
+
+3. Contributing
+===============
+
+All patch submission should be sent to freeipa-devel@redhat.com, use [DOC] tag
+in the mail headline. For detailed rules related to contributing, please see:
+  http://www.freeipa.org/page/Contribute
+
+
+4. Licensing
+============
+
+Please see the file called COPYING.
+
+
+5. Contacts
+===========
+
+* If you want to be informed about new code releases, bug fixes, security
+  fixes, general news and information about the FreeIPA project, subscribe
+  to the freeipa-announce mailing list at
+  <https://www.redhat.com/mailman/listinfo/freeipa-interest/>.
+
+* If you have a bug report please submit it at:
+  <https://fedorahosted.org/freeipa/newticket>

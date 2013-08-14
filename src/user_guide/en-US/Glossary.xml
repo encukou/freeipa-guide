@@ -1,0 +1,1582 @@
+<?xml version='1.0'?>
+<!DOCTYPE glossary PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+     "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
+[
+]>
+<glossary id="Glossary">
+    <title>Glossary</title>
+    <glossdiv>
+        <title id="a">A</title>
+        <glossentry id="access-control-instruction">
+            <glossterm>access control instruction</glossterm>
+            <glosssee otherterm="aci" />
+        </glossentry>
+        <glossentry id="aci">
+            <glossterm>ACI</glossterm>
+            <glossdef>
+                <para>An instruction that grants or denies permissions to
+                entries in the directory.</para>
+                <glossseealso otherterm="access-control-instruction" />
+            </glossdef>
+        </glossentry>
+        <glossentry id="access-control-list">
+            <glossterm>access control list</glossterm>
+            <glosssee otherterm="ACL" />
+        </glossentry>
+        <glossentry id="ACL">
+            <glossterm>ACL</glossterm>
+            <glossdef>
+                <para>The mechanism for controlling access to your
+                directory.</para>
+                <glossseealso otherterm="access-control-list" />
+            </glossdef>
+        </glossentry>
+        <glossentry id="access-rights">
+            <glossterm>access rights</glossterm>
+            <glossdef>
+                <para>In the context of access control, specify the level of
+                access granted or denied. Access rights are related to the type
+                of operation that can be performed on the directory. The
+                following rights can be granted or denied: read, write, add,
+                delete, search, compare, selfwrite, proxy and all.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="account-inactivation">
+            <glossterm>account inactivation</glossterm>
+            <glossdef>
+                <para>Disables a user account, group of accounts, or an entire
+                domain so that all authentication attempts are automatically
+                rejected.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="All-IDs-Threshold">
+            <glossterm>All IDs Threshold</glossterm>
+            <glossdef>
+                <para>
+                <emphasis>Replaced with the ID list scan limit in &DS; version
+                7.1.</emphasis>A size limit which is globally applied to every
+                index key managed by the server. When the size of an individual
+                ID list reaches this limit, the server replaces that ID list
+                with an All IDs token.</para>
+                <glossseealso otherterm="IDList-scan-limit" />
+            </glossdef>
+        </glossentry>
+        <glossentry id="All-IDs-token">
+            <glossterm>All IDs token</glossterm>
+            <glossdef>
+                <para>A mechanism which causes the server to assume that all
+                directory entries match the index key. In effect, the All IDs
+                token causes the server to behave as if no index was available
+                for the search request.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="anonymous-access">
+            <glossterm>anonymous access</glossterm>
+            <glossdef>
+                <para>When granted, allows anyone to access directory
+                information without providing credentials, and regardless of
+                the conditions of the bind.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="approximate-index">
+            <glossterm>approximate index</glossterm>
+            <glossdef>
+                <para>Allows for efficient approximate or "sounds-like"
+                searches.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="attribute">
+            <glossterm>attribute</glossterm>
+            <glossdef>
+                <para>Holds descriptive information about an entry. Attributes
+                have a label and a value. Each attribute also follows a
+                standard syntax for the type of information that can be stored
+                as the attribute value.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="attribute-list">
+            <glossterm>attribute list</glossterm>
+            <glossdef>
+                <para>A list of required and optional attributes for a given
+                entry type or object class.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="authenticating-directory-server">
+            <glossterm>authenticating directory server</glossterm>
+            <glossdef>
+                <para>In pass-through authentication (PTA), the authenticating
+                Directory Server is the Directory Server that contains the
+                authentication credentials of the requesting client. The
+                PTA-enabled host sends PTA requests it receives from clients to
+                the host.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="authentication">
+            <glossterm>authentication</glossterm>
+            <glossdef>
+                <para>(1) Process of proving the identity of the client user to
+                the Directory Server. Users must provide a bind DN and either
+                the corresponding password or certificate in order to be
+                granted access to the directory. Directory Server allows the
+                user to perform functions or access files and directories based
+                on the permissions granted to that user by the directory
+                administrator.</para>
+                <para>(2) Allows a 
+                <xref linkend="client" />to make sure they are connected to a
+                secure server, preventing another computer from impersonating
+                the server or attempting to appear secure when it is
+                not.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="authentication-certificate">
+            <glossterm>authentication certificate</glossterm>
+            <glossdef>
+                <para>Digital file that is not transferable and not forgeable
+                and is issued by a third party. Authentication certificates are
+                sent from server to client or client to server in order to
+                verify and authenticate the other party.</para>
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="B">
+        <title>B</title>
+        <glossentry id="base-DN">
+            <glossterm>base DN</glossterm>
+            <glossdef>
+                <para>Base distinguished name. A search operation is performed
+                on the base DN, the DN of the entry and all entries below it in
+                the directory tree.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="base-distinguished-name">
+            <glossterm>base distinguished name</glossterm>
+            <glosssee otherterm="base-DN" />
+        </glossentry>
+        <glossentry id="bind-DN">
+            <glossterm>bind DN</glossterm>
+            <glossdef>
+                <para>Distinguished name used to authenticate to Directory
+                Server when performing an operation.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="bind-distinguished-name">
+            <glossterm>bind distinguished name</glossterm>
+            <glosssee otherterm="bind-DN" />
+        </glossentry>
+        <glossentry id="bind-rule">
+            <glossterm>bind rule</glossterm>
+            <glossdef>
+                <para>In the context of access control, the bind rule specifies
+                the credentials and conditions that a particular user or client
+                must satisfy in order to get access to directory
+                information.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="branch-entry">
+            <glossterm>branch entry</glossterm>
+            <glossdef>
+                <para>An entry that represents the top of a subtree in the
+                directory.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="browser">
+            <glossterm>browser</glossterm>
+            <glossdef>
+                <para>Software, such as Mozilla Firefox, used to request and
+                view World Wide Web material stored as HTML files. The browser
+                uses the HTTP protocol to communicate with the host
+                server.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="browsing-index">
+            <glossterm>browsing index</glossterm>
+            <glossdef>
+                <para>Speeds up the display of entries in the Directory Server
+                Console. Browsing indexes can be created on any branch point in
+                the directory tree to improve display performance.</para>
+                <glossseealso otherterm="virtual-list-view-index" />
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="C">
+        <title>C</title>
+        <glossentry id="CA">
+            <glossterm>CA</glossterm>
+            <glosssee otherterm="Certificate-Authority" />
+        </glossentry>
+        <glossentry id="cascading-replication">
+            <glossterm>cascading replication</glossterm>
+            <glossdef>
+                <para>In a cascading replication scenario, one server, often
+                called the hub supplier, acts both as a consumer and a supplier
+                for a particular replica. It holds a read-only replica and
+                maintains a changelog. It receives updates from the supplier
+                server that holds the master copy of the data and in turn
+                supplies those updates to the consumer.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="certificate">
+            <glossterm>certificate</glossterm>
+            <glossdef>
+                <para>A collection of data that associates the public keys of a
+                network user with their DN in the directory. The certificate is
+                stored in the directory as user object attributes.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="Certificate-Authority">
+            <glossterm>Certificate Authority</glossterm>
+            <glossdef>
+                <para>Company or organization that sells and issues
+                authentication certificates. You may purchase an authentication
+                certificate from a Certification Authority that you trust. Also
+                known as a 
+                <xref linkend="CA" />.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="CGI">
+            <glossterm>CGI</glossterm>
+            <glossdef>
+                <para>Common Gateway Interface. An interface for external
+                programs to communicate with the HTTP server. Programs written
+                to use CGI are called CGI programs or CGI scripts and can be
+                written in many of the common programming languages. CGI
+                programs handle forms or perform output parsing that is not
+                done by the server itself.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="chaining">
+            <glossterm>chaining</glossterm>
+            <glossdef>
+                <para>A method for relaying requests to another server. Results
+                for the request are collected, compiled, and then returned to
+                the client.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="changelog">
+            <glossterm>changelog</glossterm>
+            <glossdef>
+                <para>A changelog is a record that describes the modifications
+                that have occurred on a replica. The supplier server then
+                replays these modifications on the replicas stored on replica
+                servers or on other masters, in the case of multi-master
+                replication.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="character-type">
+            <glossterm>character type</glossterm>
+            <glossdef>
+                <para>Distinguishes alphabetic characters from numeric or other
+                characters and the mapping of upper-case to lower-case
+                letters.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="ciphertext">
+            <glossterm>ciphertext</glossterm>
+            <glossdef>
+                <para>Encrypted information that cannot be read by anyone
+                without the proper key to decrypt the information.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="class-definition">
+            <glossterm>class definition</glossterm>
+            <glossdef>
+                <para>Specifies the information needed to create an instance of
+                a particular object and determines how the object works in
+                relation to other objects in the directory.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="class-of-service">
+            <glossterm>class of service</glossterm>
+            <glosssee otherterm="CoS" />
+        </glossentry>
+        <glossentry id="classic-CoS">
+            <glossterm>classic CoS</glossterm>
+            <glossdef>
+                <para>A classic CoS identifies the template entry by both its
+                DN and the value of one of the target entry's
+                attributes.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="client">
+            <glossterm>client</glossterm>
+            <glosssee otherterm="LDAP-client" />
+        </glossentry>
+        <glossentry id="code-page">
+            <glossterm>code page</glossterm>
+            <glossdef>
+                <para>An internal table used by a locale in the context of the
+                internationalization plug-in that the operating system uses to
+                relate keyboard keys to character font screen displays.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="collation-order">
+            <glossterm>collation order</glossterm>
+            <glossdef>
+                <para>Provides language and cultural-specific information about
+                how the characters of a given language are to be sorted. This
+                information might include the sequence of letters in the
+                alphabet or how to compare letters with accents to letters
+                without accents.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="consumer">
+            <glossterm>consumer</glossterm>
+            <glossdef>
+                <para>Server containing replicated directory trees or subtrees
+                from a supplier server.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="consumer-server">
+            <glossterm>consumer server</glossterm>
+            <glossdef>
+                <para>In the context of replication, a server that holds a
+                replica that is copied from a different server is called a
+                consumer for that replica.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="CoS">
+            <glossterm>CoS</glossterm>
+            <glossdef>
+                <para>A method for sharing attributes between entries in a way
+                that is invisible to applications.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="CoS-definition-entry">
+            <glossterm>CoS definition entry</glossterm>
+            <glossdef>
+                <para>Identifies the type of CoS you are using. It is stored as
+                an LDAP subentry below the branch it affects.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="CoS-template-entry">
+            <glossterm>CoS template entry</glossterm>
+            <glossdef>
+                <para>Contains a list of the shared attribute values.</para>
+                <glossseealso otherterm="template-entry" />
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="D">
+        <title>D</title>
+        <glossentry id="daemon">
+            <glossterm>daemon</glossterm>
+            <glossdef>
+                <para>A background process on a Unix machine that is
+                responsible for a particular system task. Daemon processes do
+                not need human intervention to continue functioning.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="DAP">
+            <glossterm>DAP</glossterm>
+            <glossdef>
+                <para>Directory Access Protocol. The ISO X.500 standard
+                protocol that provides client access to the directory.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="data-master">
+            <glossterm>data master</glossterm>
+            <glossdef>
+                <para>The server that is the master source of a particular
+                piece of data.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="database-link">
+            <glossterm>database link</glossterm>
+            <glossdef>
+                <para>An implementation of chaining. The database link behaves
+                like a database but has no persistent storage. Instead, it
+                points to data stored remotely.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="default-index">
+            <glossterm>default index</glossterm>
+            <glossdef>
+                <para>One of a set of default indexes created per database
+                instance. Default indexes can be modified, although care should
+                be taken before removing them, as certain plug-ins may depend
+                on them.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="definition-entry">
+            <glossterm>definition entry</glossterm>
+            <glosssee otherterm="CoS-definition-entry" />
+        </glossentry>
+        <glossentry id="Directory-Access-Protocol">
+            <glossterm>Directory Access Protocol</glossterm>
+            <glosssee otherterm="DAP" />
+        </glossentry>
+        <glossentry id="directory-tree">
+            <glossterm>directory tree</glossterm>
+            <glossdef>
+                <para>The logical representation of the information stored in
+                the directory. It mirrors the tree model used by most
+                filesystems, with the tree's root point appearing at the top of
+                the hierarchy. Also known as 
+                <xref linkend="DIT" />.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="Directory-Manager">
+            <glossterm>Directory Manager</glossterm>
+            <glossdef>
+                <para>The privileged database administrator, comparable to the
+                root user in UNIX. Access control does not apply to the
+                Directory Manager.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="directory-service">
+            <glossterm>directory service</glossterm>
+            <glossdef>
+                <para>A database application designed to manage descriptive,
+                attribute-based information about people and resources within
+                an organization.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="distinguished-name">
+            <glossterm>distinguished name</glossterm>
+            <glossdef>
+                <para>String representation of an entry's name and location in
+                an LDAP directory.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="DIT">
+            <glossterm>DIT</glossterm>
+            <glosssee otherterm="directory-tree" />
+        </glossentry>
+        <glossentry id="DN">
+            <glossterm>DN</glossterm>
+            <glosssee otherterm="distinguished-name" />
+        </glossentry>
+        <glossentry id="DM">
+            <glossterm>DM</glossterm>
+            <glosssee otherterm="Directory-Manager" />
+        </glossentry>
+        <glossentry id="DNS">
+            <glossterm>DNS</glossterm>
+            <glossdef>
+                <para>Domain Name System. The system used by machines on a
+                network to associate standard IP addresses (such as
+                198.93.93.10) with hostnames (such as 
+                <command>www.example.com</command>). Machines normally get the
+                IP address for a hostname from a DNS server, or they look it up
+                in tables maintained on their systems.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="DNS-alias">
+            <glossterm>DNS alias</glossterm>
+            <glossdef>
+                <para>A DNS alias is a hostname that the DNS server knows
+                points to a different host&#8212;specifically a DNS CNAME
+                record. Machines always have one real name, but they can have
+                one or more aliases. For example, an alias such as 
+                <command>www.</command>
+                <emphasis>yourdomain</emphasis>. 
+                <emphasis>domain</emphasis>might point to a real machine called
+                
+                <command>realthing.</command>
+                <emphasis>yourdomain</emphasis>. 
+                <emphasis>domain</emphasis>where the server currently
+                exists.</para>
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="E">
+        <title>E</title>
+        <glossentry id="entry">
+            <glossterm>entry</glossterm>
+            <glossdef>
+                <para>A group of lines in the LDIF file that contains
+                information about an object.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="entry-distribution">
+            <glossterm>entry distribution</glossterm>
+            <glossdef>
+                <para>Method of distributing directory entries across more than
+                one server in order to scale to support large numbers of
+                entries.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="entry-ID-list">
+            <glossterm>entry ID list</glossterm>
+            <glossdef>
+                <para>Each index that the directory uses is composed of a table
+                of index keys and matching entry ID lists. The entry ID list is
+                used by the directory to build a list of candidate entries that
+                may match the client application's search request.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="equality-index">
+            <glossterm>equality index</glossterm>
+            <glossdef>
+                <para>Allows you to search efficiently for entries containing a
+                specific attribute value.</para>
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="F">
+        <title>F</title>
+        <glossentry id="file-extension">
+            <glossterm>file extension</glossterm>
+            <glossdef>
+                <para>The section of a filename after the period or dot (.)
+                that typically defines the type of file (for example, .GIF and
+                .HTML). In the filename 
+                <command>index.html</command>the file extension is 
+                <command>html</command>.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="file-type">
+            <glossterm>file type</glossterm>
+            <glossdef>
+                <para>The format of a given file. For example, graphics files
+                are often saved in GIF format, while a text file is usually
+                saved as ASCII text format. File types are usually identified
+                by the file extension (for example, .GIF or .HTML).</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="filter">
+            <glossterm>filter</glossterm>
+            <glossdef>
+                <para>A constraint applied to a directory query that restricts
+                the information returned.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="filtered-role">
+            <glossterm>filtered role</glossterm>
+            <glossdef>
+                <para>Allows you to assign entries to the role depending upon
+                the attribute contained by each entry. You do this by
+                specifying an LDAP filter. Entries that match the filter are
+                said to possess the role.</para>
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="G">
+        <title>G</title>
+        <glossentry id="general-access">
+            <glossterm>general access</glossterm>
+            <glossdef>
+                <para>When granted, indicates that all authenticated users can
+                access directory information.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="GSS-API">
+            <glossterm>GSS-API</glossterm>
+            <glossdef>
+                <para>Generic Security Services. The generic access protocol
+                that is the native way for UNIX-based systems to access and
+                authenticate Kerberos services; also supports session
+                encryption.</para>
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="H">
+        <title>H</title>
+        <glossentry id="hostname">
+            <glossterm>hostname</glossterm>
+            <glossdef>
+                <para>A name for a machine in the form machine.domain.dom,
+                which is translated into an IP address. For example, 
+                <command>www.example.com</command>is the machine 
+                <command>www</command>in the subdomain 
+                <command>example</command>and 
+                <command>com</command>domain.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="HTML">
+            <glossterm>HTML</glossterm>
+            <glossdef>
+                <para>Hypertext Markup Language. The formatting language used
+                for documents on the World Wide Web. HTML files are plain text
+                files with formatting codes that tell browsers such as the
+                Mozilla Firefox how to display text, position graphics, and
+                form items and to display links to other pages.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="HTTP">
+            <glossterm>HTTP</glossterm>
+            <glossdef>
+                <para>Hypertext Transfer Protocol. The method for exchanging
+                information between HTTP servers and clients.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="HTTPD">
+            <glossterm>HTTPD</glossterm>
+            <glossdef>
+                <para>An abbreviation for the HTTP daemon or service, a program
+                that serves information using the HTTP protocol. The daemon or
+                service is often called an httpd.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="HTTPS">
+            <glossterm>HTTPS</glossterm>
+            <glossdef>
+                <para>A secure version of HTTP, implemented using the Secure
+                Sockets Layer, SSL.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="hub">
+            <glossterm>hub</glossterm>
+            <glossdef>
+                <para>In the context of replication, a server that holds a
+                replica that is copied from a different server, and, in turn,
+                replicates it to a third server.</para>
+                <glossseealso otherterm="cascading-replication" />
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="I">
+        <title>I</title>
+        <glossentry id="IDList-scan-limit">
+            <glossterm>ID list scan limit</glossterm>
+            <glossdef>
+                <para>A size limit which is globally applied to any indexed
+                search operation. When the size of an individual ID list
+                reaches this limit, the server replaces that ID list with an
+                all IDs token.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="index-key">
+            <glossterm>index key</glossterm>
+            <glossdef>
+                <para>Each index that the directory uses is composed of a table
+                of index keys and matching entry ID lists.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="indirect-CoS">
+            <glossterm>indirect CoS</glossterm>
+            <glossdef>
+                <para>An indirect CoS identifies the template entry using the
+                value of one of the target entry's attributes.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="international-index">
+            <glossterm>international index</glossterm>
+            <glossdef>
+                <para>Speeds up searches for information in international
+                directories.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="International-Standards-Organization">
+            <glossterm>International Standards Organization</glossterm>
+            <glosssee otherterm="ISO" />
+        </glossentry>
+        <glossentry id="IP-address">
+            <glossterm>IP address</glossterm>
+            <glossdef>
+                <para>
+                <emphasis>Also Internet Protocol address.</emphasis>A set of
+                numbers, separated by dots, that specifies the actual location
+                of a machine on the Internet (for example, 198.93.93.10). &DS;
+                supports both IPv4 and IPv6 IP addresses.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="ISO">
+            <glossterm>ISO</glossterm>
+            <glossdef>
+                <para>International Standards Organization.</para>
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="K">
+        <title>K</title>
+        <glossentry id="knowledge-reference">
+            <glossterm>knowledge reference</glossterm>
+            <glossdef>
+                <para>Pointers to directory information stored in different
+                databases.</para>
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="L">
+        <title>L</title>
+        <glossentry id="LDAP">
+            <glossterm>LDAP</glossterm>
+            <glossdef>
+                <para>Lightweight Directory Access Protocol. Directory service
+                protocol designed to run over TCP/IP and across multiple
+                platforms.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="LDAPv3">
+            <glossterm>LDAPv3</glossterm>
+            <glossdef>
+                <para>Version 3 of the LDAP protocol, upon which Directory
+                Server bases its schema format.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="LDAP-client">
+            <glossterm>LDAP client</glossterm>
+            <glossdef>
+                <para>Software used to request and view LDAP entries from an
+                LDAP Directory Server.</para>
+                <glossseealso otherterm="browser" />
+            </glossdef>
+        </glossentry>
+        <glossentry id="LDAP-Data-Interchange-Format">
+            <glossterm>LDAP Data Interchange Format</glossterm>
+            <glosssee otherterm="LDAP-Data-Interchange-Format" />
+        </glossentry>
+        <glossentry id="LDAP-URL">
+            <glossterm>LDAP URL</glossterm>
+            <glossdef>
+                <para>Provides the means of locating Directory Servers using
+                DNS and then completing the query via LDAP. A sample LDAP URL
+                is 
+                <command>ldap://ldap.example.com</command>.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="LDBM-database">
+            <glossterm>LDBM database</glossterm>
+            <glossdef>
+                <para>A high-performance, disk-based database consisting of a
+                set of large files that contain all of the data assigned to it.
+                The primary data store in Directory Server.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="LDIF">
+            <glossterm>LDIF</glossterm>
+            <glossdef>
+                <para>LDAP Data Interchange Format. Format used to represent
+                Directory Server entries in text form.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="leaf-entry">
+            <glossterm>leaf entry</glossterm>
+            <glossdef>
+                <para>An entry under which there are no other entries. A leaf
+                entry cannot be a branch point in a directory tree.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="Lightweight-Directory-Access-Protocol">
+            <glossterm>Lightweight Directory Access Protocol</glossterm>
+            <glosssee otherterm="LDAP" />
+        </glossentry>
+        <glossentry id="locale">
+            <glossterm>locale</glossterm>
+            <glossdef>
+                <para>Identifies the collation order, character type, monetary
+                format and time / date format used to present data for users of
+                a specific region, culture, and/or custom. This includes
+                information on how data of a given language is interpreted,
+                stored, or collated. The locale also indicates which code page
+                should be used to represent a given language.</para>
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="M">
+        <title>M</title>
+        <glossentry id="managed-object">
+            <glossterm>managed object</glossterm>
+            <glossdef>
+                <para>A standard value which the SNMP agent can access and send
+                to the NMS. Each managed object is identified with an official
+                name and a numeric identifier expressed in dot-notation.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="managed-role">
+            <glossterm>managed role</glossterm>
+            <glossdef>
+                <para>Allows creation of an explicit enumerated list of
+                members.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="management-information-base">
+            <glossterm>management information base</glossterm>
+            <glosssee otherterm="MIB" />
+        </glossentry>
+        <glossentry id="mapping-tree">
+            <glossterm>mapping tree</glossterm>
+            <glossdef>
+                <para>A data structure that associates the names of suffixes
+                (subtrees) with databases.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="master">
+            <glossterm>master</glossterm>
+            <glosssee otherterm="supplier" />
+        </glossentry>
+        <glossentry id="master-agent">
+            <glossterm>master agent</glossterm>
+            <glosssee otherterm="SNMP-master-agent" />
+        </glossentry>
+        <glossentry id="matching-rule">
+            <glossterm>matching rule</glossterm>
+            <glossdef>
+                <para>Provides guidelines for how the server compares strings
+                during a search operation. In an international search, the
+                matching rule tells the server what collation order and
+                operator to use.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="MD5">
+            <glossterm>MD5</glossterm>
+            <glossdef>
+                <para>A message digest algorithm by RSA Data Security, Inc.,
+                which can be used to produce a short digest of data that is
+                unique with high probability and is mathematically extremely
+                hard to produce; a piece of data that will produce the same
+                message digest.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="MD5-signature">
+            <glossterm>MD5 signature</glossterm>
+            <glossdef>
+                <para>A message digest produced by the MD5 algorithm.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="MIB">
+            <glossterm>MIB</glossterm>
+            <glossdef>
+                <para>Management Information Base. All data, or any portion
+                thereof, associated with the SNMP network. We can think of the
+                MIB as a database which contains the definitions of all SNMP
+                managed objects. The MIB has a tree-like hierarchy, where the
+                top level contains the most general information about the
+                network and lower levels deal with specific, separate network
+                areas.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="MIB-namespace">
+            <glossterm>MIB namespace</glossterm>
+            <glossdef>
+                <para>Management Information Base namespace. The means for
+                directory data to be named and referenced. Also called the 
+                <xref linkend="directory-tree" />.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="monetary-format">
+            <glossterm>monetary format</glossterm>
+            <glossdef>
+                <para>Specifies the monetary symbol used by specific region,
+                whether the symbol goes before or after its value, and how
+                monetary units are represented.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="multi-master-replication">
+            <glossterm>multi-master replication</glossterm>
+            <glossdef>
+                <para>An advanced replication scenario in which two servers
+                each hold a copy of the same read-write replica. Each server
+                maintains a changelog for the replica. Modifications made on
+                one server are automatically replicated to the other server. In
+                case of conflict, a time stamp is used to determine which
+                server holds the most recent version.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="multiplexor">
+            <glossterm>multiplexor</glossterm>
+            <glossdef>
+                <para>The server containing the database link that communicates
+                with the remote server.</para>
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="N">
+        <title>N</title>
+        <glossentry id="n-1-directory-problem">
+            <glossterm>n + 1 directory problem</glossterm>
+            <glossdef>
+                <para>The problem of managing multiple instances of the same
+                information in different directories, resulting in increased
+                hardware and personnel costs.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="name-collisions">
+            <glossterm>name collisions</glossterm>
+            <glossdef>
+                <para>Multiple entries with the same distinguished name.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="nested-role">
+            <glossterm>nested role</glossterm>
+            <glossdef>
+                <para>Allows the creation of roles that contain other
+                roles.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="network-management-application">
+            <glossterm>network management application</glossterm>
+            <glossdef>
+                <para>Network Management Station component that graphically
+                displays information about SNMP managed devices, such as which
+                device is up or down and which and how many error messages were
+                received.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="network-management-station">
+            <glossterm>network management station</glossterm>
+            <glosssee otherterm="NMS" />
+        </glossentry>
+        <glossentry id="NIS">
+            <glossterm>NIS</glossterm>
+            <glossdef>
+                <para>Network Information Service. A system of programs and
+                data files that Unix machines use to collect, collate, and
+                share specific information about machines, users, filesystems,
+                and network parameters throughout a network of
+                computers.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="NMS">
+            <glossterm>NMS</glossterm>
+            <glossdef>
+                <para>Powerful workstation with one or more network management
+                applications installed. Also 
+                <xref linkend="network-management-station" />.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="ns-slapd">
+            <glossterm>ns-slapd</glossterm>
+            <glossdef>
+                <para>Red Hat's LDAP Directory Server daemon or service that is
+                responsible for all actions of the Directory Server.</para>
+                <glossseealso otherterm="slapd" />
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="O">
+        <title>O</title>
+        <glossentry id="object-class">
+            <glossterm>object class</glossterm>
+            <glossdef>
+                <para>Defines an entry type in the directory by defining which
+                attributes are contained in the entry.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="object-identifier">
+            <glossterm>object identifier</glossterm>
+            <glossdef>
+                <para>A string, usually of decimal numbers, that uniquely
+                identifies a schema element, such as an object class or an
+                attribute, in an object-oriented system. Object identifiers are
+                assigned by ANSI, IETF or similar organizations.</para>
+                <glossseealso otherterm="OID" />
+            </glossdef>
+        </glossentry>
+        <glossentry id="OID">
+            <glossterm>OID</glossterm>
+            <glosssee otherterm="object-identifier" />
+        </glossentry>
+        <glossentry id="operational-attribute">
+            <glossterm>operational attribute</glossterm>
+            <glossdef>
+                <para>Contains information used internally by the directory to
+                keep track of modifications and subtree properties. Operational
+                attributes are not returned in response to a search unless
+                explicitly requested.</para>
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="P">
+        <title>P</title>
+        <glossentry id="parent-access">
+            <glossterm>parent access</glossterm>
+            <glossdef>
+                <para>When granted, indicates that users have access to entries
+                below their own in the directory tree if the bind DN is the
+                parent of the targeted entry.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="pass-through-authentication">
+            <glossterm>pass-through authentication</glossterm>
+            <glosssee otherterm="PTA" />
+        </glossentry>
+        <glossentry id="pass-through-subtree">
+            <glossterm>pass-through subtree</glossterm>
+            <glossdef>
+                <para>In pass-through authentication, the 
+                <xref linkend="PTA-directory-server" />will pass through bind
+                requests to the 
+                <xref linkend="authenticating-directory-server" />from all
+                clients whose DN is contained in this subtree.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="password-file">
+            <glossterm>password file</glossterm>
+            <glossdef>
+                <para>A file on Unix machines that stores Unix user login
+                names, passwords, and user ID numbers. It is also known as 
+                <command>/etc/passwd</command>because of where it is
+                kept.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="password-policy">
+            <glossterm>password policy</glossterm>
+            <glossdef>
+                <para>A set of rules that governs how passwords are used in a
+                given directory.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="permission">
+            <glossterm>permission</glossterm>
+            <glossdef>
+                <para>In the context of access control, permission states
+                whether access to the directory information is granted or
+                denied and the level of access that is granted or
+                denied.</para>
+                <glossseealso otherterm="access-rights" />
+            </glossdef>
+        </glossentry>
+        <glossentry id="PDU">
+            <glossterm>PDU</glossterm>
+            <glossdef>
+                <para>Encoded messages which form the basis of data exchanges
+                between SNMP devices. Also 
+                <xref linkend="protocol-data-unit" />.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="pointer-CoS">
+            <glossterm>pointer CoS</glossterm>
+            <glossdef>
+                <para>A pointer CoS identifies the template entry using the
+                template DN only.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="presence-index">
+            <glossterm>presence index</glossterm>
+            <glossdef>
+                <para>Allows searches for entries that contain a specific
+                indexed attribute.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="protocol">
+            <glossterm>protocol</glossterm>
+            <glossdef>
+                <para>A set of rules that describes how devices on a network
+                exchange information.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="protocol-data-unit">
+            <glossterm>protocol data unit</glossterm>
+            <glosssee otherterm="PDU" />
+        </glossentry>
+        <glossentry id="proxy-authentication">
+            <glossterm>proxy authentication</glossterm>
+            <glossdef>
+                <para>A special form of authentication where the user
+                requesting access to the directory does not bind with its own
+                DN but with a proxy DN.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="proxy-DN">
+            <glossterm>proxy DN</glossterm>
+            <glossdef>
+                <para>Used with proxied authorization. The proxy DN is the DN
+                of an entry that has access permissions to the target on which
+                the client-application is attempting to perform an
+                operation.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="PTA">
+            <glossterm>PTA</glossterm>
+            <glossdef>
+                <para>Mechanism by which one Directory Server consults another
+                to check bind credentials. Also 
+                <xref linkend="pass-through-authentication" />.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="PTA-directory-server">
+            <glossterm>PTA directory server</glossterm>
+            <glossdef>
+                <para>In pass-through authentication ( 
+                <xref linkend="PTA" />), the PTA Directory Server is the server
+                that sends (passes through) bind requests it receives to the 
+                <xref linkend="authenticating-directory-server" />.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="PTA-LDAP-URL">
+            <glossterm>PTA LDAP URL</glossterm>
+            <glossdef>
+                <para>In pass-through authentication, the URL that defines the 
+                <xref linkend="authenticating-directory-server" />,
+                pass-through subtree(s), and optional parameters.</para>
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="R">
+        <title>R</title>
+        <glossentry id="RAM">
+            <glossterm>RAM</glossterm>
+            <glossdef>
+                <para>Random access memory. The physical semiconductor-based
+                memory in a computer. Information stored in RAM is lost when
+                the computer is shut down.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="rc.local">
+            <glossterm>rc.local</glossterm>
+            <glossdef>
+                <para>A file on Unix machines that describes programs that are
+                run when the machine starts. It is also called 
+                <filename>/etc/rc.local</filename>because of its
+                location.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="RDN">
+            <glossterm>RDN</glossterm>
+            <glossdef>
+                <para>The name of the actual entry itself, before the entry's
+                ancestors have been appended to the string to form the full
+                distinguished name. Also 
+                <xref linkend="relative-distinguished-name" />.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="referential-integrity">
+            <glossterm>referential integrity</glossterm>
+            <glossdef>
+                <para>Mechanism that ensures that relationships between related
+                entries are maintained within the directory.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="referral">
+            <glossterm>referral</glossterm>
+            <glossdef>
+                <para>(1) When a server receives a search or update request
+                from an LDAP client that it cannot process, it usually sends
+                back to the client a pointer to the LDAP sever that can process
+                the request.</para>
+                <para>(2) In the context of replication, when a read-only
+                replica receives an update request, it forwards it to the
+                server that holds the corresponding read-write replica. This
+                forwarding process is called a referral.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="read-only-replica">
+            <glossterm>read-only replica</glossterm>
+            <glossdef>
+                <para>A replica that refers all update operations to read-write
+                replicas. A server can hold any number of read-only
+                replicas.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="read-write-replica">
+            <glossterm>read-write replica</glossterm>
+            <glossdef>
+                <para>A replica that contains a master copy of directory
+                information and can be updated. A server can hold any number of
+                read-write replicas.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="relative-distinguished-name">
+            <glossterm>relative distinguished name</glossterm>
+            <glosssee otherterm="RDN" />
+        </glossentry>
+        <glossentry id="replica">
+            <glossterm>replica</glossterm>
+            <glossdef>
+                <para>A database that participates in replication.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="replica-initiated-replication">
+            <glossterm>replica-initiated replication</glossterm>
+            <glossdef>
+                <para>Replication configuration where replica servers, either
+                hub or consumer servers, pull directory data from supplier
+                servers. This method is available only for legacy
+                replication.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="replication">
+            <glossterm>replication</glossterm>
+            <glossdef>
+                <para>Act of copying directory trees or subtrees from supplier
+                servers to replica servers.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="replication-agreement">
+            <glossterm>replication agreement</glossterm>
+            <glossdef>
+                <para>Set of configuration parameters that are stored on the
+                supplier server and identify the databases to replicate, the
+                replica servers to which the data is pushed, the times during
+                which replication can occur, the DN and credentials used by the
+                supplier to bind to the consumer, and how the connection is
+                secured.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="RFC">
+            <glossterm>RFC</glossterm>
+            <glossdef>
+                <para>Request for Comments. Procedures or standards documents
+                submitted to the Internet community. People can send comments
+                on the technologies before they become accepted
+                standards.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="role">
+            <glossterm>role</glossterm>
+            <glossdef>
+                <para>An entry grouping mechanism. Each role has 
+                <emphasis>members</emphasis>, which are the entries that
+                possess the role.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="role-based-attributes">
+            <glossterm>role-based attributes</glossterm>
+            <glossdef>
+                <para>Attributes that appear on an entry because it possesses a
+                particular role within an associated CoS template.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="root">
+            <glossterm>root</glossterm>
+            <glossdef>
+                <para>The most privileged user available on Unix machines. The
+                root user has complete access privileges to all files on the
+                machine.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="root-suffix">
+            <glossterm>root suffix</glossterm>
+            <glossdef>
+                <para>The parent of one or more sub suffixes. A directory tree
+                can contain more than one root suffix.</para>
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="S">
+        <title>S</title>
+        <glossentry id="glSASL">
+            <glossterm>SASL</glossterm>
+            <glossdef>
+                <para>An authentication framework for clients as they attempt
+                to bind to a directory. Also 
+                <xref linkend="Simple-Authentication-and-Security-Layer" />.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="schema">
+            <glossterm>schema</glossterm>
+            <glossdef>
+                <para>Definitions describing what types of information can be
+                stored as entries in the directory. When information that does
+                not match the schema is stored in the directory, clients
+                attempting to access the directory may be unable to display the
+                proper results.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="schema-checking">
+            <glossterm>schema checking</glossterm>
+            <glossdef>
+                <para>Ensures that entries added or modified in the directory
+                conform to the defined schema. Schema checking is on by
+                default, and users will receive an error if they try to save an
+                entry that does not conform to the schema.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="Secure-Sockets-Layer">
+            <glossterm>Secure Sockets Layer</glossterm>
+            <glosssee otherterm="SSL" />
+        </glossentry>
+        <glossentry id="self-access">
+            <glossterm>self access</glossterm>
+            <glossdef>
+                <para>When granted, indicates that users have access to their
+                own entries if the bind DN matches the targeted entry.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="Server-Console">
+            <glossterm>Server Console</glossterm>
+            <glossdef>
+                <para>Java-based application that allows you to perform
+                administrative management of your Directory Server from a
+                GUI.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="server-daemon">
+            <glossterm>server daemon</glossterm>
+            <glossdef>
+                <para>The server daemon is a process that, once running,
+                listens for and accepts requests from clients.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="server-service">
+            <glossterm>server service</glossterm>
+            <glossdef>
+                <para>A process on Windows that, once running, listens for and
+                accepts requests from clients. It is the SMB server on Windows
+                NT.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="Server-Selector">
+            <glossterm>Server Selector</glossterm>
+            <glossdef>
+                <para>Interface that allows you select and configure servers
+                using a browser.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="service">
+            <glossterm>service</glossterm>
+            <glossdef>
+                <para>A background process on a Windows machine that is
+                responsible for a particular system task. Service processes do
+                not need human intervention to continue functioning.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="SIE">
+            <glossterm>SIE</glossterm>
+            <glossdef>
+                <para>Server Instance Entry. The ID assigned to an instance of
+                Directory Server during installation.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="Simple-Authentication-and-Security-Layer">
+            <glossterm>Simple Authentication and Security Layer</glossterm>
+            <glosssee otherterm="glSASL" />
+        </glossentry>
+        <glossentry id="Simple-Network-Management-Protocol">
+            <glossterm>Simple Network Management Protocol</glossterm>
+            <glosssee otherterm="SNMP" />
+        </glossentry>
+        <glossentry id="single-master-replication">
+            <glossterm>single-master replication</glossterm>
+            <glossdef>
+                <para>The most basic replication scenario in which multiple
+                servers, up to four, each hold a copy of the same read-write
+                replicas to replica servers. In a single-master replication
+                scenario, the supplier server maintains a changelog.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="SIR">
+            <glossterm>SIR</glossterm>
+            <glosssee otherterm="supplier-initiated-replication" />
+        </glossentry>
+        <glossentry id="slapd">
+            <glossterm>slapd</glossterm>
+            <glossdef>
+                <para>LDAP Directory Server daemon or service that is
+                responsible for most functions of a directory except
+                replication.</para>
+                <glossseealso otherterm="ns-slapd" />
+            </glossdef>
+        </glossentry>
+        <glossentry id="SNMP">
+            <glossterm>SNMP</glossterm>
+            <glossdef>
+                <para>Used to monitor and manage application processes running
+                on the servers by exchanging data about network activity. Also 
+                <xref linkend="Simple-Network-Management-Protocol" />.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="SNMP-master-agent">
+            <glossterm>SNMP master agent</glossterm>
+            <glossdef>
+                <para>Software that exchanges information between the various
+                subagents and the NMS.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="SNMP-subagent">
+            <glossterm>SNMP subagent</glossterm>
+            <glossdef>
+                <para>Software that gathers information about the managed
+                device and passes the information to the master agent. Also
+                called a 
+                <xref linkend="subagent" />.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="soa">
+            <glossterm>SOA</glossterm>
+            <glosssee otherterm="glsoa" />
+        </glossentry>
+        <glossentry id="SSL">
+            <glossterm>SSL</glossterm>
+            <glossdef>
+                <para>A software library establishing a secure connection
+                between two parties (client and server) used to implement
+                HTTPS, the secure version of HTTP. Also called 
+                <xref linkend="Secure-Sockets-Layer" />.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="standard-index">
+            <glossterm>standard index</glossterm>
+            <glossdef>
+                <para>An index maintained by default.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="glsoa">
+            <glossterm>start of authority (SOA)</glossterm>
+            <glossdef>
+                <para>A record which contains the core information about a DNS
+                zone.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="sub-suffix">
+            <glossterm>sub suffix</glossterm>
+            <glossdef>
+                <para>A branch underneath a root suffix.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="subagent">
+            <glossterm>subagent</glossterm>
+            <glosssee otherterm="SNMP-subagent" />
+        </glossentry>
+        <glossentry id="substring-index">
+            <glossterm>substring index</glossterm>
+            <glossdef>
+                <para>Allows for efficient searching against substrings within
+                entries. Substring indexes are limited to a minimum of two
+                characters for each entry.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="suffix">
+            <glossterm>suffix</glossterm>
+            <glossdef>
+                <para>The name of the entry at the top of the directory tree,
+                below which data is stored. Multiple suffixes are possible
+                within the same directory. Each database only has one
+                suffix.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="superuser">
+            <glossterm>superuser</glossterm>
+            <glossdef>
+                <para>The most privileged user available on Unix machines. The
+                superuser has complete access privileges to all files on the
+                machine. Also called 
+                <xref linkend="root" />.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="supplier">
+            <glossterm>supplier</glossterm>
+            <glossdef>
+                <para>Server containing the master copy of directory trees or
+                subtrees that are replicated to replica servers.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="supplier-server">
+            <glossterm>supplier server</glossterm>
+            <glossdef>
+                <para>In the context of replication, a server that holds a
+                replica that is copied to a different server is called a
+                supplier for that replica.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="supplier-initiated-replication">
+            <glossterm>supplier-initiated replication</glossterm>
+            <glossdef>
+                <para>Replication configuration where 
+                <xref linkend="supplier" />servers replicate directory data to
+                any replica servers.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="symmetric-encryption">
+            <glossterm>symmetric encryption</glossterm>
+            <glossdef>
+                <para>Encryption that uses the same key for both encrypting and
+                decrypting. DES is an example of a symmetric encryption
+                algorithm.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="system-index">
+            <glossterm>system index</glossterm>
+            <glossdef>
+                <para>Cannot be deleted or modified as it is essential to
+                Directory Server operations.</para>
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="T">
+        <title>T</title>
+        <glossentry id="target">
+            <glossterm>target</glossterm>
+            <glossdef>
+                <para>In the context of access control, the target identifies
+                the directory information to which a particular ACI
+                applies.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="target-entry">
+            <glossterm>target entry</glossterm>
+            <glossdef>
+                <para>The entries within the scope of a CoS.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="TCP-IP">
+            <glossterm>TCP/IP</glossterm>
+            <glossdef>
+                <para>Transmission Control Protocol/Internet Protocol. The main
+                network protocol for the Internet and for enterprise (company)
+                networks.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="template-entry">
+            <glossterm>template entry</glossterm>
+            <glosssee otherterm="CoS-template-entry" />
+        </glossentry>
+        <glossentry id="time-date-format">
+            <glossterm>time/date format</glossterm>
+            <glossdef>
+                <para>Indicates the customary formatting for times and dates in
+                a specific region.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="TLS">
+            <glossterm>TLS</glossterm>
+            <glossdef>
+                <para>The new standard for secure socket layers; a public key
+                based protocol. Also 
+                <xref linkend="Transport-Layer-Security" />.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="topology">
+            <glossterm>topology</glossterm>
+            <glossdef>
+                <para>The way a directory tree is divided among physical
+                servers and how these servers link with one another.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="Transport-Layer-Security">
+            <glossterm>Transport Layer Security</glossterm>
+            <glosssee otherterm="TLS" />
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="U">
+        <title>U</title>
+        <glossentry id="uid">
+            <glossterm>uid</glossterm>
+            <glossdef>
+                <para>A unique number associated with each user on a Unix
+                system.</para>
+            </glossdef>
+        </glossentry>
+        <glossentry id="URL">
+            <glossterm>URL</glossterm>
+            <glossdef>
+                <para>Uniform Resource Locater. The addressing system used by
+                the server and the client to request documents. It is often
+                called a location. The format of a URL is 
+                <emphasis>protocol</emphasis>:// 
+                <emphasis>machine</emphasis>: 
+                <emphasis>port</emphasis>/ 
+                <emphasis>document</emphasis>. The port number is necessary
+                only on selected servers, and it is often assigned by the
+                server, freeing the user of having to place it in the
+                URL.</para>
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="V">
+        <title>V</title>
+        <glossentry id="virtual-list-view-index">
+            <glossterm>virtual list view index</glossterm>
+            <glossdef>
+                <para>Speeds up the display of entries in the Directory Server
+                Console. Virtual list view indexes can be created on any branch
+                point in the directory tree to improve display
+                performance.</para>
+                <glossseealso otherterm="browsing-index" />
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+    <glossdiv id="X">
+        <title>X</title>
+        <glossentry id="X.500-standard">
+            <glossterm>X.500 standard</glossterm>
+            <glossdef>
+                <para>The set of ISO/ITU-T documents outlining the recommended
+                information model, object classes and attributes used by
+                directory server implementation.</para>
+            </glossdef>
+        </glossentry>
+    </glossdiv>
+</glossary>

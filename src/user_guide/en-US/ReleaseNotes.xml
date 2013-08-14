@@ -1,0 +1,823 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
+[
+]>
+<preface id="ReleaseNotes">
+    <title>Release Information</title>
+    <para>&PROD; is part of &RHEL; &RVER;, so major features, known issues, and
+    bug fixes are covered in the &RHEL; release notes. This section is provided
+    as a convenient reference for significant issues that are in &PROD; &VER;.
+    The full list of known issues related to &PROD; is in the 
+    <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/6.3_Technical_Notes/authentication_issues.html">
+    &OS; 6.3 Technical Notes</ulink>.</para>
+    <section id="new-features">
+        <title>New Features in 6.3</title>
+        <formalpara>
+            <title>Automatic Group Membership for Users and Hosts</title>
+            <para>Most of the policies configured in &PROD; are based on group
+            membership, so managing group membership is critical as a part of
+            managing the policies for both users and hosts. 
+            <emphasis>Automembership</emphasis>allows administrators to set up
+            filters for new users and hosts so that they are assigned,
+            automatically, to the appropriate user groups and host groups.
+            Automembership, including examples, is covered in 
+            <xref linkend="automember" />.</para>
+        </formalpara>
+        <formalpara>
+            <title>Disabling User Private Groups</title>
+            <para>On &OS; systems, every time a user is created, a
+            corresponding, secret user group is automatically created with that
+            new user as its only member. This is a 
+            <emphasis>user private group</emphasis>. There may be certain users
+            or types of users which do not require a private group or the
+            environment may already have those GIDs assigned to NIS groups or
+            other system groups. In that case, user private group creation can
+            be disabled. See 
+            <xref linkend="user-private-groups" />.</para>
+        </formalpara>
+        <formalpara>
+            <title>Better Web UI Performance</title>
+            <para>A number of performance and usability changes have been made
+            in &IPA; 2.2, including improved session handling and adding
+            support for Services4Unix Proxy. Along with overall better
+            performance, these changes have introduced two new features for the
+            web UI: 
+            <itemizedlist>
+                <listitem>
+                    <para>Self-service management supported in Internet
+                    Explorer</para>
+                </listitem>
+                <listitem>
+                    <para>Form-based authentication for the web UI, in addition
+                    to Kerberos</para>
+                </listitem>
+            </itemizedlist></para>
+        </formalpara>
+        <formalpara>
+            <title>Enhanced DNS Resource Record Support</title>
+            <para>The way that &IPA; handles DNS resource records has been
+            improved to make it easier to create and edit records. The UI and
+            CLI tooling have both been enhanced to provide type-specific
+            options for common resource record types. For more information, see
+            
+            <xref linkend="managing-dnsrecord-entries" />.</para>
+        </formalpara>
+        <formalpara>
+            <title>SSH Key Management (Tech Preview)</title>
+            <para>OpenSSH uses 
+            <emphasis>public-private key pairs</emphasis>to authenticate hosts.
+            The machine then stores user and host public keys in a central
+            file, such as the 
+            <filename>known_hosts</filename>file. Clients can simple check that
+            central key file and then grant access automatically to approved
+            users and hosts. However, since all of those files are created
+            locally, it can be difficult to maintain host and user key files
+            across an entire enterprise. The System Security Services Daemon
+            (SSSD) can be configured to cache and retrieve SSH keys so that
+            applications and services only have to look in one location for
+            keys. Because SSSD can use &PROD; as one of its identity
+            information providers, &PROD; provides a universal and centralized
+            repository of keys. For more information, see 
+            <xref linkend="user-keys" />.</para>
+        </formalpara>
+    </section>
+    <section id="upgrade-notes">
+        <title>Upgrade Notes for &IPA; 2.2</title>
+        <itemizedlist>
+            <listitem>
+                <para>Upgrade procedures are covered in 
+                <xref linkend="upgrading" />.</para>
+            </listitem>
+            <listitem>
+                <para>Existing replicas and servers in a domain can use
+                different versions of &IPA;. However, when creating a new
+                replica, the new replica must be the same version as the master
+                server which it is being created from.</para>
+            </listitem>
+            <listitem>
+                <para>Because of UI session enhancements in &IPA; 2.2, it is no
+                longer necessary to enable ticket-granting ticket (TGT)
+                creation for browser sessions. For existing &IPA; servers, a
+                new 
+                <filename>configure.jar</filename>file can be created that no
+                longer enables TGT delegation as part of client browser
+                configuration. For existing &IPA; clients, TGT delegation can
+                be disabled again in the browser. This is covered in 
+                <xref linkend="ticket-delegation" />.</para>
+            </listitem>
+            <listitem>
+                <para>In &IPA; 2.1, it was possible to enable password-based
+                authentication by editing the 
+                <filename>ipa.conf</filename>file:</para>
+                <screen>vim /etc/httpd/conf.d/ipa.conf KrbMethodNegotiate off
+                KrbMethodK5Passwd on</screen>
+                <para>Because of the changes and enhancements to browser
+                authentication mechanisms, this 
+                <filename>ipa.conf</filename>file is updated as part of the
+                upgrade process, and any changes are overwritten.</para>
+                <para>Since &IPA; 2.2. supports form-based authentication
+                automatically, it is now possible to log in using a username
+                and password without having to modify the 
+                <filename>ipa.conf</filename>file. See 
+                <xref linkend="form-based-auth" />.</para>
+                <note>
+                    <title>NOTE</title>
+                    <para>Any time a file is replaced during upgrade, a backup
+                    is made. If other edits were made to the 
+                    <filename>ipa.conf</filename>file, the backup can be used
+                    to restore them.</para>
+                </note>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <section id="fixed-three">
+        <title>Fixed in 6.3</title>
+        <para>These issues have been resolved in &IPA; 2.2.</para>
+        <table id="tab.fixed-issues">
+            <title>Fixed Bugs in 6.3</title>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry>Bugzilla</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>
+                            <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=736074">
+                            Bugzilla 736074</ulink>
+                        </entry>
+                        <entry>In the directory, calling 
+                        <function>hash_create()</function>with an initial table
+                        size of 65536 corrupted memory. With the default
+                        parameters, the corruption could occur if the initial
+                        table size was larger than 1024.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=743680">
+                            Bugzilla 743680</ulink>
+                        </entry>
+                        <entry>
+                            <para>When &IPAA; server was installed with a
+                            custom hostname that was not resolvable, the 
+                            <command>ipa-server-install</command>command failed
+                            to add a record to the static hostname lookup table
+                            in 
+                            <filename>/etc/hosts</filename>, which prevented
+                            further configuration of Identity Management
+                            integrated services.</para>
+                            <para>The record is now properly added to 
+                            <filename>/etc/hosts</filename>when an IP address
+                            is passed as an CLI option and not
+                            interactively.</para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=751776">
+                            Bugzilla 751776</ulink>
+                        </entry>
+                        <entry>
+                            <para>If a zone entry contained an invalid record,
+                            the entire zone failed to load. None of the records
+                            in the DNS zone, including root records, were
+                            serviced.</para>
+                            <para>Now, the DNS zone loads and skips the invalid
+                            resource record. All of the other DNS resource
+                            entries are served, can be resolved, and respond to
+                            requests.</para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=754539">
+                            Bugzilla 754539</ulink>
+                        </entry>
+                        <entry>Once a connection between a replica and server
+                        was deleted using 
+                        <command>ipa-replica-manage del</command>, a new
+                        connection could not be created. It failed with this
+                        error: 
+                        <screen>unexpected error: list index out of
+                        range</screen></entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=759100">
+                            Bugzilla 759100</ulink>
+                        </entry>
+                        <entry>The &IPA; server could not be installed on a
+                        machine with a dual NIC. When two DNS A records existed
+                        for the same hostname, the installer failed with this
+                        error: 
+                        <screen>Server host name [server1.example.com]:
+                        Warning: skipping DNS resolution of host
+                        server1.example.com The domain name has been calculated
+                        based on the host name. Please confirm the domain name
+                        [example]: Unable to resolve IP address for host name
+                        Please provide the IP address to be used for this host
+                        name:</screen></entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
+    <section id="knownissues">
+        <title>Known Issues in 6.3</title>
+        <section>
+            <title>A Note on Internet Explorer Support on Windows</title>
+            <para>The enhancements for Services4Unix Proxy support have made
+            steps in adding support to use the &IPA; web UI on Internet
+            Explorer on Windows. However, this is still a nascent feature. 
+            <emphasis role="bold">In &IPA; 2.2, Internet Explorer can be used
+            for self-service management, such as resetting account details and
+            changing passwords.</emphasis></para>
+            <para>When using Internet Explorer to perform other tasks in the
+            &IPA; web UI, there can be issues with UI performance and layout or
+            some operations may not be possible.</para>
+            <para>These are some of the known issues specifically for Internet
+            Explorer and the web UI:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>While the browser window is not maximized or many
+                    users are logged into the WebUI, scrolling down a page to
+                    select a user may not work properly. As soon as the user's
+                    checkbox is selected, the scroll bar jumps back up without
+                    selecting the user. This error also occurs when a
+                    permission is added to a privilege. ( 
+                    <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=831299">
+                    Bugzilla 831299</ulink>)</para>
+                </listitem>
+                <listitem>
+                    <para>When attempting to edit a service, the edit page for
+                    that service may occasionally be blank, or show only labels
+                    for Principal or Service without showing their values. When
+                    adding a service, under certain conditions, the drop-down
+                    menu lists the available services and hosts but users are
+                    unable to select any of the entries. ( 
+                    <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=831227">
+                    Bugzilla 831227</ulink>)</para>
+                </listitem>
+                <listitem>
+                    <para>When adding a permission of type subtree, the text
+                    area to specify the subtree is too small and non-resizable
+                    making it difficult to enter long subtree entries. ( 
+                    <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=830817">
+                    Bugzilla 830817</ulink>)</para>
+                </listitem>
+                <listitem>
+                    <para>When adding a delegation, its attributes are
+                    separated by disproportionately large vertical spaces. ( 
+                    <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=829899">
+                    Bugzilla 829899</ulink>)</para>
+                </listitem>
+                <listitem>
+                    <para>When adding a member, the edge of the displayed
+                    window suggests it can be resized. However, resizing of the
+                    window does not work. When adding a sudo command to a sudo
+                    command group, the first group overlays with the column
+                    title. ( 
+                    <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=829746">
+                    Bugzilla 829746</ulink>)</para>
+                </listitem>
+                <listitem>
+                    <para>Adding a new DNS zone causes the window to be
+                    incorrectly rendered as text on the existing page. ( 
+                    <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=827583">
+                    Bugzilla 827583</ulink>)</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+        <section>
+            <title>List of Issues</title>
+            <table id="tab.known-issues">
+                <title>Known Issues in 6.3</title>
+                <tgroup cols="3">
+                    <thead>
+                        <row>
+                            <entry>Bugzilla</entry>
+                            <entry>Description</entry>
+                            <entry>Workaround</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>
+                                <emphasis role="bold">SELinux mapping is not
+                                working.</emphasis>
+                            </entry>
+                            <entry>The SELinux mapping feature was intended to
+                            be a tech preview feature in &RHEL; 6.3. This
+                            feature is disabled, pending further development.
+                            The SELinux mapping area in the web UI and the
+                            SELinux mapping-related tools are
+                            non-functional.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=724911">
+                                Bugzilla 724911</ulink>
+                            </entry>
+                            <entry>It is not possible to change the 
+                            <parameter>uidNumber</parameter>or 
+                            <parameter>gidNumber</parameter>of a user when
+                            using SSSD. SSSD caches the authentication
+                            information; when the user is deleted and re-added
+                            with a new 
+                            <parameter>uidNumber</parameter>number, then SSSD
+                            attempts to reuse the cached object for the new
+                            user, which fails wit this error: 
+                            <screen>Cache file [/tmp/krb5cc_1866400007_wPJrHJ]
+                            exists, but is owned by [1866400007] instead of
+                            [1866400008].</screen></entry>
+                            <entry>If the UID or GID number is ever changed for
+                            an account, then go to each local SSSD client and
+                            purge the cache. The SSSD cache purge tool is
+                            described in the 
+                            <citetitle>&OS; &OVER; &DPG;</citetitle>.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=726456">
+                                Bugzilla 726456</ulink>
+                            </entry>
+                            <entry>SSSD does not support the LDAP password
+                            expiration controls, so it does not support
+                            password expiration notifications or warnings. The
+                            &DSF; instance used by &PROD; does support these
+                            controls.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=741264">
+                                Bugzilla 741264</ulink>
+                            </entry>
+                            <entry>The way that &AD; performs referrals is
+                            different than the way that the OpenLDAP libraries
+                            (used by the &DSF; instance in &PROD;) perform
+                            referrals. Intermittently, &AD; may return a
+                            referral during an LDAP bind attempt that is denied
+                            by the OpenLDAP libraries. This can cause
+                            performance problems, information loss, or for SSSD
+                            to go offline.</entry>
+                            <entry>Set this parameter in 
+                            <filename>sssd.conf</filename>: 
+                            <screen>ldap_referrals = False</screen>This
+                            disables referral chasing in SSSD.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=741957">
+                                Bugzilla 741957</ulink>
+                            </entry>
+                            <entry>When updating the list of object classes for
+                            a user or group entry, it is possible to delete
+                            object classes which are required by &IPA;. The UI
+                            and CLI do not prevent the required object classes
+                            from being deleted, but adding a user or group
+                            after the change will fail with object class
+                            violations.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=742263">
+                                Bugzilla 742263</ulink>
+                            </entry>
+                            <entry>The previous and next buttons were not
+                            displayed in the UI if the number of entries
+                            returned is larger than the configured size
+                            limit.</entry>
+                            <entry>Increase the number of entries displayed in
+                            a search to a reasonable level. This is described
+                            in 
+                            <xref linkend="search-limits" />.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=743680">
+                                Bugzilla 743680</ulink>
+                            </entry>
+                            <entry>When &IPAA; server is installed with a
+                            custom hostname that is not resolvable, the 
+                            <command>ipa-server-install</command>command should
+                            add a record to the static hostname lookup table in
+                            
+                            <filename>/etc/hosts</filename>and enable further
+                            configuration of Identity Management integrated
+                            services. However, a record is not added to 
+                            <filename>/etc/hosts</filename>when an IP address
+                            is passed as an CLI option and not interactively.
+                            Consequently, &IPA; server installation fails
+                            because integrated services that are being
+                            configured expect the &IPA; server hostname to be
+                            resolvable.</entry>
+                            <entry>There are two ways to work around this
+                            issue: 
+                            <itemizedlist>
+                                <listitem>
+                                    <para>Run the 
+                                    <command>
+                                    ipa-server-install</command>without the 
+                                    <option>--ip-address</option>option and
+                                    pass the IP address interactively.</para>
+                                </listitem>
+                                <listitem>
+                                    <para>Add a record to 
+                                    <filename>/etc/hosts</filename>before the
+                                    installation is started. The record should
+                                    contain the Identity Management server IP
+                                    address and its full hostname (the 
+                                    <command>hosts(5)</command>man page
+                                    specifies the record format).</para>
+                                </listitem>
+                            </itemizedlist></entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=743945">
+                                Bugzilla 743945</ulink>
+                            </entry>
+                            <entry>Searches can be performed on attributes that
+                            are not displayed in the UI. This means that
+                            entries can be returned in a search that do not
+                            appear to match the given filter. This is
+                            especially common if the search information is very
+                            short, which increases the likelihood of a
+                            match.</entry>
+                            <entry>For more information on setting and changing
+                            attributes which are searched, see 
+                            <xref linkend="search-fields" />and 
+                            <xref linkend="search-fields-groups" />.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=745575">
+                                Bugzilla 745575</ulink>
+                            </entry>
+                            <entry>On the configuration page of the Identity
+                            Management web UI, if the 
+                            <guilabel>User</guilabel>search field is left
+                            blank, and the 
+                            <guibutton>search</guibutton>button is clicked, an
+                            internal error is returned.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                            <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=749357">
+                            Bugzilla 749357</ulink>and 
+                            <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=750596">
+                            Bugzilla 750596</ulink></entry>
+                            <entry>
+                                <para>The &IPA; information is stored in a
+                                separate LDAP directory than the certificate
+                                information, and these two LDAP databases are
+                                replicated separately. It is possible for a
+                                replication agreement to be broken for one
+                                directory and working for another, which can
+                                cause problems with managing clients.</para>
+                                <para>For example, &IPAA; server and replica
+                                have a function replication agreement between
+                                their &IPA; databases, but the replication
+                                agreement between their CA databases is broken.
+                                If a host is created on the server, the host
+                                entry is replicated over to the replica &mdash;
+                                but the certificate for that host is not
+                                replicated. The replica is aware of the client,
+                                but any management operations for that client
+                                will fail because the replica doesn't have a
+                                copy of its certificate.</para>
+                            </entry>
+                            <entry>The CA replication agreement can be
+                            recreated using the 
+                            <command>
+                            ipa-csreplica-manage</command>utility.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=751694">
+                                Bugzilla 751694</ulink>
+                            </entry>
+                            <entry>Installing the &IPA; client fails if the
+                            32-bit packages are installed on a 64-bit system
+                            because required NSS dependencies are not
+                            installed.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=752181">
+                                Bugzilla 752181</ulink>
+                            </entry>
+                            <entry>If any previous version of Red Hat
+                            Enterprise IPA or the &PROD; tech preview are
+                            installed, they must be uninstalled before the
+                            latest version of &PROD; can be installed and
+                            configured. Otherwise, there are problems
+                            connecting to the &PROD; LDAP server.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=754739">
+                                Bugzilla 754739</ulink>
+                            </entry>
+                            <entry>When a replica is uninstalled, the 
+                            <command>ipa-replica-manage list</command>command
+                            still lists the replica as being in the server
+                            topology.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=754973">
+                                Bugzilla 754973</ulink>
+                            </entry>
+                            <entry>
+                                <para>The 
+                                <command>ipa-replica-manage</command>script
+                                manages both replication agreements between
+                                &IPA; servers and synchronization agreements
+                                between &IPAA; server and an &AD;
+                                server.</para>
+                                <para>The 
+                                <option>force-sync</option>, 
+                                <option>del</option>, and 
+                                <option>re-initialize</option>subcommands with 
+                                <command>ipa-replica-manage</command>do not
+                                work when managing sync agreements, so these
+                                operations fail when run against an &AD;
+                                server.</para>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=755436">
+                                Bugzilla 755436</ulink>
+                            </entry>
+                            <entry>The 
+                            <parameter>uidNumber</parameter>and 
+                            <parameter>gidNumber</parameter>attributes on &AD;
+                            user entries are not synced over to &IPA;.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=783502">
+                                Bugzilla 783502</ulink>
+                            </entry>
+                            <entry>The Identity Management permission plug-in
+                            does not verify that the set of attributes
+                            specified for a new permission is relevant to the
+                            target object type that the permission allows
+                            access to. This means a user is able to create a
+                            permission which allows access to attributes that
+                            will never be present in the target object type
+                            because such attributes are not allowed in its
+                            object classes. You must ensure that the chosen set
+                            of attributes for which a new permission grants
+                            access to is relevant to the chosen target object
+                            type.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=785201">
+                                Bugzilla 785201</ulink>
+                            </entry>
+                            <entry>&AD; users synced to the &IPA; server are
+                            not added to the global 
+                            <command>ipausers</command>group.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=786629">
+                                Bugzilla 786629</ulink>
+                            </entry>
+                            <entry>Because a permission does not provide write
+                            access to an entry, delegation does not work as
+                            expected. 
+                            <para>The &DSF; distinguishes between access to
+                            entries and access to attributes. For example, an
+                            entry can be granted add or delete access, whereas
+                            an attribute can be granted read, search, and write
+                            access.</para></entry>
+                            <entry>
+                                <para>To grant write access to an entry, the
+                                list of writable attributes needs to be
+                                provided. The filter, subtree, and other
+                                options are used to target those entries which
+                                are writable. Attributes define which parts of
+                                those entries are writable. As a result, the
+                                list of attributes will be writable to members
+                                of the permission.</para>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=790513">
+                                Bugzilla 790513</ulink>
+                            </entry>
+                            <entry>The 
+                            <package>ipa-client</package>package does not
+                            install the 
+                            <package>policycoreutils</package>package as its
+                            dependency, which may cause install or uninstall
+                            issues when using the 
+                            <command>ipa-client-install</command>setup
+                            script.</entry>
+                            <entry>Install the 
+                            <package>policycoreutils</package>package manually:
+                            
+                            <screen>~]# yum install
+                            policycoreutils</screen></entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=794882">
+                                Bugzilla 794882</ulink>
+                            </entry>
+                            <entry>When adding members to netgroups, if a host
+                            that is not configured in &IPA; already, that host
+                            is considered to be an external host. This host can
+                            be controlled with netgroups, but the &IPA; domain
+                            has no knowledge of it. Currently, there is no way
+                            to use the 
+                            <command>netgroup-find</command>command to search
+                            for external hosts. 
+                            <para>When an external host is added to the
+                            netgroup coniguration, it is not automatically
+                            converted in the netgroup rule. 
+                            <!-- ?? --></para></entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=804605">
+                                Bugzilla 804605</ulink>
+                            </entry>
+                            <entry>&PROD; and the 
+                            <command>mod_ssl</command>module should not be
+                            installed on the same system. 
+                            <command>mod_ssl</command>holds the 
+                            <command>mod_proxy</command>hooks, which prevents
+                            &PROD; from issuing certificates.</entry>
+                            <entry>Uninstall 
+                            <command>mod_ssl</command>.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=813376">
+                                Bugzilla 813376</ulink>
+                            </entry>
+                            <entry>Updating the LDAP configuration when the
+                            system upgrades, which is done with the 
+                            <command>ipa-ldap-updater</command>utility, fails
+                            with a traceback error when executed by a non-root
+                            user. The SASL EXTERNAL bind attempt requires root
+                            privileges. To workaround this, update the LDAP
+                            configuration as root.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=812127">
+                                Bugzilla 812127</ulink>
+                            </entry>
+                            <entry>&IPA; relies on the LDAP schema to know what
+                            type of data to expect in a given attribute. If, in
+                            certain situations (such as replication), attribute
+                            values that do not meet those expectations are
+                            inserted for an attribute, IPA will not be able to
+                            handle the entry, and LDAP tools must be used to
+                            manually clean up that entry.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=812122">
+                                Bugzilla 812122</ulink>
+                            </entry>
+                            <entry>In &IPA;, 
+                            <command>sudo</command>commands are not case
+                            sensitive, but on the operating system, commands
+                            are treated as different if they are different
+                            cases. This can lead to conflicts in &IPA; 
+                            <command>sudo</command>policy. For example, when
+                            executing these two commands, the second command
+                            fails because &IPA; treats both commands the same. 
+                            <screen>~]$ ipa sudocmd-add /usr/bin/X ? ~]$ ipa
+                            sudocmd-add /usr/bin/x ipa: ERROR: sudo command
+                            with name "/usr/bin/x" already
+                            exists</screen></entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=817121">
+                                Bugzilla 817121</ulink>
+                            </entry>
+                            <entry>In some circumstances, deleting a DNS record
+                            entry in the web UI can leave the DNS zone entry
+                            visible in the UI. This is strictly a display
+                            issue; the underlying DNS data are correctly
+                            updated and the zone is deleted.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=817878">
+                                Bugzilla 817878</ulink>
+                            </entry>
+                            <entry>If an invalid value is given for the 
+                            <emphasis>Seconds Latitude</emphasis>field in the
+                            configuration for a DNS location (LOC) record, the
+                            server throws this error: 
+                            <screen>[Tue May 01 09:44:59 2012] [error] ipa:
+                            ERROR: non-public: InvalidOperation: quantize
+                            result has too many digits for current
+                            context</screen></entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=822350">
+                                Bugzilla 822350</ulink>
+                            </entry>
+                            <entry>When a user is migrated from an LDAP
+                            directory, the user's entry in the LDAP directory
+                            does not contain Kerberos credentials needed for a
+                            Kerberos login. When the user visits the password
+                            migration page, Kerberos credentials are generated
+                            for the user and logging in with Kerberos
+                            authentication works as expected. 
+                            <para>However, Identity Management does not
+                            generate the credentials correctly if the migrated
+                            password does not follow the password policy set on
+                            the Identity Management server. Consequently, when
+                            the password migration is done and a user tries to
+                            log in with Kerberos authentication, the user is
+                            prompted to change the password. However, the
+                            password change itself is unsuccessful, so the user
+                            is unable to log into Kerberos.</para></entry>
+                            <entry>An administrator can reset the password of a
+                            migrated user with the 
+                            <command>ipa passwd</command>command. When reset,
+                            the user's Kerberos credentials are properly
+                            generated.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=826731">
+                                Bugzilla 826731</ulink>
+                            </entry>
+                            <entry>If configuring the CA fails, the entire
+                            server installation fails, but the command output
+                            is unclear where or why the installation attempt
+                            failed. To troubleshoot installation failures,
+                            check the server installation log, 
+                            <filename>
+                            /var/log/ipaserver-install.log</filename>, and the
+                            CA installation log, 
+                            <filename>
+                            /var/log/pki-ca-install.log</filename>.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=826790">
+                                Bugzilla 826790</ulink>
+                            </entry>
+                            <entry>Disabling password expiration (--maxlife=0
+                            and --minlife=0) in the default 
+                            <command>global_policy</command>sets users'
+                            password expiration to 90 days.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=826973">
+                                Bugzilla 826973</ulink>
+                            </entry>
+                            <entry>When Identity Management is installed using
+                            an external CA to sign its CA certificate, the
+                            installation is processed in two steps. In the
+                            first step, a certificate request is generated to
+                            be signed by an external CA. The second step
+                            submits a file with the new signed certificate for
+                            the Identity Management CA and the certificate of
+                            the external CA. 
+                            <para>During the second step of the installation, a
+                            signed Identity Management CA certificate subject
+                            is validated. However, the certificate subject
+                            validation procedure does not pull the subject of
+                            the certificate. This means that the validation
+                            step fails, unless the subject name is manually
+                            supplied.</para></entry>
+                            <entry>When running the second step of the
+                            installation, use the 
+                            <option>--subject</option>option to give the
+                            subject nname of the certificate; by default, this
+                            is 
+                            <command>O=</command>
+                            <emphasis>REALM</emphasis>, and 
+                            <emphasis>REALM</emphasis>is the name of the new
+                            &IPA; Kerberos realm. If a custom subject was used
+                            for the first stage of the installation, use its
+                            value instead.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </section>
+    </section>
+</preface>

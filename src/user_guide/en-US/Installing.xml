@@ -1,0 +1,1616 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
+[
+]>
+<chapter id="installing-ipa">
+    <title>Installing &IPAA; Server</title>
+    <para>The &IPA; domain is defined and managed by &IPAA; 
+    <emphasis>server</emphasis>which is essentially a domain controller. There
+    can be multiple domain controllers within a domain for load-balancing and
+    failover tolerance. These additional servers are called 
+    <emphasis>replicas</emphasis>of the master &IPA; server.</para>
+    <para>Both &IPA; servers and replicas only run on &OS; systems. For both
+    servers and replicas, the necessary packages must be installed and then the
+    &IPA; server or replica itself is configured through setup scripts, which
+    configure all of the requisite services.</para>
+    <section id="Operating_System_Requirements" condition="redhat">
+        <title>Supported Server Platforms</title>
+        <para>&IPA; &VER; is supported on these platforms:</para>
+        <itemizedlist>
+            <listitem>
+                <para>&OS; &OVER; i386</para>
+            </listitem>
+            <listitem>
+                <para>&OS; &OVER; x86_64</para>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <section id="Preparing_for_an_IPA_Installation">
+        <title>Preparing to Install the &IPA; Server</title>
+        <para>Before you install &IPA;, ensure that the installation
+        environment is suitably configured. You also need to provide certain
+        information during the installation and configuration procedures,
+        including realm names and certain usernames and passwords. This section
+        describes the information that you need to provide.</para>
+        <section id="Preparing_for_an_IPA_Installation-Hardware_Requirements">
+            <title>Hardware Recommendations</title>
+            <para>A basic user entry is about 1 KB in size, as is a simple host
+            entry with a certificate. The most important hardware feature to
+            size properly is RAM. While all deployments are different,
+            depending on the number of users and groups and the type of data
+            stored, there is a rule of thumb to use to help determine how much
+            RAM to use:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>For 10,000 users and 100 groups, have at least 2GB of
+                    RAM and 1GB swap space.</para>
+                </listitem>
+                <listitem>
+                    <para>For 100,000 users and 50,000 groups, have at least
+                    16GB of RAM and 4GB of swap space.</para>
+                </listitem>
+            </itemizedlist>
+            <note>
+                <title>TIP</title>
+                <para>For larger deployments, it is more effective to increase
+                the RAM than to increase disk space because much of the data
+                are stored in cache.</para>
+            </note>
+            <para>The underlying &DS; instance used by the &IPA; server can be
+            tuned to increase performance. For tuning information, see the &DS;
+            documentation at 
+            <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Directory_Server/8.2/html/Performance_Tuning_Guide/system-tuning.html" />.</para>
+        </section>
+        <section id="Preparing_for_an_IPA_Installation-Software_Requirements">
+            <title>Software Requirements</title>
+            <para>Most of the packages that &IPAA; server depends on are
+            installed as dependencies when the &IPA; packages are installed.
+            There are some packages, however, which are required before
+            installing the &IPA; packages:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Kerberos 1.10</para>
+                </listitem>
+                <listitem>
+                    <para>The 
+                    <package>named</package>and 
+                    <package>bind-dyndb-ldap</package>packages for DNS</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+        <section id="supported-browsers">
+            <title>Supported Web Browsers</title>
+            <para>The only supported browser to access the &IPA; web UI is
+            Firefox 3.x or 4.x.</para>
+        </section>
+        <section id="prerequisites">
+            <title>System Prerequisites</title>
+            <para>The &IPA; server is set up using a configuration script, and
+            this script makes certain assumption about the host system. If the
+            system does not meet these prerequisites, then server configuration
+            may fail.</para>
+            <section id="hostname-requirements">
+                <title>Hostname and IP Address Requirements</title>
+                <para>Regardless of whether the DNS is within the &IPA; server
+                or external, the server host must have DNS properly
+                configured:</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>The hostname must be a fully-qualified domain
+                        name. For example, 
+                        <systemitem class="fqdomainname">
+                        ipaserver.example.com</systemitem>.</para>
+                        <important>
+                            <title>IMPORTANT</title>
+                            <para>This must be a valid DNS name, which means
+                            only numbers, alphabetic characters, and hyphens
+                            (-) are allowed. Other characters, like
+                            underscores, in the hostname will cause DNS
+                            failures.</para>
+                        </important>
+                    </listitem>
+                    <listitem>
+                        <para>The hostname must be all lower-case.</para>
+                    </listitem>
+                    <listitem>
+                        <para>The server's A record must be set and resolve to
+                        its public IP address.</para>
+                        <para>The fully-qualified domain name cannot resolve to
+                        the loopback address. It must resolve to the machine's
+                        public IP address, not to 
+                        <systemitem class="ipaddress">127.0.0.1</systemitem>.
+                        The output of the 
+                        <command>hostname</command>command cannot be 
+                        <systemitem class="systemname">localhost</systemitem>or
+                        
+                        <systemitem class="systemname">
+                        localhost6</systemitem>.</para>
+                    </listitem>
+                    <listitem>
+                        <para>The server's hostname and IP address must be in
+                        its own 
+                        <filename>/etc/hosts</filename>file.</para>
+                    </listitem>
+                    <listitem>
+                        <para>It is recommended that a separate DNS domain be
+                        allocated for the &IPA; server. While not required
+                        (clients from other domains can still be enrolled in
+                        the &IPA; domain), this is a convenience for overall
+                        DNS management.</para>
+                    </listitem>
+                </itemizedlist>
+                <note>
+                    <title>TIP</title>
+                    <para>If the &IPA; server is configured to host its own DNS
+                    server, any previous existing DNS ignored. A records and
+                    PTR records do not need to match for the &IPA; server
+                    machine, and the machine can have any configured IP
+                    address.</para>
+                </note>
+            </section>
+            <section id="prereq-ds">
+                <title>&DS;</title>
+                <para>There must not be any instances of &DSF; installed on the
+                host machine.</para>
+            </section>
+            <section id="prereq-system">
+                <title>System Files</title>
+                <para>The server script overwrites system files to set up the
+                &IPA; domain. The system should be clean, without custom
+                configuration for services like DNS and Kerberos, before
+                configuring the &IPA; server.</para>
+            </section>
+            <section id="prereq-ports">
+                <title>System Ports</title>
+                <para>&IPA; uses a number of ports to communicate with its
+                services. These ports, listed in 
+                <xref linkend="tab.ipa-ports" />, must be open and available
+                for &IPA; to work. They cannot be in use by another service or
+                blocked by a firewall. To make sure that these ports are
+                available, try 
+                <command>iptables</command>to list the available ports or 
+                <command>nc</command>, 
+                <command>telnet</command>, or 
+                <command>nmap</command>to connect to a port or run a port
+                scan.</para>
+                <para>To open a port:</para>
+                <screen>[root@server ~]# iptables -A INPUT -p tcp --dport 389
+                -j ACCEPT</screen>
+                <para>The 
+                <command>iptables</command>man page has more information on
+                opening and closing ports on a system.</para>
+                <table id="tab.ipa-ports">
+                    <title>&IPA; Ports</title>
+                    <tgroup cols="3">
+                        <thead>
+                            <row>
+                                <entry>Service</entry>
+                                <entry>Ports</entry>
+                                <entry>Type</entry>
+                            </row>
+                        </thead>
+                        <tbody>
+                            <row>
+                                <entry>HTTP/HTTPS</entry>
+                                <entry>
+                                    <simplelist>
+                                        <member>80</member>
+                                        <member>443</member>
+                                    </simplelist>
+                                </entry>
+                                <entry>TCP</entry>
+                            </row>
+                            <row>
+                                <entry>LDAP/LDAPS</entry>
+                                <entry>
+                                    <simplelist>
+                                        <member>389</member>
+                                        <member>636</member>
+                                    </simplelist>
+                                </entry>
+                                <entry>TCP</entry>
+                            </row>
+                            <row>
+                                <entry>Kerberos</entry>
+                                <entry>
+                                    <simplelist>
+                                        <member>88</member>
+                                        <member>464</member>
+                                    </simplelist>
+                                </entry>
+                                <entry>TCP and UDP</entry>
+                            </row>
+                            <row>
+                                <entry>DNS</entry>
+                                <entry>53</entry>
+                                <entry>TCP and UDP</entry>
+                            </row>
+                            <row>
+                                <entry>NTP</entry>
+                                <entry>123</entry>
+                                <entry>UDP</entry>
+                            </row>
+                            <row>
+                                <entry>&FCRTS; - LDAP</entry>
+                                <entry>7389</entry>
+                                <entry>TCP</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </table>
+            </section>
+            <section id="prereq-ntp">
+                <title>NTP</title>
+                <para>If a server is being installed on a virtual machine, that
+                server 
+                <emphasis>should not</emphasis>run an NTP server. To disable
+                NTP for &IPA;, use the 
+                <option>--no-ntp</option>option.</para>
+            </section>
+            <section id="NSCD">
+                <title>NSCD</title>
+                <para>
+                <emphasis>It is strongly recommended</emphasis>that you avoid
+                or restrict the use of 
+                <systemitem class="daemon">nscd</systemitem>in &IPAA;
+                deployment. The 
+                <systemitem class="daemon">nscd</systemitem>service is
+                extremely useful for reducing the load on the server, and for
+                making clients more responsive, but there can be problems when
+                a system is also using SSSD, which performs its own
+                caching.</para>
+                <para>
+                <systemitem class="daemon">nscd</systemitem>caches
+                authentication and identity information for all services that
+                perform queries through nsswitch, including 
+                <command>getent</command>. Because 
+                <systemitem class="daemon">nscd</systemitem>performs both
+                positive and negative caching, if a request determines that a
+                specific &IPA; user does not exist, it marks this as a negative
+                cache. Values stored in the cache remain until the cache
+                expires, regardless of any changes that may occur on the
+                server. The results of such caching is that new users and
+                memberships may not be visible, and users and memberships that
+                have been removed may still be visible.</para>
+                <para>Avoid clashes with SSSD caches and to prevent locking out
+                users, avoid using 
+                <systemitem class="daemon">nscd</systemitem>altogether.
+                Alternatively, use a shorter cache time by resetting the
+                time-to-live caching values in the 
+                <filename>/etc/nscd.conf</filename>file:</para>
+                <programlisting>positive-time-to-live group 3600
+                negative-time-to-live group 60 positive-time-to-live hosts 3600
+                negative-time-to-live hosts 20</programlisting>
+            </section>
+        </section>
+        <section id="Preparing_for_an_IPA_Installation-Configuring_Networking">
+            <title>Networking</title>
+            <section id="Configuring_Networking-Configuring_Networking_Services">
+
+                <title>Configuring Networking Services</title>
+                <para>The default networking service used by &OS; is
+                NetworkManager, and due to the way this service works, it can
+                cause problems with &IPA; and the KDC. Consequently, it is
+                highly recommended that you use the 
+                <systemitem>network</systemitem>service to manage the
+                networking requirements in &IPAA; environment and disable the
+                NetworkManager service.</para>
+                <orderedlist>
+                    <listitem>
+                        <para>Boot the machine into single-user mode and run
+                        the following commands:</para>
+                        <programlisting language="Bash">[root@server ~]#
+                        chkconfig NetworkManager off; service NetworkManager
+                        stop</programlisting>
+                    </listitem>
+                    <listitem>
+                        <para>If 
+                        <systemitem class="service">
+                        NetworkManagerDispatcher</systemitem>is installed,
+                        ensure that it is stopped and disabled:</para>
+                        <programlisting language="Bash">[root@server ~]#
+                        chkconfig NetworkManagerDispatcher off; service
+                        NetworkManagerDispatcher stop</programlisting>
+                    </listitem>
+                    <listitem>
+                        <para>Then, make sure that the 
+                        <systemitem>network</systemitem>service is properly
+                        started. 
+                        <programlisting language="Bash">[root@server ~]#
+                        chkconfig network on; service network
+                        start</programlisting></para>
+                    </listitem>
+                    <listitem>
+                        <para>Ensure that static networking is correctly
+                        configured.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Restart the system.</para>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="Configuring_Networking-Configuring_the_etchosts_File">
+                <title>Configuring the /etc/hosts File</title>
+                <para>You need to ensure that your 
+                <filename>/etc/hosts</filename>file is configured correctly. A
+                misconfigured file can prevent the &IPA; command-line tools
+                from functioning correctly and can prevent the &IPA; web
+                interface from connecting to the &IPA; server.</para>
+                <para>Configure the 
+                <filename>/etc/hosts</filename>file to list the FQDN for the
+                &IPA; server 
+                <emphasis>before</emphasis>any aliases. Also ensure that the
+                hostname is not part of the 
+                <literal>localhost</literal>entry. The following is an example
+                of a valid hosts file:</para>
+                <programlisting>127.0.0.1 localhost.localdomain localhost ::1
+                localhost6.localdomain6 localhost6 192.168.1.1
+                ipaserver.example.com ipaserver</programlisting>
+                <important>
+                    <para>Do not omit the 
+                    <systemitem class="protocol">IPv4</systemitem>entry in the 
+                    <filename>/etc/hosts</filename>file. This entry is required
+                    by the &IPA; web service.</para>
+                </important>
+            </section>
+        </section>
+    </section>
+    <section id="Installing_the_IPA_Server_Packages">
+        <title>Installing the &IPA; Server Packages</title>
+        <para>Installing only the &IPA; server requires a single package, 
+        <filename condition="redhat">ipa-server</filename>
+        <filename condition="fedora">freeipa-server</filename>. If the &IPA;
+        server will also manage a DNS server, then it requires two additional
+        packages to set up the DNS.</para>
+        <para>All of these packages can be installed using the 
+        <command>yum</command>command:</para>
+        <programlisting language="Bash" condition="fedora">[root@server ~]# yum
+        install freeipa-server bind bind-dyndb-ldap</programlisting>
+        <programlisting language="Bash" condition="redhat">[root@server ~]# yum
+        install ipa-server bind bind-dyndb-ldap</programlisting>
+        <para>Installing the 
+        <filename condition="redhat">ipa-server</filename>
+        <filename condition="fedora">freeipa-server</filename>also installs a
+        large number of dependencies, such as 
+        <package>389-ds-base</package>for the LDAP service and 
+        <package>krb5-server</package>for the Kerberos service, along with
+        &IPA; tools.</para>
+        <para>After the packages are installed, the server instance must be
+        created using the 
+        <command>ipa-server-install</command>command. The options for
+        configuring the new server instance are described in 
+        <xref linkend="creating-server" />.</para>
+    </section>
+    <section id="creating-server">
+        <title>Creating &IPAA; Server Instance</title>
+        <para>The &IPA; setup script creates a server instance, which includes
+        configuring all of the required services for the &IPA; domain:</para>
+        <itemizedlist>
+            <listitem>
+                <para>The network time daemon (ntpd)</para>
+            </listitem>
+            <listitem>
+                <para>A &DSF; instance</para>
+            </listitem>
+            <listitem>
+                <para>A Kerberos key distribution center (KDC)</para>
+            </listitem>
+            <listitem>
+                <para>Apache (httpd)</para>
+            </listitem>
+            <listitem>
+                <para>An updated SELinux targeted policy</para>
+            </listitem>
+            <listitem>
+                <para>The Active Directory WinSync plug-in</para>
+            </listitem>
+            <listitem>
+                <para>A certificate authority</para>
+            </listitem>
+            <listitem>
+                <para>
+                <emphasis>Optional.</emphasis>A domain name service (DNS)
+                server</para>
+            </listitem>
+        </itemizedlist>
+        <para>The &IPA; setup process can be minimal, where the administrator
+        only supplies some required information, or it can be very specific,
+        with user-defined settings for many parts of the &IPA; services. The
+        configuration is passed using arguments with the 
+        <command>ipa-server-install</command>script.</para>
+        <note>
+            <title>NOTE</title>
+            <para>The port numbers and directory locations used by &IPA; are
+            all defined automatically, as defined in 
+            <xref linkend="prereq-ports" />and 
+            <xref linkend="ipa-files" />. These ports and directories 
+            <emphasis>cannot</emphasis>be changed or customized.</para>
+        </note>
+        <section id="install-command">
+            <title>About ipa-server-install</title>
+            <para>&IPAB; server instance is created by running the 
+            <command>ipa-server-install</command>script. This script can accept
+            user-defined settings for services, like DNS and Kerberos, that are
+            used by the &IPA; instance, or it can supply predefined values for
+            minimal input from the administrator.</para>
+            <para>While 
+            <command>ipa-server-install</command>can be run without any
+            options, so that it prompts for the required information, it has
+            numerous arguments which allow the configuration process to be
+            easily scripted or to supply additional information which is not
+            requested during an interactive installation.</para>
+            <para>
+            <xref linkend="tab.ipa-server-install-param" />lists some common
+            arguments with 
+            <command>ipa-server-install</command>, while 
+            <xref linkend="install-examples" />has examples of some common
+            installation scenarios. The full list of options are in the 
+            <command>ipa-server-install</command>manpage. In real life, the 
+            <command>ipa-server-install</command>options are versatile enough
+            to be customized to the specific deployment environment.</para>
+            <table id="tab.ipa-server-install-param">
+                <title>ipa-server-install Options</title>
+                <tgroup cols="2">
+                    <thead>
+                        <row>
+                            <entry>Argument</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>-a 
+                            <emphasis>ipa_admin_password</emphasis></entry>
+                            <entry>The password for the &IPA; administrator.
+                            This is used for the admin user to authenticate to
+                            the Kerberos realm.</entry>
+                        </row>
+                        <row>
+                            <entry>--hostname= 
+                            <emphasis>hostname</emphasis></entry>
+                            <entry>The fully-qualified domain name of the &IPA;
+                            server machine. 
+                            <important>
+                                <title>IMPORTANT</title>
+                                <para>This must be a valid DNS name, which
+                                means only numbers, alphabetic characters, and
+                                hyphens (-) are allowed. Other characters, like
+                                underscores, in the hostname will cause DNS
+                                failures.</para>
+                                <para>Additionally, the hostname must all be
+                                lower-case. No capital letters are
+                                allowed.</para>
+                            </important></entry>
+                        </row>
+                        <row>
+                            <entry>-n 
+                            <emphasis>domain_name</emphasis></entry>
+                            <entry>The name of the LDAP server domain to use
+                            for the &IPA; domain. This is usually based on the
+                            &IPA; server's hostname.</entry>
+                        </row>
+                        <row>
+                            <entry>-p 
+                            <emphasis>
+                            directory_manager_password</emphasis></entry>
+                            <entry>The password for the superuser, 
+                            <command>cn=Directory Manager</command>, for the
+                            LDAP service.</entry>
+                        </row>
+                        <row>
+                            <entry>-r 
+                            <emphasis>realm_name</emphasis></entry>
+                            <entry>The name of the Kerberos realm to create for
+                            the &IPA; domain.</entry>
+                        </row>
+                        <row>
+                            <entry>--subject= 
+                            <emphasis>subject_DN</emphasis></entry>
+                            <entry>Sets the base element for the subject DN of
+                            the issued certificates. This defaults to 
+                            <command>O=</command>
+                            <emphasis>realm</emphasis>.</entry>
+                        </row>
+                        <row>
+                            <entry>--forwarder= 
+                            <emphasis>forwarder</emphasis></entry>
+                            <entry>Gives a DNS forwarder to use with the DNS
+                            service. To specify more than one forwarder, use
+                            this option multiple times.</entry>
+                        </row>
+                        <row>
+                            <entry>--no-forwarders</entry>
+                            <entry>Uses root servers with the DNS service
+                            instead of forwarders.</entry>
+                        </row>
+                        <row>
+                            <entry>--no-reverse</entry>
+                            <entry>Does 
+                            <emphasis>not</emphasis>create a reverse DNS zone
+                            when the DNS domain is set up. (If a reverse DNS
+                            zone is already configured, then that existing
+                            reverse DNS zone is used.) If this option is not
+                            used, then the default value is true, which assumes
+                            that reverse DNS should be configured by the
+                            installation script.</entry>
+                        </row>
+                        <row>
+                            <entry>--setup-dns</entry>
+                            <entry>Tells the installation script to set up a
+                            DNS service within the &IPA; domain. Using an
+                            integrated DNS service is optional, so if this
+                            option is not passed with the installation script,
+                            then no DNS is configured.</entry>
+                        </row>
+                        <row>
+                            <entry>--idmax= 
+                            <emphasis>number</emphasis></entry>
+                            <entry>Sets the upper bound for IDs which can be
+                            assigned by the &IPA; server. The default value is
+                            the ID start value plus 199999.</entry>
+                        </row>
+                        <row>
+                            <entry>--idstart= 
+                            <emphasis>number</emphasis></entry>
+                            <entry>Sets the lower bound (starting value) for
+                            IDs which can be assigned by the &IPA; server. The
+                            default value is randomly selected.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </section>
+        <section id="install-interactive">
+            <title>Setting up &IPAA; Server: Basic Interactive
+            Installation</title>
+            <para>All that is required to set up &IPAA; server is to run the 
+            <command>ipa-server-install</command>script. This launches the
+            script interactively, which prompts for the required information to
+            set up a server, but without more advanced configuration like DNS
+            and CA options.</para>
+            <orderedlist>
+                <listitem>
+                    <para>Run the 
+                    <command>ipa-server-install</command>script.</para>
+                    <programlisting language="Bash">[root@server ~]#
+                    ipa-server-install</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Enter the hostname. This is determined automatically
+                    using reverse DNS.</para>
+                    <programlisting language="Bash">Server host name
+                    [ipaserver.example.com]:</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Enter the domain name. This is determined
+                    automatically based on the hostname.</para>
+                    <programlisting language="Bash">Please confirm the domain
+                    name [example.com]:</programlisting>
+                </listitem>
+                <listitem>
+                    <para>The script then reprints the hostname, IP address,
+                    and domain name.</para>
+                    <programlisting language="Bash">The IPA Master Server will
+                    be configured with Hostname: ipaserver.example.com IP
+                    address: 192.168.1.1 Domain name:
+                    example.com</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Enter the new Kerberos realm name. This is usually
+                    based on the domain name.</para>
+                    <programlisting language="Bash">Please provide a realm name
+                    [EXAMPLE.COM]:</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Enter the password for the &DS; superuser, 
+                    <command>cn=Directory Manager</command>. There are password
+                    strength requirements for this password, including a
+                    minimum password length.</para>
+                    <programlisting language="Bash">Directory Manager password:
+                    Password (confirm):</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Enter the password for the &IPA; system user account,
+                    
+                    <command>admin</command>. This user is created on the
+                    machine.</para>
+                    <programlisting language="Bash">IPA admin password:
+                    Password (confirm):</programlisting>
+                </listitem>
+                <listitem>
+                    <para>After that, the script configures all of the
+                    associated services for &IPA;, with task counts and
+                    progress bars.</para>
+                    <programlisting language="Bash">Configuring ntpd [1/4]:
+                    stopping ntpd ... done configuring ntpd. Configuring
+                    directory server for the CA: Estimated time 30 seconds
+                    [1/3]: creating directory server user ... done configuring
+                    pkids. Configuring certificate server: Estimated time 6
+                    minutes [1/17]: creating certificate server user .... done
+                    configuring pki-cad. Configuring directory server:
+                    Estimated time 1 minute [1/32]: creating directory server
+                    user ... done configuring dirsrv. Configuring Kerberos KDC:
+                    Estimated time 30 seconds [1/14]: setting KDC account
+                    password ... done configuring krb5kdc. Configuring kadmin
+                    [1/2]: starting kadmin [2/2]: configuring kadmin to start
+                    on boot done configuring kadmin. Configuring the web
+                    interface: Estimated time 1 minute [1/12]: disabling
+                    mod_ssl in httpd ... done configuring httpd. Setting the
+                    certificate subject base restarting certificate server
+                    Applying LDAP updates Restarting the directory server
+                    Restarting the KDC Restarting the web server Sample zone
+                    file for bind has been created in
+                    /tmp/sample.zone.ygzij5.db
+                    ==============================================================================
+                    Setup complete</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Restart the 
+                    <systemitem class="service">SSH</systemitem>service to
+                    retrieve the Kerberos principal and to refresh the name
+                    server switch (NSS) configuration file: 
+                    <programlisting language="Bash">[root@server ~]# service
+                    sshd restart</programlisting></para>
+                </listitem>
+                <listitem>
+                    <para>Authenticate to the Kerberos realm using the admin
+                    user's credentials to ensure that the user is properly
+                    configured and the Kerberos realm is accessible.</para>
+                    <programlisting language="Bash">[root@server ~]# kinit
+                    admin Password for admin@EXAMPLE.COM:</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Test the &IPA; configuration by running a command
+                    like 
+                    <command>ipa user-find</command>. For example:</para>
+                    <programlisting language="Bash">[root@server ~]# ipa
+                    user-find admin -------------- 1 user matched
+                    -------------- User login: admin Last name: Administrator
+                    Home directory: /home/admin Login shell: /bin/bash Account
+                    disabled: False Member of groups: admins
+                    ---------------------------- Number of entries returned 1
+                    ----------------------------</programlisting>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="install-examples">
+            <title>Examples of Creating the &IPA; Server</title>
+            <para>The way that &IPAA; server is installed can be different
+            depending on the network environment, security requirements within
+            the organization, and the desired topology. These example
+            illustrate some common options when installing the server. These
+            examples are not mutually exclusive; it is entirely possible to use
+            CA options, DNS options, and &IPA; configuration options in the
+            same server invocation. These are called out separately simply to
+            make it more clear what each configuration area requires.</para>
+            <section id="install-normal">
+                <title>Non-Interactive Basic Installation</title>
+                <para>As shown in 
+                <xref linkend="install-interactive" />, only a few pieces of
+                information are required to configured &IPAA; server. While the
+                setup script can prompt for this information in interactive
+                mode, this information can also be passed with the setup
+                command to allow automated and unattended configuration:</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Passwords for the &IPA; administrative user and
+                        the &DS; super user (Directory Manager)</para>
+                    </listitem>
+                    <listitem>
+                        <para>The server hostname</para>
+                    </listitem>
+                    <listitem>
+                        <para>The Kerberos realm name</para>
+                    </listitem>
+                    <listitem>
+                        <para>The DNS domain name</para>
+                    </listitem>
+                </itemizedlist>
+                <para>This information can be passed with the 
+                <command>ipa-server-install</command>, along with the 
+                <option>-U</option>to force it to run without requiring user
+                interaction.</para>
+                <example id="ex.basic-opts">
+                    <title>Basic Installation without Interaction</title>
+                    <programlisting language="Bash">[root@server ~]#
+                    ipa-server-install -a secret12
+                    --hostname=ipaserver.example.com -r EXAMPLE.COM -p secret12
+                    -n example.com -U</programlisting>
+                    <para>The script then prints the submitted values:</para>
+                    <programlisting>To accept the default shown in brackets,
+                    press the Enter key. The IPA Master Server will be
+                    configured with Hostname: ipaserver.example.com IP address:
+                    192.168.1.1 Domain name: example.com</programlisting>
+                    <para>The server name must be a valid DNS name, which means
+                    only numbers, alphabetic characters, and hyphens (-) are
+                    allowed. Other characters, like underscores, in the
+                    hostname will cause DNS failures. Additionally, the
+                    hostname must all be lower-case. No capital letters are
+                    allowed.</para>
+                    <para>Then the script runs through the configuration
+                    progress for each &IPA; service, as in 
+                    <xref linkend="install-interactive" />.</para>
+                </example>
+            </section>
+            <section id="install-ca-options">
+                <title>Using Different CA Configurations</title>
+                <para>&PROD; uses an integrated certificate authority (CA) to
+                create the certificates and keytabs used by users and hosts
+                within the domain. There are three different ways that &IPA;
+                incorporates the CA into the &IPA; server:</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>The installation script installs a root &FCRTS;
+                        CA. The &FCRTS; CA provides the full range of
+                        certificate services, based on policies that are
+                        defined in the &FCRTS; configuration.</para>
+                        <para>This is the default configuration.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Alternatively, the installation script can set up
+                        a &FCRTS; CA that is 
+                        <emphasis>subordinate</emphasis>to an external CA. A
+                        subordinate CA is chained to another CA, and it uses
+                        the policies and restrictions defined by that external
+                        CA. The root CA can be an external CA like Verisign or
+                        a corporate CA.</para>
+                        <para>A &FCRTS; CA is still installed and configured as
+                        part of the &IPA; server installation, but its CA
+                        certificates are issued by the external CA rather than
+                        by itself.</para>
+                    </listitem>
+                    <!-- removing self-signed
+                    <listitem>
+                        <para>
+                            The &IPA; server can use self-signed certificates without installing a CA. This is 
+                    done by using the <option>- -selfsign</option> option. When the &IPA; server uses a self-signed certificate, the setup process
+                    is exactly the same as a normal installation, except that no &FCRTS; instance is created. There is still a <filename>cacert.p12</filename> file created that can be 
+                    used by replicas, but the certificate services that the &IPA; server can perform are much more limited.
+                        </para>
+                    </listitem>
+                    -->
+                </itemizedlist>
+                <!--
+                removing self signed
+                <example id="ex.selfsigned"><title>Using a Self-Signed Certificate</title>
+<programlisting language="Bash"># ipa-server-install -a secret12 - -hostname=ipaserver.example.com -r EXAMPLE.COM -p secret12 -n example.com -U - -selfsign</programlisting>
+                </example>
+                <note><title>NOTE</title>
+                    <para>
+                        A self-signed certificate should only be used for a testing or development environment.
+                    </para>
+                </note>
+                -->
+                <para>The &IPA; server can use a certificate issued by an
+                external CA. This can be a corporate CA or a third-party CA
+                like Verisign or Thawte. As with a normal setup process, using
+                an external CA still uses a &FCRTS; instance for the &IPA;
+                server for issuing all of its client and replica certificates;
+                the initial CA certificate is simply issued by a different
+                CA.</para>
+                <para>When using an external CA, there are two additional steps
+                that must be performed: submit the generated certificate
+                request to the external CA and then load the CA certificate and
+                issued server certificate to complete the setup.</para>
+                <example id="ex.externalca">
+                    <title>Using an External CA</title>
+                    <orderedlist>
+                        <listitem>
+                            <para>Run the 
+                            <command>ipa-server-install</command>script, using
+                            the 
+                            <option>--external-ca</option>option.</para>
+                            <programlisting language="Bash">[root@server ~]#
+                            ipa-server-install -a secret12 -r EXAMPLE.COM -P
+                            password -p secret12 -n ipaserver.example.com
+                            --external-ca</programlisting>
+                        </listitem>
+                        <listitem>
+                            <para>The script sets up the NTP and &DS; services
+                            as normal.</para>
+                        </listitem>
+                        <listitem>
+                            <para>The script completes the CA setup and returns
+                            information about where the certificate signing
+                            request (CSR) is located, 
+                            <filename>/root/ipa.csr</filename>. This request
+                            must be submitted to the external CA.</para>
+                            <programlisting language="Bash">Configuring
+                            certificate server: Estimated time 6 minutes [1/4]:
+                            creating certificate server user [2/4]: creating
+                            pki-ca instance [3/4]: restarting certificate
+                            server [4/4]: configuring certificate server
+                            instance The next step is to get /root/ipa.csr
+                            signed by your CA and re-run
+                            ipa-server-install.</programlisting>
+                        </listitem>
+                        <listitem>
+                            <para>Submit the request to the CA. The process
+                            differs for every service.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Retrieve the issued certificate and the CA
+                            certificate chain for the issuing CA. Again, the
+                            process differs for every certificate service, but
+                            there is usually a download link on a web page or
+                            in the notification email that allows
+                            administrators to download all the required
+                            certificates. Be sure to get the full certificate
+                            chain for the CA, not just the CA
+                            certificate.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Rerun 
+                            <command>ipa-server-install</command>, specifying
+                            the locations and names of the certificate and CA
+                            chain files. For example:</para>
+                            <programlisting language="Bash">[root@server ~]#
+                            ipa-server-install
+                            --external_cert_file=/tmp/servercert20110601.p12
+                            --external_ca_file=/tmp/cacert.p12</programlisting>
+                        </listitem>
+                        <listitem>
+                            <para>Complete the setup process and verify that
+                            everything is working as expected, as in 
+                            <xref linkend="install-interactive" />.</para>
+                        </listitem>
+                    </orderedlist>
+                </example>
+            </section>
+            <section id="install-dns">
+                <title>Using DNS</title>
+                <para>&IPA; can be configured to manage its own DNS, use an
+                existing DNS, or not use DNS services at all (which is the
+                default). Running the setup script alone does not configure
+                DNS; this requires the 
+                <option>--setup-dns</option>option.</para>
+                <para>As with a basic setup, the DNS setup can either prompt
+                for the required information or the DNS information can be
+                passed with the script to allow an automatic or unattended
+                setup process.</para>
+                <example id="ex.dns-w-prompts">
+                    <title>Interactive DNS Setup</title>
+                    <orderedlist>
+                        <listitem>
+                            <para>Run the 
+                            <command>ipa-server-install</command>script, using
+                            the 
+                            <option>--setup-dns</option>option.</para>
+                            <programlisting language="Bash">[root@server ~]#
+                            ipa-server-install -a secret12 -r EXAMPLE.COM -P
+                            password -p secret12 -n ipaserver.example.com
+                            --setup-dns</programlisting>
+                        </listitem>
+                        <listitem>
+                            <para>The script configures the hostname and domain
+                            name as normal.</para>
+                        </listitem>
+                        <listitem>
+                            <para>The script then prompts for DNS forwarders.
+                            If forwarders will be used, enter yes, and then
+                            supply the list of DNS servers. If &IPA; will
+                            manage its own DNS service, then enter no.</para>
+                            <programlisting language="Bash">Do you want to
+                            configure DNS forwarders? [yes]: no No DNS
+                            forwarders configured</programlisting>
+                        </listitem>
+                        <listitem>
+                            <para>The script sets up the NTP, &DS;, &CRTS;,
+                            Kerberos, and Apache services.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Before completing the configuration, the
+                            script prompts to ask whether it should configure
+                            reverse DNS services. If you select yes, then it
+                            configures the 
+                            <systemitem>named</systemitem>service.</para>
+                            <programlisting language="Bash">Do you want to
+                            configure the reverse zone? [yes]: yes Configuring
+                            named: [1/9]: adding DNS container [2/9]: setting
+                            up our zone [3/9]: setting up reverse zone [4/9]:
+                            setting up our own record [5/9]: setting up
+                            kerberos principal [6/9]: setting up named.conf
+                            [7/9]: restarting named [8/9]: configuring named to
+                            start on boot [9/9]: changing resolv.conf to point
+                            to ourselves done configuring named.
+                            ==============================================================================
+                            Setup complete</programlisting>
+                        </listitem>
+                        <listitem>
+                            <para>Verify that everything is working as
+                            expected, as in 
+                            <xref linkend="install-interactive" />.</para>
+                        </listitem>
+                    </orderedlist>
+                </example>
+                <para>If DNS is used with &IPA;, then two pieces of information
+                are required: any DNS forwarders that will be used and using
+                (or not) reverse DNS. To perform a non-interactive setup, this
+                information can be passed using the 
+                <option>--forwarder</option>or 
+                <option>--no-forwarders</option>option and 
+                <option>--no-reverse</option>option.</para>
+                <example id="ex.dns-script">
+                    <title>Setting up DNS Non-Interactively</title>
+                    <para>To use DNS always requires the 
+                    <option>--setup-dns</option>. To user forwarders, use the 
+                    <option>--forwarder</option>option; for multiple
+                    forwarders, use multiple invocations of 
+                    <option>--forwarder</option>.</para>
+                    <programlisting language="Bash">[root@server ~]#
+                    ipa-server-install ... --setup-dns --forwarder=1.2.3.0
+                    --forwarder=1.2.255.0</programlisting>
+                    <para>Some kind of forwarder information is required. If no
+                    external forwarders will be used with the &IPA; DNS
+                    service, then use the 
+                    <option>--no-forwarders</option>option to indicate that
+                    only root servers will be used.</para>
+                    <para>The script always assumes that reverse DNS is
+                    configured along with DNS, so it is not necessary to use
+                    any options to 
+                    <emphasis>enable</emphasis>reverse DNS. To disable reverse
+                    DNS, use the 
+                    <option>--no-reverse</option>option; if a reverse DNS zone
+                    is already configured, then using the 
+                    <option>--no-reverse</option>option means that existing
+                    reverse DNS zone is used.</para>
+                    <programlisting language="Bash">[root@server ~]#
+                    ipa-server-install ... --setup-dns
+                    --no-reverse</programlisting>
+                </example>
+            </section>
+        </section>
+        <section id="troubleshooting-install">
+            <title>Troubleshooting Installation Problems</title>
+            <para>The server installation log is located in 
+            <filename>/var/log/ipaserver-install.log</filename>. The &IPA;
+            logs, both for the server and for &IPA;-associated services, are
+            covered in 
+            <xref linkend="logging" />.</para>
+            <formalpara>
+                <title>GSS Failures When Running IPA Commands</title>
+                <para>Immediately after installation, there can be Kerberos
+                problems when trying to run an 
+                <command>ipa-*</command>command. For example:</para>
+            </formalpara>
+            <programlisting>ipa: ERROR: Kerberos error: ('Unspecified GSS
+            failure. Minor code may provide more information',
+            851968)/('Decrypt integrity check failed',
+            -1765328353)</programlisting>
+            <para>There are two potential causes for this:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>DNS is not properly configured.</para>
+                </listitem>
+                <listitem>
+                    <para>Active Directory is in the same domain as the &IPA;
+                    server.</para>
+                </listitem>
+            </itemizedlist>
+            <formalpara>
+                <title>named Daemon Fails to Start</title>
+                <para>If &IPAA; server is configured to manage DNS and is set
+                up successfully, but the 
+                <systemitem class="daemon">named</systemitem>service fails to
+                start, this can indicate that there is a package conflict.
+                Check the 
+                <filename>/var/log/messages</filename>file for error messages
+                related to the 
+                <command>named</command>service and the 
+                <filename>ldap.so</filename>library:</para>
+            </formalpara>
+            <screen>ipaserver named[6886]: failed to dynamically load driver
+            'ldap.so': libldap-2.4.so.2: cannot open shared object file: No
+            such file or directory</screen>
+            <para>This usually means that the 
+            <package>bind-chroot</package>package is installed and is
+            preventing the 
+            <systemitem class="daemon">named</systemitem>service from starting.
+            To resolve this issue, remove the 
+            <package>bind-chroot</package>package and then restart the &IPA;
+            server. 
+            <programlisting language="Bash">[root@server ~]# yum remove
+            bind-chroot # ipactl restart</programlisting></para>
+        </section>
+    </section>
+    <section id="Setting_up_IPA_Replicas">
+        <title>Setting up &IPA; Replicas</title>
+        <para>In the &IPA; domain, there are three types of machines:</para>
+        <itemizedlist>
+            <listitem>
+                <para>Servers, which manage all of the services used by domain
+                members</para>
+            </listitem>
+            <listitem>
+                <para>Replicas, which are essentially copies of servers (and,
+                once copied, are identical to servers)</para>
+            </listitem>
+            <listitem>
+                <para>Clients, which belong to the Kerberos domains, receive
+                certificates and tickets issued by the servers, and use other
+                centralized services for authentication and
+                authorization</para>
+            </listitem>
+        </itemizedlist>
+        <para>A replica is a clone of a specific &IPA; server. The server and
+        replica share the same internal information about users, machines,
+        certificates, and configured policies. These data are copied from the
+        server to the replica in a process called 
+        <emphasis>replication</emphasis>. The two &DS; instances used by an
+        &IPA; server &mdash; the &DS; instance used by the &IPA; server as a
+        data store and the &DS; instance used by the &FCRTS; to store
+        certificate information &mdash; are replicated over to corresponding
+        consumer &DS; instances used by the &IPA; replica.</para>
+        <note>
+            <title>TIP</title>
+            <para>If you are using a &FCRTS; instance as the CA for the &IPA;
+            domain, then it is possible to make a replica of a replica. 
+            <!--
+            It is <emphasis>not</emphasis> possible to make a replica of a replica if you use the <option>- -selfsign</option> option for the original &IPA; server.
+            --></para>
+        </note>
+        <section id="installing-replica">
+            <title>Prepping and Installing the Replica Server</title>
+            <para>Replicas are functionally the same as &IPA; servers, so they
+            have the same installation requirements and packages.</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Make sure that the machine meets all of the
+                    prerequisites listed in 
+                    <xref linkend="Preparing_for_an_IPA_Installation" />.</para>
+                </listitem>
+                <listitem>
+                    <para>The replica must be the same version as the original
+                    master server. If the master server is running on &RHEL;
+                    6.3, &IPA; version 2.2.x, then the replica must also run on
+                    &RHEL; 6.3 and use the &IPA; 2.2.x packages.</para>
+                    <important>
+                        <title>IMPORTANT</title>
+                        <para>Creating a replica of a different version than
+                        the master 
+                        <emphasis role="bold">is not supported</emphasis>.
+                        Attempting to create a replica using a different
+                        version fails when attempting to configure the &DSF;
+                        instance.</para>
+                    </important>
+                </listitem>
+                <listitem>
+                    <para>Install the server packages as in 
+                    <xref linkend="Installing_the_IPA_Server_Packages" />. For
+                    example:</para>
+                    <programlisting language="Bash" condition="fedora">
+                    [root@server ~]# yum install freeipa-server bind
+                    bind-dyndb-ldap</programlisting>
+                    <programlisting language="Bash" condition="redhat">
+                    [root@server ~]# yum install ipa-server bind
+                    bind-dyndb-ldap</programlisting>
+                    <important>
+                        <title>IMPORTANT</title>
+                        <para>
+                        <emphasis role="bold">Do not</emphasis>run the 
+                        <command>ipa-server-install</command>script.</para>
+                    </important>
+                    <para>The replica and the master server must be running the
+                    same version of &IPA;.</para>
+                </listitem>
+                <listitem>
+                    <para>If there is an existing &FCRTS; or &RH; &CRTS;
+                    instance on the replica machine, make sure that port 
+                    <systemitem>7389</systemitem>is free. This port is used by
+                    the master &IPA; server to communicate with the
+                    replica.</para>
+                </listitem>
+                <listitem>
+                    <para>Make sure the appropriate ports are open on both the
+                    server and the replica machine during and after the replica
+                    configuration. Servers and replicas connect to each other
+                    over ports 9443, 9444, 9445, and 7389 during the replica
+                    configuration. Once the replica is set up, the server and
+                    replica communicate over port 7389.</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+        <section id="creating-the-replica">
+            <title>Creating the Replica</title>
+            <orderedlist>
+                <listitem>
+                    <para>On the master server, create a 
+                    <emphasis>replica information file</emphasis>. This
+                    contains realm and configuration information taken from the
+                    master server which will be used to configure the replica
+                    server.</para>
+                    <para>Run the 
+                    <command>ipa-replica-prepare</command>command 
+                    <emphasis>on the master &IPA; server</emphasis>. The
+                    command requires the fully-qualified domain name of the 
+                    <emphasis>replica</emphasis>machine. Using the 
+                    <option>--ip-address</option>option automatically creates
+                    DNS entries for the replica, including the A and PTR
+                    records for the replica to the DNS.</para>
+                    <programlisting language="Bash">[root@server ~]#
+                    ipa-replica-prepare ipareplica.example.com --ip-address
+                    192.168.1.2 Determining current realm name Getting domain
+                    name from LDAP Preparing replica for ipareplica.example.com
+                    from ipaserver.example.com Creating SSL certificate for the
+                    &DS; Creating SSL certificate for the Web Server Copying
+                    additional files Finalizing configuration Packaging the
+                    replica into
+                    replica-info-ipareplica.example.com</programlisting>
+                    <important>
+                        <title>IMPORTANT</title>
+                        <para>This must be a valid DNS name, which means only
+                        numbers, alphabetic characters, and hyphens (-) are
+                        allowed. Other characters, like underscores, in the
+                        hostname will cause DNS failures.</para>
+                        <para>Additionally, the hostname must all be
+                        lower-case. No capital letters are allowed.</para>
+                    </important>
+                    <para>For more options with 
+                    <command>ipa-replica-prepare</command>, see the 
+                    <command>ipa-replica-prepare</command>manpage.</para>
+                    <para>Each replica information file is created in the 
+                    <filename>/var/lib/ipa/</filename>directory as a
+                    GPG-encrypted file. Each file is named specifically for the
+                    replica server for which it is intended, such as 
+                    <filename>
+                    replica-info-ipareplica.example.com.gpg</filename>.</para>
+                    <note>
+                        <title>NOTE</title>
+                        <para>A replica information file cannot be used to
+                        create multiple replicas. It can only be used for the
+                        specific replica and machine for which it was
+                        created.</para>
+                    </note>
+                    <warning>
+                        <title>WARNING</title>
+                        <para>Replica information files contain sensitive
+                        information. Take appropriate steps to ensure that they
+                        are properly protected.</para>
+                    </warning>
+                </listitem>
+                <listitem>
+                    <para>Copy the replica information file to the replica
+                    server:</para>
+                    <programlisting language="Bash">[root@server ~]# scp
+                    /var/lib/ipa/replica-info-ipareplica.example.com.gpg
+                    root@ipareplica:/var/lib/ipa/</programlisting>
+                </listitem>
+                <listitem>
+                    <para>On the replica server, run the replica installation
+                    script, referencing the replication information file. There
+                    are other options for setting up DNS, much like the server
+                    installation script. Additionally, there is an option to
+                    configure a CA for the replica; while CA's are installed by
+                    default for servers, they are optional for replicas.</para>
+                    <para>Some information about DNS forwarders is required. A
+                    list can be given of configured DNS forwarders using a 
+                    <option>--forwarder</option>option for each one, or
+                    forwarder configuration can be skipped by specifying the 
+                    <option>--no-forwarders</option>option.</para>
+                    <para>For example:</para>
+                    <programlisting language="Bash">[root@ipareplica ~]#
+                    ipa-replica-install --setup-ca --setup-dns --no-forwarders
+                    /var/lib/ipa/replica-info-ipareplica.example.com.gpg
+                    Directory Manager (existing master) password: Warning:
+                    Hostname (ipareplica.example.com) not found in DNS Run
+                    connection check to master Check connection from replica to
+                    remote master 'ipareplica. example.com': Directory Service:
+                    Unsecure port (389): OK Directory Service: Secure port
+                    (636): OK Kerberos KDC: TCP (88): OK Kerberos Kpasswd: TCP
+                    (464): OK HTTP Server: Unsecure port (80): OK HTTP Server:
+                    Secure port (443): OK The following list of ports use UDP
+                    protocol and would need to be checked manually: Kerberos
+                    KDC: UDP (88): SKIPPED Kerberos Kpasswd: UDP (464): SKIPPED
+                    Connection from replica to master is OK. Start listening on
+                    required ports for remote master check Get credentials to
+                    log in to remote master admin@EXAMPLE.COM password: Execute
+                    check on remote master admin@example.com's password: Check
+                    connection from master to remote replica 'ipareplica.
+                    example.com': Directory Service: Unsecure port (389): OK
+                    Directory Service: Secure port (636): OK Kerberos KDC: TCP
+                    (88): OK Kerberos KDC: UDP (88): OK Kerberos Kpasswd: TCP
+                    (464): OK Kerberos Kpasswd: UDP (464): OK HTTP Server:
+                    Unsecure port (80): OK HTTP Server: Secure port (443): OK
+                    Connection from master to replica is OK. Connection check
+                    OK</programlisting>
+                    <para>Additional options for the replica installation
+                    script are listed in the 
+                    <command>ipa-replica-install</command>manpage.</para>
+                    <para>The replica installation script runs a test to ensure
+                    that the replica file being installed matches the current
+                    hostname. If they do not match, the script returns a
+                    warning message and asks for confirmation. This could occur
+                    on a multi-homed machine, for example, where mismatched
+                    hostnames may not be an issue.</para>
+                </listitem>
+                <listitem>
+                    <para>Enter the Directory Manager password when prompted.
+                    The script then configures a &DS; instance based on
+                    information in the replica information file and initiates a
+                    replication process to copy over data from the master
+                    server to the replica, a process called 
+                    <emphasis>initialization</emphasis>.</para>
+                </listitem>
+                <listitem>
+                    <para>Verify that the proper DNS entries were created so
+                    that &IPA; clients can discover the new server. DNS entries
+                    are required for required domain services:</para>
+                    <itemizedlist>
+                        <listitem>
+                            <para>ldap._tcp</para>
+                        </listitem>
+                        <listitem>
+                            <para>_kerberos._tcp</para>
+                        </listitem>
+                        <listitem>
+                            <para>_kerberos._udp</para>
+                        </listitem>
+                        <listitem>
+                            <para>_kerberos-master._tcp</para>
+                        </listitem>
+                        <listitem>
+                            <para>_kerberos-master._udp</para>
+                        </listitem>
+                        <listitem>
+                            <para>_ntp._udp</para>
+                        </listitem>
+                    </itemizedlist>
+                    <para>If the initial &IPA; server was created with DNS
+                    enabled, then the replica is created with the proper DNS
+                    entries. For example:</para>
+                    <programlisting>[root@ipareplica ~]# DOMAIN=example.com
+                    [root@ipareplica ~]# NAMESERVER=ipareplica [root@ipareplica
+                    ~]# for i in _ldap._tcp _kerberos._tcp _kerberos._udp
+                    _kerberos-master._tcp _kerberos-master._udp _ntp._udp; do
+                    echo ""; dig @${NAMESERVER} ${i}.${DOMAIN} srv +nocmd
+                    +noquestion +nocomments +nostats +noaa +noadditional
+                    +noauthority; done | egrep -v "^;" | egrep _
+                    _ldap._tcp.example.com. 86400 IN SRV 0 100 389
+                    ipaserver1.example.com. _ldap._tcp.example.com. 86400 IN
+                    SRV 0 100 389 ipaserver2.example.com.
+                    _kerberos._tcp.example.com. 86400 IN SRV 0 100 88
+                    ipaserver1.example.com. ...8&lt;...</programlisting>
+                    <para>If the initial &IPA; server was created without DNS
+                    enabled, then each DNS entry, including both TCP and UPD
+                    entries for some services, should be added manually. For
+                    example:</para>
+                    <screen>[root@ipareplica ~]# kinit admin [root@ipareplica
+                    ~]# ipa dnsrecord-add example.com _ldap._tcp --srv-rec="0
+                    100 389 ipareplica.example.com."</screen>
+                </listitem>
+                <listitem>
+                    <para>
+                    <emphasis>Optional.</emphasis>Set up DNS services for the
+                    replica. These are not configured by the setup script, even
+                    if the master server uses DNS.</para>
+                    <para>Use the 
+                    <command>ipa-dns-install</command>command to install the
+                    DNS manually, then use the 
+                    <command>ipa dnsrecord-add</command>command to add the
+                    required DNS records. For example: 
+                    <programlisting language="Bash">[root@ipareplica ~]#
+                    ipa-dns-install [root@ipareplica ~]# ipa dnsrecord-add
+                    example.com @ --ns-rec
+                    ipareplica.example.com.</programlisting></para>
+                    <important>
+                        <title>IMPORTANT</title>
+                        <para>Use the fully-qualified domain name of the
+                        replica, including the final period (.), otherwise BIND
+                        will treat the hostname as relative to the
+                        domain.</para>
+                    </important>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="troubleshooting-replica-install">
+            <title>Troubleshooting Replica Installation</title>
+            <formalpara>
+                <title>Certificate System setup failed.</title>
+                <para>If the replica installation fails on step 3 ( 
+                <emphasis role="bold">[3/11]: configuring certificate server
+                instance</emphasis>), that usually means that the required port
+                is not available. This can be verified by checking the debug
+                logs for the CA, 
+                <filename>/var/log/pki-ca/debug</filename>, which may show
+                error messages about being unable to find certain entries. For
+                example: 
+                <screen>[04/Feb/&YEAR;:22:29:03][http-9445-Processor25]:
+                DatabasePanel comparetAndWaitEntries ou=people,o=ipaca not
+                found, let's wait</screen></para>
+            </formalpara>
+            <para>The only resolution is to uninstall the replica: 
+            <programlisting language="Bash">[root@ipareplica ~]#
+            ipa-server-install --uninstall</programlisting></para>
+            <para>After uninstalling the replica, ensure that port 7389 on the
+            replica is available, and retry the replica installation.</para>
+            <formalpara>
+                <title>There are SASL, GSS-API, and Kerberos errors in the
+                &DSF; logs when the replica starts.</title>
+                <para>When the replica starts, there can be a series of SASL
+                bind errors recorded in the &DSF; logs stating that the GSS-API
+                connection failed because it could not find a credentials
+                cache:</para>
+            </formalpara>
+            <screen>slapd_ldap_sasl_interactive_bind - Error: could not perform
+            interactive bind for id [] mech [GSSAPI]: error -2 (Local error)
+            (SASL(-1): generic failure: GSSAPI Error: Unspecified GSS failure.
+            Minor code may provide more information (Credentials cache file
+            '/tmp/krb5cc_496' not found)) ...</screen>
+            <para>The replica is looking for a credentials cache in 
+            <filename>/tmp/krb5cc_496</filename>(where 496 is the &DSF; user
+            ID) and cannot find it.</para>
+            <para>There may also be messages that the server could not obtain
+            Kerberos credentials for the host principal:</para>
+            <screen>set_krb5_creds - Could not get initial credentials for
+            principal [ldap/ replica1.example.com] in keytab
+            [WRFILE:/etc/dirsrv/ds.keytab]: -1765328324 (Generic
+            error)</screen>
+            <para>These errors are both related to how and when the &DSF;
+            instance loads its Kerberos credentials cache.</para>
+            <para>While &DSF; itself supports multiple different authentication
+            mechanisms, &PROD; only uses GSS-API for Kerberos connections. The
+            &DSF; instance for &PROD; keeps its Kerberos credentials cache in
+            memory. When the &DSF; process ends &mdash; like when the &IPA;
+            replica is stopped &mdash; the credentials cache is
+            destroyed.</para>
+            <para>Also, the &DSF; is used as the backend storage for the
+            principal information for the KDC.</para>
+            <para>When the replica then restarts, the &DSF; instance starts
+            first, since it supplies information for the KDC, and then the KDC
+            server starts. This start order is what causes the GSS-API and
+            Kerberos connection errors.</para>
+            <para>The &DSF; attempts to open a GSS-API connection, but since
+            there is no credentials cache yet and the KDC is not started, the
+            GSS connection fails. Likewise, any attempt to obtain the host
+            credentials also fails.</para>
+            <para>These errors are transient. The &DSF; re-attempts the GSS-API
+            connection after the KDC starts and it has a credentials cache. The
+            &DSF; logs then record a 
+            <command>bind resumed</command>message.</para>
+            <para>These startup GSS-API connection failures can be ignored as
+            long as that connection is successfully established.</para>
+        </section>
+    </section>
+    <section id="Uninstalling_IPA_Servers">
+        <title>Uninstalling &IPA; Servers and Replicas</title>
+        <para>To uninstall both &IPAA; server and &IPAA; replica, pass the 
+        <option>--uninstall</option>option to the 
+        <command>ipa-server-install</command>command: 
+        <programlisting language="Bash">[root@ipareplica ~]# ipa-server-install
+        --uninstall</programlisting></para>
+    </section>
+    <section id="upgrading">
+        <title condition="redhat">Upgrading &PROD; to &RHEL; 6.4</title>
+        <title condition="fedora">Upgrading from &IPA; 2.1 to 2.2</title>
+        <para>&PROD; is generally updated whenever a system is upgraded to a
+        new release. Upgrades should be transparent and do not require any user
+        or administrative intervention.</para>
+        <section id="upgrading-pkgs">
+            <title>Upgrading Packages</title>
+            <para>The &IPA; server packages are updated when the system
+            packages are updated:</para>
+            <screen>[root@ipaserver ~]# yum update *</screen>
+            <para>This is the easiest way to upgrade the server because it
+            automatically pulls in updates for related services, like SSSD,
+            which provide &PROD; functionality.</para>
+            <para>To upgrade the &IPA; server packages specifically, run 
+            <command>yum</command>on the master server:</para>
+            <screen condition="redhat">[root@ipaserver ~]# yum update
+            ipa-server</screen>
+            <screen condition="fedora">[root@ipaserver ~]# yum update
+            freeipa-server</screen>
+            <para>It can take several seconds for the update process to apply
+            all of the changes.</para>
+            <note>
+                <title>NOTE</title>
+                <para>It is not necessary to update all servers and replicas at
+                precisely the same time; the &IPA; servers will still work with
+                each other and replicate data successfully. The older &IPA;
+                servers will simply lack the new features.</para>
+            </note>
+            <formalpara>
+                <title>Upgrade Notes</title>
+                <para>
+                    <itemizedlist>
+                        <listitem>
+                            <para>The update process automatically updates all
+                            schema and LDAP configuration, Apache
+                            configuration, and other services configuration,
+                            and restarts all &IPA;-associated services.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Schema changes are replicated between
+                            servers. So once one master server is updated, all
+                            servers and replicas will have the updated schema,
+                            even if their packages are not yet updated. This
+                            ensures that any new entries which use the new
+                            schema can still be replicated among all the
+                            servers in the &IPA; domain.</para>
+                            <para>The LDAP upgrade operation is logged in the
+                            upgrade log at 
+                            <filename>/var/log/ipaupgrade-log</filename>. If
+                            any LDAP errors occur, then they are recorded in
+                            that log. Once any errors are resolved, the LDAP
+                            update process can be manually initiated by running
+                            the updater script:</para>
+                            <screen>[root@server ~]# ipa-ldap-updater
+                            --upgrade</screen>
+                        </listitem>
+                        <listitem>
+                            <para>Clients do not need to have new packages
+                            installed. The client packages used to configured a
+                            &OS; system do not impact the enrollment of the
+                            client within the domain.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Updating client packages could bring in
+                            updated packages for other dependencies, such as 
+                            <command>certmonger</command>which contain bug
+                            fixes, but this is not required to maintain client
+                            functionality or behavior within the &IPA;
+                            domain.</para>
+                        </listitem>
+                    </itemizedlist>
+                </para>
+            </formalpara>
+        </section>
+        <section id="ticket-delegation">
+            <title>Removing Browser Configuration for Ticket Delegation (For
+            Upgrading from 6.2)</title>
+            <para>As part of establishing Kerberos authentication, a principal
+            is given a 
+            <emphasis>ticket granting ticket</emphasis>(TGT). Whenever that
+            principal attempts to contact a service or application within the
+            Kerberos domain, the service checks for an active TGT and then
+            requests its own service-specific ticket from the TGT for that
+            principal to access that service.</para>
+            <para>As part of configuring the web browser used to access the
+            &IPA; web UI (and any other Kerberos-aware web applications),
+            previous versions of &PROD; required that the TGT delegation be
+            forwarded to the &IPA; server. This required adding the 
+            <command>delegation-uris</command>parameter to the 
+            <command>about:config</command>setup in Firefox:</para>
+            <screen>network.negotiate-auth.delegation-uris
+            .example.com</screen>
+            <para condition="redhat">In &RHEL; 6.3, &PROD; uses the Kerberos
+            Services for User to Proxy (S4U2Proxy), so this additional
+            delegation step is no longer required.</para>
+            <para condition="fedora">&PROD; &VER; uses the Kerberos Services
+            for User to Proxy (S4U2Proxy), so this additional delegation step
+            is no longer required.</para>
+            <formalpara>
+                <title>Updating Existing Configured Browsers</title>
+                <para>For browsers which have already been configured to use
+                the &PROD; web UI, the 
+                <command>delegation-uris</command>setting can be cleared after
+                upgrading to 
+                <filename>ipa-server-2.2.0</filename>or 
+                <filename>ipa-client-2.2.0</filename>.</para>
+            </formalpara>
+            <para>There is no need to restart the browser after changing the 
+            <command>delegation-uris</command>setting.</para>
+            <formalpara>
+                <title>Updating configure.jar for New Browser
+                Configuration</title>
+                <para>The browser configuration is defined in the 
+                <filename>configure.jar</filename>file. This JAR file is
+                generated when the server is installed and it is not updated
+                with other files when &IPA; is updated. Any browsers configured
+                will still have the 
+                <command>delegation-uris</command>parameter set unnecessarily,
+                even after the &IPA; server is upgraded. However, the 
+                <filename>configure.jar</filename>file can be updated.</para>
+            </formalpara>
+            <para>The 
+            <filename>preference.html</filename>file in 
+            <filename>configure.jar</filename>sets the 
+            <command>delegation-uris</command>parameter. The updated 
+            <filename>preference.html</filename>file can be added to 
+            <filename>configure.jar</filename>, and then 
+            <filename>configure.jar</filename>can be re-signed and re-deployed
+            on the &IPA; servers.</para>
+            <note>
+                <title>NOTE</title>
+                <para>Only update the 
+                <filename>configure.jar</filename>file on the 
+                <emphasis>initial</emphasis>&IPA; server. This is the master
+                server, and it is the only server which has a signing
+                certificate. Then propagate the updated file to the other
+                servers and replicas.</para>
+            </note>
+            <orderedlist>
+                <listitem>
+                    <para>Update the packages on the initial &IPA; master
+                    server (the first instance). This will bring in the &VER;
+                    UI packages, including the 
+                    <filename>configure.jar</filename>file.</para>
+                </listitem>
+                <listitem>
+                    <para>Back up the existing 
+                    <filename>configure.jar</filename>file.</para>
+                    <screen>[root@ipaserver ~]# mv
+                    /usr/share/ipa/html/configure.jar
+                    /usr/share/ipa/html/configure.jar.old</screen>
+                </listitem>
+                <listitem>
+                    <para>Create a temporary working directory.</para>
+                    <screen>[root@ipaserver ~]# mkdir /tmp/sign</screen>
+                </listitem>
+                <listitem>
+                    <para>Copy the updated 
+                    <filename>preference.html</filename>file to the working
+                    directory.</para>
+                    <screen>[root@ipaserver ~]# cp
+                    /usr/share/ipa/html/preferences.html /tmp/sign</screen>
+                </listitem>
+                <listitem>
+                    <para>Use the 
+                    <command>signtool</command>command (one of the NSS
+                    utilities) to add the new 
+                    <filename>preference.html</filename>file and re-sign the 
+                    <filename>configure.jar</filename>file.</para>
+                    <screen>[root@ipaserver ~]# signtool -d /etc/httpd/alias -k
+                    Signing-Cert -Z /usr/share/ipa/html/configure.jar -e
+                    ".html" -p `cat /etc/httpd/alias/pwdfile.txt`
+                    /tmp/sign</screen>
+                    <para>The 
+                    <option>-e</option>option tells the tool to sign only files
+                    with a 
+                    <filename>.html</filename>extension. The 
+                    <option>-Z</option>option creates a new JAR file.</para>
+                </listitem>
+                <listitem>
+                    <para>Copy the regenerated 
+                    <filename>configure.jar</filename>file to all other &IPA;
+                    servers and replicas.</para>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="upgrading-server">
+            <title>Testing Before Upgrading the &IPA; Server
+            (Recommended)</title>
+            <para>It can be beneficial, and safer, to test newer versions of
+            &PROD; before upgrading production systems. There is a relatively
+            simple way to do this by creating a sacrificial replica and testing
+            on that system.</para>
+            <orderedlist>
+                <listitem>
+                    <para>Set up a replica based on one of the production
+                    servers, with the same version of &IPA; as is running in
+                    production, as described in 
+                    <xref linkend="Setting_up_IPA_Replicas" />. For this
+                    example, this is called Test Replica. Make sure that Test
+                    Replica can successfully connect to the 
+                    <emphasis>production</emphasis>server and domain.</para>
+                </listitem>
+                <listitem>
+                    <para>After verifying that Test Replica has been
+                    successfully added to the production domain, 
+                    <emphasis role="bold">disconnect Test Replica from the
+                    network</emphasis>.</para>
+                </listitem>
+                <listitem>
+                    <para>Remove the replication agreements for Test Replica
+                    from the original &IPA; server and from Test
+                    Replica.</para>
+                </listitem>
+                <listitem>
+                    <para>Reconnect Test Replica to the network.</para>
+                </listitem>
+                <listitem>
+                    <para>Upgrade the packages on Test Replica using 
+                    <command>yum</command>or whatever package update tool is
+                    appropriate for your system. For example:</para>
+                    <programlisting language="Bash">[root@ipareplica ~]# yum
+                    update ipa*</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Test common things on Test Replica, like getting
+                    Kerberos credentials, opening the server UI, and running
+                    commands.</para>
+                </listitem>
+            </orderedlist>
+        </section>
+    </section>
+</chapter>

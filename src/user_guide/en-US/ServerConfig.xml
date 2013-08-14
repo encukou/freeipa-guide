@@ -1,0 +1,1423 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
+[
+]>
+<chapter id="server-config">
+    <title>Configuration: Configuring the &IPA; Server</title>
+    <para>The &IPA; servers and backend services are configured with default
+    settings that are applicable in most environments.</para>
+    <para>There are some configuration areas where the &IPA; server
+    configuration can be tweaked to improve security or performance in certain
+    situations.</para>
+    <para>This chapter covers information about the &IPA; configuration,
+    including files and logs used by the &IPA; server, and procedures for
+    updating the &IPA; server configuration itself.</para>
+    <section id="ipa-files">
+        <title>&PROD; Files and Logs</title>
+        <para>&PROD; is a unifying framework that combines disparate Linux
+        services into a single management context. However, the underlying
+        technologies &mdash; such as Kerberos, DNS, &DSF;, and &FCRTS; &mdash;
+        retain their own configuration files and log files. &PROD; directly
+        manages each of these elements through their own configuration files
+        and tools.</para>
+        <para>This section covers the directories, files, and logs used
+        specifically by &IPA;. For more information about the configuration
+        files or logs for a specific server used within &IPA;, see the product
+        documentation.</para>
+        <section id="file-ref">
+            <title>A Reference of &IPA; Server Configuration Files and
+            Directories</title>
+            <table id="tab.file-ref">
+                <title>&IPA; Server Configuration Files and Directories</title>
+                <tgroup cols="2">
+                    <colspec colname="col1" colnum="1" />
+                    <colspec colname="col2" colnum="2" />
+                    <thead>
+                        <row>
+                            <entry>Directory or File</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry namest="col1" nameend="col2">
+                                <emphasis role="bold">Server
+                                Configuration</emphasis>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>/etc/ipa</entry>
+                            <entry>The main &IPA; configuration
+                            directory.</entry>
+                        </row>
+                        <row>
+                            <entry>/etc/ipa/default.conf</entry>
+                            <entry>The primary configuration file for
+                            &IPA;.</entry>
+                        </row>
+                        <row>
+                            <entry>/etc/ipa/ca.crt</entry>
+                            <entry>The CA certificate issued by the &IPA;
+                            server's CA.</entry>
+                        </row>
+                        <row>
+                            <entry>~/.ipa/</entry>
+                            <entry>A user-specific &IPA; directory that is
+                            created on the local system in the system user's
+                            home directory the first time the user runs &IPAA;
+                            command.</entry>
+                        </row>
+                        <row>
+                            <entry namest="col1" nameend="col2">
+                                <emphasis role="bold">&IPA; Logs</emphasis>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>~/.ipa/log/cli.log</entry>
+                            <entry>The log file for all XML-RPC calls and
+                            responses by the &IPA; command-line tools. This is
+                            created in the home directory for the 
+                            <emphasis>system user</emphasis>who runs the tools,
+                            who may have a different name than the &IPA;
+                            user.</entry>
+                        </row>
+                        <row>
+                            <entry>/var/log/ipaclient-install.log</entry>
+                            <entry>The installation log for the client
+                            service.</entry>
+                        </row>
+                        <row>
+                            <entry>/var/log/ipaserver-install.log</entry>
+                            <entry>The installation log for the &IPA;
+                            server.</entry>
+                        </row>
+                        <row>
+                            <entry namest="col1" nameend="col2">
+                                <emphasis role="bold">System
+                                Services</emphasis>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>/etc/rc.d/init.d/ipa</entry>
+                            <entry>The &IPA; server init script.</entry>
+                        </row>
+                        <row>
+                            <entry namest="col1" nameend="col2">
+                                <emphasis role="bold">Web UI</emphasis>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>/etc/ipa/html</entry>
+                            <entry>A symlink directory in the main
+                            configuration directory for the HTML files used by
+                            the &IPA; web UI.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <simplelist>
+                                    <member>/etc/httpd/conf.d/ipa.conf</member>
+                                    <member>
+                                    /etc/httpd/conf.d/ipa-rewrite.conf</member>
+                                </simplelist>
+                            </entry>
+                            <entry>The configuration files used by the Apache
+                            host for the web UI application.</entry>
+                        </row>
+                        <row>
+                            <entry>/etc/httpd/conf/ipa.keytab</entry>
+                            <entry>The keytab file used by the web UI
+                            service.</entry>
+                        </row>
+                        <row>
+                            <entry>/usr/share/ipa</entry>
+                            <entry>The main directory for all of the HTML
+                            files, scripts, and stylesheets used by the web
+                            UI.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <simplelist>
+                                    <member>
+                                    /usr/share/ipa/ipa-rewrite.conf</member>
+                                    <member>/usr/share/ipa/ipa.conf</member>
+                                </simplelist>
+                            </entry>
+                            <entry>The configuration files used by the Apache
+                            host for the web UI application.</entry>
+                        </row>
+                        <row>
+                            <entry>/usr/share/ipa/updates</entry>
+                            <entry>Contains any updated files, schema, and
+                            other elements for &PROD;.</entry>
+                        </row>
+                        <row>
+                            <entry>/usr/share/ipa/html</entry>
+                            <entry>Contains the HTML files, JavaScript files,
+                            and stylesheets used by the web UI.</entry>
+                        </row>
+                        <row>
+                            <entry>/usr/share/ipa/ipaclient</entry>
+                            <entry>Contains the JavaScript files used to access
+                            Firefox's autoconfiguration feature and set up the
+                            Firefox browser to work in the &IPA; Kerberos
+                            realm.</entry>
+                        </row>
+                        <row>
+                            <entry>/usr/share/ipa/migration</entry>
+                            <entry>Contains HTML pages, stylesheets, and Python
+                            scripts used for running the &IPA; server in
+                            migration mode.</entry>
+                        </row>
+                        <row>
+                            <entry>/usr/share/ipa/ui</entry>
+                            <entry>Contains all of the scripts used by the UI
+                            to perform &IPA; operations.</entry>
+                        </row>
+                        <row>
+                            <entry>/var/log/httpd</entry>
+                            <entry>The log files for the Apache web
+                            server.</entry>
+                        </row>
+                        <row>
+                            <entry namest="col1" nameend="col2">
+                                <emphasis role="bold">Kerberos</emphasis>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>/etc/krb5.conf</entry>
+                            <entry>The Kerberos service configuration
+                            file.</entry>
+                        </row>
+                        <row>
+                            <entry namest="col1" nameend="col2">
+                                <emphasis role="bold">SSSD</emphasis>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>/etc/sssd/sssd.api.d/sssd-ipa.conf</entry>
+                            <entry>The configuration file used to identify the
+                            &IPA; server, &IPA; &DS;, and other &IPA; services
+                            used by SSSD.</entry>
+                        </row>
+                        <row>
+                            <entry>/var/log/sssd</entry>
+                            <entry>The log files for SSSD.</entry>
+                        </row>
+                        <row>
+                            <entry namest="col1" nameend="col2">
+                                <emphasis role="bold">&DSF;</emphasis>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>/var/lib/dirsrv/slapd- 
+                            <emphasis>REALM_NAME</emphasis></entry>
+                            <entry>All of the schema, configuration, and
+                            database files associated with the &DS; instance
+                            used by the &IPA; server.</entry>
+                        </row>
+                        <row>
+                            <entry>/var/log/dirsrv/slapd- 
+                            <emphasis>REALM_NAME</emphasis></entry>
+                            <entry>Log files associated with the &DS; instance
+                            used by the &IPA; server.</entry>
+                        </row>
+                        <row>
+                            <entry namest="col1" nameend="col2">
+                                <emphasis role="bold">&FCRTS;</emphasis>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>/etc/pki-ca</entry>
+                            <entry>The main directory for the &IPA; CA
+                            instance.</entry>
+                        </row>
+                        <row>
+                            <entry>/etc/pki-ca/conf/CS.cfg</entry>
+                            <entry>The main configuration file for the &IPA; CA
+                            instance.</entry>
+                        </row>
+                        <row>
+                            <entry>/var/lib/dirsrv/slapd-PKI-IPA/</entry>
+                            <entry>All of the schema, configuration, and
+                            database files associated with the &DS; instance
+                            used by the &IPA; CA.</entry>
+                        </row>
+                        <row>
+                            <entry>/var/log/dirsrv/slapd-PKI-IPA/</entry>
+                            <entry>Log files associated with the &DS; instance
+                            used by the &IPA; CA.</entry>
+                        </row>
+                        <row>
+                            <entry namest="col1" nameend="col2">
+                                <emphasis role="bold">Cache Files</emphasis>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>/var/cache/ipa</entry>
+                            <entry>Cache files for the &IPA; server and the
+                            &IPA; Kerberos password daemon.</entry>
+                        </row>
+                        <row>
+                            <entry namest="col1" nameend="col2">
+                                <emphasis role="bold">System Backups</emphasis>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>/var/lib/ipa/sysrestore</entry>
+                            <entry>Contains backups of all of the system files
+                            and scripts that were reconfigured when the &IPA;
+                            server was installed. These include the original 
+                            <filename>.conf</filename>files for NSS, Kerberos
+                            (both 
+                            <filename>krb5.conf</filename>and 
+                            <filename>kdc.conf</filename>), and NTP.</entry>
+                        </row>
+                        <row>
+                            <entry>/var/lib/ipa-client/sysrestore</entry>
+                            <entry>Contains backups of all of the system files
+                            and scripts that were reconfigured when the &IPA;
+                            client was installed. Commonly, this is the 
+                            <filename>sssd.conf</filename>file for SSSD
+                            authentication services.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </section>
+        <section id="default.conf">
+            <title>About default.conf and Context Configuration Files</title>
+            <para>Certain global defaults &mdash; like the realm information,
+            the LDAP configuration, and the CA settings &mdash; are stored in
+            the 
+            <filename>default.conf</filename>file. This configuration file is
+            referenced when the &IPA; client and servers start and every time
+            the 
+            <command>ipa</command>command is run to supply information as
+            operations are performed.</para>
+            <para>The parameters in the 
+            <filename>default.conf</filename>file are simple 
+            <emphasis>attribute=value</emphasis>pairs. The attributes are
+            case-insensitive and order-insensitive.</para>
+            <programlisting language="LDIF">[global] basedn=dc=example,dc=com
+            realm=EXAMPLE.COM domain=example.com
+            xmlrpc_uri=https://server.example.com/ipa/xml
+            ldap_uri=ldapi://%2fvar%2frun%2fslapd-EXAMPLE-COM.socket
+            enable_ra=True ra_plugin=dogtag mode=production</programlisting>
+            <para>When adding more configuration attributes or overriding the
+            global values, users can create additional 
+            <emphasis>context</emphasis>configuration files. A 
+            <filename>server.conf</filename>and 
+            <filename>cli.conf</filename>file can be created to create
+            different options when the &IPA; server is started or when the 
+            <command>ipa</command>command is run, respectively. The &IPA;
+            server checks the 
+            <filename>server.conf</filename>and 
+            <filename>cli.conf</filename>files first, and then checks the 
+            <filename>default.conf</filename>file.</para>
+            <para>Any configuration files in the 
+            <filename>/etc/ipa</filename>directory apply to all users for the
+            system. Users can set individual overrides by creating 
+            <filename>default.conf</filename>, 
+            <filename>server.conf</filename>, or 
+            <filename>cli.conf</filename>files in their local &IPA; directory, 
+            <filename>~/.ipa/</filename>. This optional file is merged with 
+            <filename>default.conf</filename>and used by the local &IPA;
+            services.</para>
+        </section>
+        <section id="logging">
+            <title>Checking &IPA; Server Logs</title>
+            <para>&PROD; unifies several different Linux services, so it relies
+            on those services' native logs for tracking and debugging those
+            services.</para>
+            <para>The other services (Apache, &DSF;, and &FCRTS;) all have
+            detailed logs and log levels. See the specific server documentation
+            for more information on return codes, log formats, and log
+            levels.</para>
+            <table id="tab.ipa-logs">
+                <title>&IPA; Log Files</title>
+                <tgroup cols="4">
+                    <thead>
+                        <row>
+                            <entry>Service</entry>
+                            <entry>Log File</entry>
+                            <entry>Description</entry>
+                            <entry>Additional Information</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>&IPA; server</entry>
+                            <entry>/var/log/ipaserver-install.log</entry>
+                            <entry>Server installation log</entry>
+                            <entry></entry>
+                        </row>
+                        <row>
+                            <entry>&IPA; server</entry>
+                            <entry>~/.ipa/log/cli.log</entry>
+                            <entry>Command-line tool log</entry>
+                            <entry></entry>
+                        </row>
+                        <row>
+                            <entry>&IPA; client</entry>
+                            <entry>/var/log/ipaclient-install.log</entry>
+                            <entry>Client installation log</entry>
+                            <entry></entry>
+                        </row>
+                        <row>
+                            <entry>Apache server</entry>
+                            <entry>
+                                <simplelist>
+                                    <member>/var/log/httpd/access</member>
+                                    <member>/var/log/httpd/error</member>
+                                </simplelist>
+                            </entry>
+                            <entry>These are standard access and error logs for
+                            Apache servers. Both the web UI and the XML-RPC
+                            command-line interface use Apache, so some
+                            &IPA;-specific messages will be recorded in the
+                            error log along with the Apache messages.</entry>
+                            <entry>
+                                <ulink url="http://httpd.apache.org/docs/current/logs.html">
+                                Apache log chapter</ulink>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>&FCRTS;</entry>
+                            <entry>/var/log/pki-ca-install.log</entry>
+                            <entry>The installation log for the &IPA;
+                            CA.</entry>
+                            <entry></entry>
+                        </row>
+                        <row>
+                            <entry>&FCRTS;</entry>
+                            <entry>
+                                <simplelist>
+                                    <member>/var/log/pki-ca/debug</member>
+                                    <member>/var/log/pki-ca/system</member>
+                                    <member>
+                                    /var/log/pki-ca/transactions</member>
+                                    <member>
+                                    /var/log/pki-ca/signedAudit</member>
+                                </simplelist>
+                            </entry>
+                            <entry>These logs mainly relate to certificate
+                            operations. In &IPA;, this is used for service
+                            principals, hosts, and other entities which use
+                            certificates.</entry>
+                            <entry>
+                                <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Certificate_System/8.1/html/Admin_Guide/Logs.html">
+                                Logging chapter</ulink>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>&DSF;</entry>
+                            <entry>
+                                <simplelist>
+                                    <member>/var/log/dirsrv/slapd- 
+                                    <emphasis>REALM</emphasis>/access</member>
+                                    <member>/var/log/dirsrv/slapd- 
+                                    <emphasis>REALM</emphasis>/audit</member>
+                                    <member>/var/log/dirsrv/slapd- 
+                                    <emphasis>REALM</emphasis>/errors</member>
+                                </simplelist>
+                            </entry>
+                            <entry>The access and error logs both contain
+                            detailed information about attempted access and
+                            operations for the domain &DS; instance. The error
+                            log setting can be changed to provide very detailed
+                            output.</entry>
+                            <entry>The access log is buffered, so the server
+                            only writes to the log every 30 seconds, by
+                            default. 
+                            <itemizedlist>
+                                <listitem>
+                                    <para>
+                                        <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Directory_Server/8.2/html/Administration_Guide/Monitoring_Server_and_Database_Activity.html">
+                                        Monitoring servers and
+                                        databases</ulink>
+                                    </para>
+                                </listitem>
+                                <listitem>
+                                    <para>
+                                        <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Directory_Server/8.2/html/Configuration_and_Command-Line_Tool_Reference/logs-reference.html">
+                                        Log entries explained</ulink>
+                                    </para>
+                                </listitem>
+                            </itemizedlist></entry>
+                        </row>
+                        <row>
+                            <entry>&DSF;</entry>
+                            <entry>
+                                <simplelist>
+                                    <member>/var/log/dirsrv/slapd- 
+                                    <emphasis>REALM</emphasis>/access</member>
+                                    <member>/var/log/dirsrv/slapd- 
+                                    <emphasis>REALM</emphasis>/audit</member>
+                                    <member>/var/log/dirsrv/slapd- 
+                                    <emphasis>REALM</emphasis>/errors</member>
+                                </simplelist>
+                            </entry>
+                            <entry>This directory server instance is used by
+                            the &IPA; CA to store certificate information. Most
+                            operational data here will be related to
+                            server-replica interactions.</entry>
+                            <entry>The access log is buffered, so the server
+                            only writes to the log every 30 seconds, by
+                            default. 
+                            <itemizedlist>
+                                <listitem>
+                                    <para>
+                                        <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Directory_Server/8.2/html/Administration_Guide/Monitoring_Server_and_Database_Activity.html">
+                                        Monitoring servers and
+                                        databases</ulink>
+                                    </para>
+                                </listitem>
+                                <listitem>
+                                    <para>
+                                        <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Directory_Server/8.2/html/Configuration_and_Command-Line_Tool_Reference/logs-reference.html">
+                                        Log entries explained</ulink>
+                                    </para>
+                                </listitem>
+                            </itemizedlist></entry>
+                        </row>
+                        <row>
+                            <entry>Kerberos</entry>
+                            <entry>/var/log/krb5libs.log</entry>
+                            <entry>This is the primary log file for Kerberos
+                            connections.</entry>
+                            <entry>This location is configured in the 
+                            <filename>krb5.conf</filename>file, so it could be
+                            different on some systems.</entry>
+                        </row>
+                        <row>
+                            <entry>Kerberos</entry>
+                            <entry>/var/log/krb5kdc.log</entry>
+                            <entry>This is the primary log file for the
+                            Kerberos KDC server.</entry>
+                            <entry>This location is configured in the 
+                            <filename>krb5.conf</filename>file, so it could be
+                            different on some systems.</entry>
+                        </row>
+                        <row>
+                            <entry>Kerberos</entry>
+                            <entry>/var/log/kadmind.log</entry>
+                            <entry>This is the primary log file for the
+                            Kerberos administration server.</entry>
+                            <entry>This location is configured in the 
+                            <filename>krb5.conf</filename>file, so it could be
+                            different on some systems.</entry>
+                        </row>
+                        <row>
+                            <entry>DNS</entry>
+                            <entry>/var/log/messages</entry>
+                            <entry>DNS error messages are included with other
+                            system messages.</entry>
+                            <entry>DNS logging is 
+                            <emphasis>not</emphasis>enabled by default. DNS
+                            logging is enabled by running the 
+                            <command>querylog</command>command: 
+                            <screen>/usr/sbin/rndc querylog</screen>This begins
+                            writing log messages to the system's 
+                            <filename>/var/log/messages</filename>file. To turn
+                            off logging, run the 
+                            <command>querylog</command>command again.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <section id="server-debug">
+                <title>Enabling Server Debug Logging</title>
+                <para>Debug logging for the &IPA; server is set in the 
+                <filename>server.conf</filename>file.</para>
+                <note>
+                    <title>NOTE</title>
+                    <para>Editing the 
+                    <filename>defaults.conf</filename>configuration file
+                    affects all &IPA; components, not only the &IPA;
+                    server.</para>
+                </note>
+                <orderedlist>
+                    <listitem>
+                        <para>Edit or create the 
+                        <filename>server.conf</filename>file.</para>
+                        <screen>vim server.conf</screen>
+                    </listitem>
+                    <listitem>
+                        <para>Add the 
+                        <command>debug</command>line and set its value to
+                        true.</para>
+                        <programlisting>[global] debug=True</programlisting>
+                    </listitem>
+                    <listitem>
+                        <para>Restart the Apache daemon to load the
+                        changes.</para>
+                        <screen>service httpd restart</screen>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="Server-Increasing_Client_Debugging_Output">
+                <title>Debugging Command-Line Operations</title>
+                <para>Any command-line operation with the 
+                <command>ipa</command>command can return debug information by
+                using the 
+                <option>-v</option>option. For example:</para>
+                <screen>$ ipa 
+                <userinput>-v</userinput>user-show admin ipa: INFO: trying
+                https://ipaserver.example.com/ipa/xml First name: John Last
+                name: Smythe User login [jsmythe]: ipa: INFO: Forwarding
+                'user_add' to server u'https://ipaserver.example.com/ipa/xml'
+                -------------------- Added user "jsmythe" --------------------
+                User login: jsmythe First name: John Last name: Smythe Full
+                name: John Smythe Display name: John Smythe Initials: JS Home
+                directory: /home/jsmythe GECOS field: John Smythe Login shell:
+                /bin/sh Kerberos principal: jsmythe@EXAMPLE.COM UID: 1966800003
+                GID: 1966800003 Keytab: False Password: False</screen>
+                <para>Using the option twice, 
+                <option>-vv</option>, displays the XML-RPC exchange: 
+                <screen>$ ipa -vv user-add 
+<![CDATA[
+ipa: INFO: trying https://ipaserver.example.com/ipa/xml
+First name: Jane
+Last name: Russell
+User login [jrussell]:
+ipa: INFO: Forwarding 'user_add' to server u'https://ipaserver.example.com/ipa/xml'
+send: u'POST /ipa/xml HTTP/1.0\r\nHost: ipaserver.example.com\r\nAccept-Language: en-us\r\nAuthorization: negotiate YIIFgQYJKoZIhvcSAQICAQBuggVwMIIFbKADAgEFoQMCAQ6iBwMFACAAAACjggGHYYIBgzCCAX+gAwIBBaEZGxdSSFRTLkVORy5CT1MuUkVESEFULkNPTaI5MDegAwIBA6EwMC4bBEhUVFAbJmRlbGwtcGUxODUwLTAxLnJodHMuZW5nLmJvcy5yZWRoYXQuY29to4IBIDCCARygAwIBEqEDAgECooIBDgSCAQpV2YEWv03X+SENdUBfOhMFGc3Fvnd51nELV0rIB1tfGVjpNlkuQxXKSfFKVD3vyAUqkii255T0mnXyTwayE93W1U4sOshetmG50zeU4KDmhuupzQZSCb5xB0KPU4HMDvP1UnDFJUGCk9tcqDJiYE+lJrEcz8H+Vxvvl+nP6yIdUQKqoEuNhJaLWIiT8ieAzk8zvmDlDzpFYtInGWe9D5ko1Bb7Npu0SEpdVJB2gnB5vszCIdLlzHM4JUqX8p21AZV0UYA6QZOWX9OXhqHdElKcuHCN2s9FBRoFYK83gf1voS7xSFlzZaFsEGHNmdA0qXbzREKGqUr8fmWmNvBGpDiR2ILQep09lL56JqSCA8owggPGoAMCARKiggO9BIIDuarbB67zjmBu9Ax2K+0klSD99pNv97h9yxol8c6NGLB4CmE8Mo39rL4MMXHeOS0OCbn+TD97XVGLu+cgkfVcuIG4PMMBoajuSnPmIf7qDvfa8IYDFlDDnRB7I//IXtCc/Z4rBbaxk0SMIRLrsKf5wha7aWtN1JbizBMQw+J0UlN8JjsWxu0Ls75hBtIDbPf3fva3vwBf7kTBChBsheewSAlck9qUglyNxAODgFVvRrXbfkw51Uo++9qHnhh+zFSWepfv7US7RYK0KxOKFd+uauY1ES+xlnMvK18ap2pcy0odBkKu1kwJDND0JXUdSY08MxK2zb/UGWrVEf6GIsBgu122UGiHp6C+0fEu+nRrvtORY65Bgi8E1vm55fbb/9dQWNcQheL9m6QJWPw0rgc+E5SO99ON6x3Vv2+Zk17EmbZXinPd2tDe7fJ9cS9o/z7Qjw8z8vvSzHL4GX7FKi2HJdBST3nEgOC8PqO46UnAJcA8pf1ZkwCK9xDWH+5PSph6WnvpRqugqf/6cq+3jk3MEjCrx+JBJ8QL6AgN3oEB4kvjZpAC+FfTkdX59VLDwfL/r0gMw3ZNk0nLLCLkiiYUMTEHZBzJw9kFbsX3LmS8qQQA6rQ2L782DYisElywfZ/0Sax8JO/G62Zvy7BHy7SQSGIvcdAOafeNyfxaWM1vTpvSh0GrnllYfs3FhZAKnVcLYrlPTapR23uLgRMv+0c9wAbwuUDfKgOOl5vAd1j55VUyapgDEzi/URsLdVdcF4zigt4KrTByCwU2/pI6FmEPqB2tsjM2A8JmqA+9Nt8bjaNdNwCOWE0dF50zeL9P8oodWGkbRZLk4DLIurpCW1d6IyTBhPQ5qZqHJWeoGiFa5y94zBpp27goMPmE0BskXT0JQmveYflOeKEMSzyiWPL2mwi7KEMtfgCpwTIGP2LRE/QxNvPGkwFfO+PDjZGVw+APKkMKqclVXxhtJA/2NmBrO1pZIIJ9R+41sR/QoACcXIUXJnhrTwwR1viKCB5Tec87gN+e0Cf0g+fmZuXNRscwJfhYQJYwJqdYzGtZW+h8jDWqa2EPcDwIQwyFAgXNQ/aMvh1yNTECpLEgrMhYmFAUDLQzI2BDnfbDftIs0rXjSC0oZn/Uaoqdr4F5syOrYAxH47bS6MW8CxyylreH8nT2qQXjenakLFHcNjt4M1nOc/igzNSeZ28qW9WSr4bCdkH+ra3BVpT/AF0WHWkxGF4vWr/iNHCjq8fLF+DsAEx0Zs696Rg0fWZy079A\r\nUser-Agent: xmlrpclib.py/1.0.1 (by www.pythonware.com)\r\nContent-Type: text/xml\r\nContent-Length: 1240\r\n\r\n'
+send: "<?xml version='1.0' encoding='UTF-8'?>\n<methodCall>\n<methodName>user_add</methodName>\n<params>\n<param>\n<value><array><data>\n<value><string>jrussell</string></value>\n</data></array></value>\n</param>\n<param>\n<value><struct>\n<member>\n<name>all</name>\n<value><boolean>0</boolean></value>\n</member>\n<member>\n<name>displayname</name>\n<value><string>Jane Russell</string></value>\n</member>\n<member>\n<name>cn</name>\n<value><string>Jane Russell</string></value>\n</member>\n<member>\n<name>noprivate</name>\n<value><boolean>0</boolean></value>\n</member>\n<member>\n<name>uidnumber</name>\n<value><int>999</int></value>\n</member>\n<member>\n<name>raw</name>\n<value><boolean>0</boolean></value>\n</member>\n<member>\n<name>version</name>\n<value><string>2.11</string></value>\n</member>\n<member>\n<name>gecos</name>\n<value><string>Jane Russell</string></value>\n</member>\n<member>\n<name>sn</name>\n<value><string>Russell</string></value>\n</member>\n<member>\n<name>krbprincipalname</name>\n<value><string>jrussell@EXAMPLE.COM</string></value>\n</member>\n<member>\n<name>givenname</name>\n<value><string>Jane</string></value>\n</member>\n<member>\n<name>initials</name>\n<value><string>JR</string></value>\n</member>\n</struct></value>\n</param>\n</params>\n</methodCall>\n"
+reply: 'HTTP/1.1 200 OK\r\n'
+header: Date: Thu, 15 Sep 2011 00:50:39 GMT
+header: Server: Apache/2.2.15 (Red Hat)
+header: WWW-Authenticate: Negotiate YIGZBgkqhkiG9xIBAgICAG+BiTCBhqADAgEFoQMCAQ+iejB4oAMCARKicQRvVl5x6Zt9PbWNzvPEWkdu+3PTCq/ZVKjGHM+1zDBz81GL/f+/Pr75zTuveLYn9de0C3k27vz96fn2HQsy9qVH7sfqn0RWGQWzl+kDkuD6bJ/Dp/mpJvicW5gSkCSH6/UCNuE4I0xqwabLIz8MM/5o
+header: Connection: close
+header: Content-Type: text/xml; charset=utf-8
+body: "<?xml version='1.0' encoding='UTF-8'?>\n<methodResponse>\n<params>\n<param>\n<value><struct>\n<member>\n<name>result</name>\n<value><struct>\n<member>\n<name>dn</name>\n<value><string>uid=jrussell,cn=users,cn=accounts,dc=example,dc=com</string></value>\n</member>\n<member>\n<name>has_keytab</name>\n<value><boolean>0</boolean></value>\n</member>\n<member>\n<name>displayname</name>\n<value><array><data>\n<value><string>Jane Russell</string></value>\n</data></array></value>\n</member>\n<member>\n<name>uid</name>\n<value><array><data>\n<value><string>jrussell</string></value>\n</data></array></value>\n</member>\n<member>\n<name>objectclass</name>\n<value><array><data>\n<value><string>top</string></value>\n<value><string>person</string></value>\n<value><string>organizationalperson</string></value>\n<value><string>inetorgperson</string></value>\n<value><string>inetuser</string></value>\n<value><string>posixaccount</string></value>\n<value><string>krbprincipalaux</string></value>\n<value><string>krbticketpolicyaux</string></value>\n<"
+body: 'value><string>ipaobject</string></value>\n</data></array></value>\n</member>\n<member>\n<name>loginshell</name>\n<value><array><data>\n<value><string>/bin/sh</string></value>\n</data></array></value>\n</member>\n<member>\n<name>uidnumber</name>\n<value><array><data>\n<value><string>1966800004</string></value>\n</data></array></value>\n</member>\n<member>\n<name>initials</name>\n<value><array><data>\n<value><string>JR</string></value>\n</data></array></value>\n</member>\n<member>\n<name>gidnumber</name>\n<value><array><data>\n<value><string>1966800004</string></value>\n</data></array></value>\n</member>\n<member>\n<name>gecos</name>\n<value><array><data>\n<value><string>Jane Russell</string></value>\n</data></array></value>\n</member>\n<member>\n<name>sn</name>\n<value><array><data>\n<value><string>Russell</string></value>\n</data></array></value>\n</member>\n<member>\n<name>homedirectory</name>\n<value><array><data>\n<value><string>/home/jrussell</string></value>\n</data></array></value>\n</member>\n<member>\n<name>has_password</name>\n<value><boolean>0</'
+body: 'boolean></value>\n</member>\n<member>\n<name>krbprincipalname</name>\n<value><array><data>\n<value><string>jrussell@EXAMPLE.COM</string></value>\n</data></array></value>\n</member>\n<member>\n<name>givenname</name>\n<value><array><data>\n<value><string>Jane</string></value>\n</data></array></value>\n</member>\n<member>\n<name>cn</name>\n<value><array><data>\n<value><string>Jane Russell</string></value>\n</data></array></value>\n</member>\n<member>\n<name>ipauniqueid</name>\n<value><array><data>\n<value><string>bba27e6e-df34-11e0-a5f4-001143d2c060</string></value>\n</data></array></value>\n</member>\n</struct></value>\n</member>\n<member>\n<name>value</name>\n<value><string>jrussell</string></value>\n</member>\n<member>\n<name>summary</name>\n<value><string>Added user "jrussell"</string></value>\n</member>\n</struct></value>\n</param>\n</params>\n</methodResponse>\n'
+---------------------
+Added user "jrussell"
+---------------------
+  User login: jrussell
+  First name: Jane
+  Last name: Russell
+  Full name: Jane Russell
+  Display name: Jane Russell
+  Initials: JR
+  Home directory: /home/jrussell
+  GECOS field: Jane Russell
+  Login shell: /bin/sh
+  Kerberos principal: jrussell@EXAMPLE.COM
+  UID: 1966800004
+  GID: 1966800004
+  Keytab: False
+  Password: False]]>
+</screen></para>
+                <important>
+                    <title>IMPORTANT</title>
+                    <para>The 
+                    <option>-v</option>and 
+                    <option>-vv</option>options are 
+                    <emphasis>global</emphasis>options and must be used before
+                    the subcommand when running 
+                    <command>ipa</command>.</para>
+                </important>
+            </section>
+        </section>
+    </section>
+    <section id="disabling-anon-binds">
+        <title>Disabling Anonymous Binds</title>
+        <para>Accessing domain resources and running client tools always
+        require Kerberos authentication. However, the backend LDAP directory
+        used by the &IPA; server allows anonymous binds by default. This
+        potentially opens up all of the domain configuration to unauthorized
+        users, including information about users, machines, groups, services,
+        netgroups, and DNS configuration.</para>
+        <para>It is possible to disable anonymous binds on the &DSF; instance
+        by using LDAP tools to reset the 
+        <parameter>nsslapd-allow-anonymous-access</parameter>attribute.</para>
+        <orderedlist>
+            <listitem>
+                <para>Change the 
+                <parameter>nsslapd-allow-anonymous-access</parameter>attribute
+                to 
+                <command>rootdse</command>.</para>
+                <screen>ldapmodify -x -D "cn=Directory Manager" -w secret -h
+                server.example.com -p 389 Enter LDAP Password: dn: cn=config
+                changetype: modify replace: nsslapd-allow-anonymous-access
+                nsslapd-allow-anonymous-access: rootdse</screen>
+                <important>
+                    <title>IMPORTANT</title>
+                    <para>Anonymous access can be completely allowed (on) or
+                    completely blocked (off). However, completely blocking
+                    anonymous access also blocks external clients from checking
+                    the server configuration. LDAP and web clients are not
+                    necessarily domain clients, so they connect anonymously to
+                    read the root DSE file to get connection
+                    information.</para>
+                    <para>The 
+                    <command>rootdse</command>allows access to the root DSE and
+                    server configuration 
+                    <emphasis>without</emphasis>any access to the directory
+                    data.</para>
+                </important>
+            </listitem>
+            <listitem>
+                <para>Restart the &DSF; instance to load the new
+                setting.</para>
+                <screen>service dirsrv restart</screen>
+            </listitem>
+        </orderedlist>
+    </section>
+    <section id="Configuring_Certificates_and_Certificate_Authorities">
+        <title>Configuring Alternate Certificate Authorities</title>
+        <para>&IPA; creates a &FCRTS; certificate authority (CA) during the
+        server installation process. To use an external CA, it is possible to
+        create the required server certificates and then import them into the
+        &DSF; and the HTTP server, which require &IPA; server
+        certificates.</para>
+        <note>
+            <title>TIP</title>
+            <para>Save an ASCII copy of the CA certificate as 
+            <filename>/usr/share/ipa/html/ca.crt</filename>. This allows users
+            to download the correct certificate when they configure their
+            browsers.</para>
+        </note>
+        <orderedlist>
+            <listitem>
+                <para>Use the 
+                <command>ipa-server-certinstall</command>command to install the
+                certificate.</para>
+                <screen># /usr/sbin/ipa-server-certinstall -d
+                /path/to/pkcs12.p12</screen>
+            </listitem>
+            <listitem>
+                <para>To keep using browser autoconfiguration in Firefox,
+                regenerate the 
+                <filename>
+                /usr/share/ipa/html/configure.jar</filename>file.</para>
+                <orderedlist>
+                    <listitem>
+                        <para>Create a directory, and then create the new
+                        security databases in that directory. 
+                        <screen># mkdir /tmp/signdb # certutil -N -d
+                        /tmp/signdb</screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Import the PKCS #12 file for the signing
+                        certificate into that directory. 
+                        <screen># pk12util -i 
+                        <replaceable>/path/to/</replaceable>pkcs12.p12 -d
+                        /tmp/signdb</screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Make a temporary signing directory, and copy the
+                        &IPA; JavaScript file to that directory. 
+                        <screen># mkdir /tmp/sign # cp
+                        /usr/share/ipa/html/preferences.html
+                        /tmp/sign</screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Use the object signing certificate to sign the
+                        JavaScript file and to regenerate the 
+                        <filename>configure.jar</filename>file. 
+                        <screen># signtool -d /tmp/signdb -k
+                        Signing_cert_nickname -Z
+                        /usr/share/ipa/html/configure.jar -e .html
+                        /tmp/sign</screen></para>
+                    </listitem>
+                </orderedlist>
+            </listitem>
+        </orderedlist>
+    </section>
+    <section id="Using_OCSP">
+        <title>Configuring CRLs and OCSP Responders</title>
+        <para>A certificate is created with a validity period, meaning it has a
+        point where it expires and is no longer valid. The expiration date is
+        contained in the certificate itself, so a client always checks the
+        validity period in the certificate to see if the certificate is still
+        valid.</para>
+        <para>However, a certificate can also be revoked before its validity
+        period is up, but this information is not contained in the certificate.
+        A CA publishes a 
+        <emphasis>certificate revocation list</emphasis>(CRL), which contains a
+        complete list of every certificate that was issued by that CA and
+        subsequently revoked. A client can check the CRL to see if a
+        certificate within its validity period has been revoked and is,
+        therefore, invalid.</para>
+        <para>Validity checks are performed using the online certificate status
+        protocol (OCSP), which sends a request to an 
+        <emphasis>OCSP responder</emphasis>. Each CA integrated with the &IPA;
+        server uses an internal OCSP responder, and any client which runs a
+        validity check can check the &IPA; CA's internal OCSP responder.</para>
+        <para>Every certificate issued by the &IPA; CA puts its OCSP responder
+        service URL in the certificate. For example:</para>
+        <screen>http://ipaserver.example.com:9180/ca/ocsp</screen>
+        <note>
+            <title>NOTE</title>
+            <para>For the &IPA; OCSP responder to be available, port 9180 needs
+            to be open in the firewall.</para>
+        </note>
+        <section id="ocsp-selinux">
+            <title>Using an OSCP Responder with SELinux</title>
+            <!-- for bz702020 -->
+            <para>Clients can use the &PROD; OCSP responder to check
+            certificate validity or to retrieve CRLs. A client can be a number
+            of different services, but is most frequently an Apache server and
+            the mod_revocator module (which handles CRL and OCSP
+            operations).</para>
+            <para>The &PROD; CA has an OCSP responder listening over port 9180,
+            which is also the port available for CRL retrieval. This port is
+            protected by default SELinux policies to prevent unauthorized
+            access. If an Apache server attempts to connect to the OCSP port,
+            then it may be denied access by SELinux.</para>
+            <para>The Apache server, on the local machine, must be granted
+            access to port 9180 for it to be able to connect to the &PROD; OCSP
+            responder. There are two ways to work around this by changing the
+            SELinux policies:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Edit the SELinux policy to allow Apache servers using
+                    the mod_revocator module to connect to port 9180:</para>
+                    <screen>semodule -i revoker.pp</screen>
+                </listitem>
+                <listitem>
+                    <para>Generate a new SELinux policy to allow access based
+                    on the SELinux error logs for the mod_revocator connection
+                    attempt.</para>
+                    <screen>audit2allow -a -M revoker</screen>
+                </listitem>
+            </itemizedlist>
+        </section>
+        <section id="ocsp-interval">
+            <title>Changing the CRL Update Interval</title>
+            <para>The CRL file is automatically generated by the &FCRTS; CA
+            every four hours. This interval can be changed by editing the
+            &FCRTS; configuration.</para>
+            <orderedlist>
+                <listitem>
+                    <para>Stop the CA server.</para>
+                    <screen>service pki-ca stop</screen>
+                </listitem>
+                <listitem>
+                    <para>Open the 
+                    <filename>CS.cfg</filename>file.</para>
+                    <screen>vim /etc/pki-ca/CS.cfg</screen>
+                </listitem>
+                <listitem>
+                    <para>Change the 
+                    <parameter>
+                    ca.crl.MasterCRL.autoUpdateInterval</parameter>to the new
+                    interval setting.</para>
+                </listitem>
+                <listitem>
+                    <para>Restart the CA server. 
+                    <screen>service pki-ca start</screen></para>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="ocsp-location">
+            <title>Changing the OCSP Responder Location</title>
+            <para>Each &IPA; server generates its own CRL. Likewise, each &IPA;
+            server uses its own OCSP responder, with its own OCSP responder URL
+            in the certificates it issues.</para>
+            <para>A DNS CNAME can be used by &IPA; clients, and then from there
+            be redirected to the appropriate &IPA; server OCSP
+            responder.</para>
+            <orderedlist>
+                <listitem>
+                    <para>Open the certificate profile.</para>
+                    <screen>vim
+                    /var/lib/pki-ca/profiles/ca/caIPAserviceCert.cfg</screen>
+                </listitem>
+                <listitem>
+                    <para>Change the 
+                    <parameter>
+                    policyset.serverCertSet.9.default.params.crlDistPointsPointName_0</parameter>parameter
+                    to the DNS CNAME hostname.</para>
+                </listitem>
+                <listitem>
+                    <para>Restart the CA server. 
+                    <screen>service pki-ca restart</screen></para>
+                </listitem>
+            </orderedlist>
+            <para>That change must be made on every &IPA; server, with the 
+            <parameter>crlDistPointsPointName_0</parameter>parameter set to the
+            same hostname.</para>
+        </section>
+    </section>
+    <section id="Server-failover" condition="reviewing">
+        <title>Configuring &IPA; Failover</title>
+        <para>XXXXXXXXXXX FIX ME XXXXXXXX add info from
+        http://post-office.corp.redhat.com/archives/ipa-and-samba-team-list/2011-April/msg00196.html</para>
+    </section>
+    <section id="dns-multihomed">
+        <title>Setting DNS Entries for Multi-Homed Servers</title>
+        <para>Some server machines may support multiple network interface cards
+        (NICs). Multi-homed machines typically have multiple IPs, all assigned
+        to the same hostname. This works fine in &IPA; most of the time because
+        it listens on all available interfaces, except localhost. For a server
+        to be available through any NIC, edit the DNS zone file and add entries
+        for each IP address. For example:</para>
+        <screen>ipaserver IN A 192.168.1.100 ipaserver IN A 192.168.1.101
+        ipaserver IN A 192.168.1.102</screen>
+    </section>
+    <section id="ipa-replica-manage">
+        <title>Managing Replication Agreements Between &IPA; Servers</title>
+        <para>Information is shared between the &IPA; servers and replicas
+        using 
+        <emphasis>multi-master replication</emphasis>. What this means is that
+        servers and replicas all receive updates and, therefore, are data
+        masters. The domain information is copied between the servers and
+        replicas using 
+        <emphasis>replication</emphasis>.</para>
+        <para>As replicas are added to the domain, mutual replication
+        agreements are automatically created between the replica and the server
+        it is based on. Additional replication agreements can be created
+        between other replicas and servers or the configuration of the
+        replication agreement can be changed using the 
+        <command>ipa-replica-manage</command>command.</para>
+        <para>When a replica is created, the replica install script creates two
+        replication agreements: one going from the master server to the replica
+        and one going from the replica to the master server.</para>
+        <figure id="fig.replica2">
+            <title>Server and Replica Agreements</title>
+            <mediaobject>
+                <imageobject>
+                    <imagedata fileref="images/ipa-replica.png" />
+                </imageobject>
+            </mediaobject>
+        </figure>
+        <para>As more replicas and servers are added to the domain, there can
+        be replicas and servers that have replication agreements to other
+        servers and replicas but not between each other. For example, the first
+        &IPA; server is Server A. Then, the admin creates Replica B, and the
+        install script creates a Server A =&gt; Replica B replication agreement
+        and a Replica B =&gt; Server A replication agreement. Next, the admin
+        creates Replica C based on Server A. The install script creates a
+        Server A =&gt; Replica C replication agreement and a Replica C =&gt;
+        Server A replication agreement. Replica B and Replica C both have
+        replication agreements with Server A &mdash; but they do not have
+        agreements with each other. For data availability, consistency,
+        failover tolerance, and performance, it can be beneficial to create a
+        pair of replication agreements between Replica B and Replica C, even
+        though their data will eventually be replicated over to each other
+        through replication with Server A.</para>
+        <section id="viewing-repl-agmt">
+            <title>Listing Replication Agreements</title>
+            <para>The 
+            <command>ipa-replica-manage</command>command can list all of the
+            servers and replicas in the replication topology, using the 
+            <command>list</command>command:</para>
+            <screen># ipa-replica-manage list srv1.example.com srv2.example.com
+            srv3.example.com srv4.example.com</screen>
+            <para>After getting the server/replica list, then it is possible to
+            list the replication agreements for the server. These are the other
+            servers/replicas to which the specified server sends
+            updates.</para>
+            <screen># ipa-replica-manage list srv1.example.com srv2.example.com
+            srv3.example.com</screen>
+        </section>
+        <section id="create-repl-agmt">
+            <title>Creating and Removing Replication Agreements</title>
+            <para>Replication agreements are created by 
+            <emphasis>connecting</emphasis>one server to another server.</para>
+            <screen>ipa-replica-manage 
+            <replaceable>server1 server2</replaceable></screen>
+            <para>If only one server is given, the replication agreements are
+            created between the local host and the specified server.</para>
+            <para>For example:</para>
+            <screen># ipa-replica-manage connect srv2.example.com
+            srv4.example.com</screen>
+            <para>Replication occurs over standard LDAP; to enable SSL, then
+            include the CA certificate for the local host (or the specified 
+            <emphasis>server1</emphasis>). The CA certificate is then installed
+            in the remote server's certificate database to enable TLS/SSL
+            connections. For example:</para>
+            <screen># ipa-replica-manage connect --cacert=/etc/ipa/ca.crt
+            srv2.example.com srv4.example.com</screen>
+            <para>To remove a replication agreement between specific
+            servers/replicas, use the 
+            <command>disconnect</command>command:</para>
+            <screen># ipa-replica-manage disconnect srv2.example.com
+            srv4.example.com</screen>
+            <para>Using the 
+            <command>disconnect</command>command removes that one replication
+            agreement but leaves both the server/replica instances in the
+            overall replication topology. To remove a server entirely from the
+            &IPA; replication topology, with all its data, (and, functionally,
+            removing it from the &IPA; domain as a server), use the 
+            <command>del</command>server:</para>
+            <screen># ipa-replica-manage del srv2.example.com</screen>
+        </section>
+        <section id="force-repl">
+            <title>Forcing Replication</title>
+            <para>Replication between servers and replicas occurs on a
+            schedule. Although replication is frequent, there can be times when
+            it is necessary to initiate the replication operation manually. For
+            example, if a server is being taken offline for maintenance, it is
+            necessary to flush all of the queued replication changes out of its
+            changelog before taking it down.</para>
+            <para>To initiate a replication update manually, use the 
+            <command>force-sync</command>command. The server which receives the
+            update is the local server; the server which sends the updates is
+            specified in the 
+            <option>--from</option>option.</para>
+            <screen># ipa-replica-manage force-sync --from
+            srv1.example.com</screen>
+        </section>
+        <section id="initialize">
+            <title>Reinitializing &IPA; Servers</title>
+            <para>When a replica is first created, the database of the master
+            server is copied, completely, over to the replica database. This
+            process is called 
+            <emphasis>initialization</emphasis>. If a server/replica is offline
+            for a long period of time or there is some kind of corruption in
+            its database, then the server can be re-initialized, with a fresh
+            and updated set of data.</para>
+            <para>This is done using the 
+            <command>re-initialize</command>command. The target server being
+            initialized is the local host. The server or replica from which to
+            pull the data to initialize the local database is specified in the 
+            <option>--from</option>option:</para>
+            <screen># ipa-replica-manage re-initialize --from
+            srv1.example.com</screen>
+        </section>
+        <section id="repl-conflicts">
+            <title>Resolving Replication Conflicts</title>
+            <para>Changes &mdash; both for &IPA; domain data and for
+            certificate and key data &mdash; are replicated between &IPA;
+            servers and replicas (and, in similar paths, between &IPA; and &AD;
+            servers).</para>
+            <para>Even though replication operations are run continuously,
+            there is a chance that changes can be made on one &IPA; server at
+            the same time different changes are made to the same entry on a
+            different &IPA; server. When replication begins to process those
+            entries, the changes collide &mdash; this is a 
+            <emphasis>replication conflict</emphasis>.</para>
+            <para>Every single directory modify operation is assigned a
+            server-specific 
+            <emphasis>change state number</emphasis>(CSN) to track how those
+            modifications are propagated during replication. The CSN also
+            contains a modify timestamp. When there is a replication conflict,
+            the timestamp is checked and the last change wins.</para>
+            <para>Simply accepting the most recent change is effective for
+            resolving conflicts with attribute values. That method is too blunt
+            for some types of operations, however, which affect the directory
+            tree. Some operations, like modrdn, DN changes, or adding or
+            removing parent and child entries, require administrator review
+            before the conflict is resolved.</para>
+            <note>
+                <title>NOTE</title>
+                <para>Replication conflicts are resolved by editing the entries
+                directory in the LDAP database.</para>
+            </note>
+            <para>When there is a replication conflict, both entries are added
+            to the directory and are assigned a 
+            <parameter>nsds5ReplConflict</parameter>attribute. This makes it
+            easy to search for entries with a conflict:</para>
+            <screen>ldapsearch -x -D "cn=directory manager" -w password -b
+            "dc=example,dc=com" "nsds5ReplConflict=*" \*
+            nsds5ReplConflict</screen>
+            <section id="Solving_Common_Replication_Conflicts-Solving_Naming_Conflicts">
+
+                <title>Solving Naming Conflicts</title>
+                <indexterm>
+                    <primary>naming conflicts</primary>
+                    <secondary>in replication</secondary>
+                </indexterm>
+                <para>When two entries are added to the &IPA; domain with the
+                same DN, both entries are added to the directory, but they are
+                renamed to use the 
+                <parameter>nsuniqueid</parameter>attribute as a naming
+                attribute. For example:</para>
+                <screen>
+                nsuniqueid=0a950601-435311e0-86a2f5bd-3cd26022+uid=jsmith,cn=users,cn=accounts,dc=example,dc=com</screen>
+                <para>Those entries can be searched for and displayed in the
+                &IPA; CLI, but they cannot be edited or deleted until the
+                conflict is resolved and the DN is updated.</para>
+                <para>To resolve the conflict:</para>
+                <orderedlist>
+                    <listitem>
+                        <para>Rename the entry using a different naming
+                        attribute, and keep the old RDN. For example:</para>
+                        <screen>ldapmodify -x -D "cn=directory manager" -w
+                        secret -h ipaserver.example.com -p 389 dn:
+                        nsuniqueid=66446001-1dd211b2+uid=jsmith,cn=users,cn=accounts,dc=example,dc=com
+                        changetype: modrdn newrdn: cn= 
+                        <replaceable>TempValue</replaceable>deleteoldrdn:
+                        0</screen>
+                    </listitem>
+                    <listitem>
+                        <para>Remove the old RDN value of the naming attribute
+                        and the conflict marker attribute. For example:</para>
+                        <screen>ldapmodify -x -D "cn=directory manager" -w
+                        secret -h ipaserver.example.com -p 389 dn: cn= 
+                        <replaceable>
+                        TempValue</replaceable>,cn=users,cn=accounts,dc=example,dc=com
+                        changetype: modify delete: uid dc: jsmith - delete:
+                        nsds5ReplConflict -</screen>
+                        <note>
+                            <title>NOTE</title>
+                            <para>The unique identifier attribute 
+                            <parameter>nsuniqueid</parameter>cannot be
+                            deleted.</para>
+                        </note>
+                    </listitem>
+                    <listitem>
+                        <para>Rename the entry with the intended
+                        attribute-value pair. For example:</para>
+                        <screen>ldapmodify -x -D "cn=directory manager" -w
+                        secret -h ipaserver.example.com -p 389 dn: cn= 
+                        <replaceable>TempValue</replaceable>,dc=example,dc=com
+                        changetype: modrdn newrdn: uid=jsmith deleteoldrdn:
+                        1</screen>
+                        <para>Setting the value of the 
+                        <parameter>deleteoldrdn</parameter>attribute to 
+                        <command>1</command>deletes the temporary
+                        attribute-value pair 
+                        <command>cn=</command>
+                        <emphasis>TempValue</emphasis>. To keep this attribute,
+                        set the value of the 
+                        <parameter>deleteoldrdn</parameter>attribute to 
+                        <command>0</command>.</para>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="Solving_Orphan_Entry_Conflicts">
+                <title>Solving Orphan Entry Conflicts</title>
+                <para>When a delete operation is replicated and the consumer
+                server finds that the entry to be deleted has child entries,
+                the conflict resolution procedure creates a 
+                <command>glue</command>entry to avoid having orphaned entries
+                in the directory.</para>
+                <para>In the same way, when an add operation is replicated and
+                the consumer server cannot find the parent entry, the conflict
+                resolution procedure creates a glue entry representing the
+                parent so that the new entry is not an orphan entry.</para>
+                <para>
+                <indexterm>
+                    <primary>glue entries</primary>
+                </indexterm>
+                <emphasis>Glue entries</emphasis>are temporary entries that
+                include the object classes 
+                <command>glue</command>and 
+                <command>extensibleObject</command>. Glue entries can be
+                created in several ways:</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>If the conflict resolution procedure finds a
+                        deleted entry with a matching unique identifier, the
+                        glue entry is a resurrection of that entry, with the
+                        addition of the 
+                        <command>glue</command>object class and the 
+                        <parameter>
+                        nsds5ReplConflict</parameter>attribute.</para>
+                        <para>In such cases, either modify the glue entry to
+                        remove the 
+                        <command>glue</command>object class and the 
+                        <parameter>nsds5ReplConflict</parameter>attribute to
+                        keep the entry as a normal entry or delete the glue
+                        entry and its child entries.</para>
+                    </listitem>
+                    <listitem>
+                        <para>The server creates a minimalistic entry with the 
+                        <command>glue</command>and 
+                        <command>extensibleObject</command>object
+                        classes.</para>
+                    </listitem>
+                </itemizedlist>
+                <para>In such cases, modify the entry to turn it into a
+                meaningful entry or delete it and all of its child
+                entries.</para>
+            </section>
+        </section>
+    </section>
+    <!--
+
+        <section id="promoting-replica"><title>Moving CRL Generation from the Master (Original) Server to Another Replica</title>
+         <para>
+             The first &IPA; server installed owns the master CA in the PKI hierarchy. 
+             The master CA is the authoritative CA; it has the root CA signing key and generates CRLs
+             which are distributed among the other servers and replicas in the topology.
+             All subsequent replica databases are cloned (or copied) directly from that master database as part of running <command>ipa-replica-install</command>.
+         </para>
+         <note><title>NOTE</title>
+             <para>
+                 The only reason to replace the master server is
+                 if the master server is being taken offline. There has to be a root CA which 
+                 can issue CRLs and ultimately validate certificate checks.
+             </para>
+         </note>
+
+         <section id="about-crl-gen"><title>About the Master Server, Replicas, and Generating CRLs</title>
+             <para>
+                 As explained in <xref linkend="ipa-servers-replicas" />, all servers and replicas work together 
+                 to share data. This arrangement is the <emphasis>server topology</emphasis>.
+             </para>
+             <para>
+                 Servers &mdash; which are created with <command>ipa-server-install</command> &mdash;
+                 can host DNS or CA services. These are the <emphasis>original</emphasis> services.
+                 When a replica is created (with <command>ipa-replica-install</command>), 
+                 it is based on the configuration of an existing server. A replica, likewise, 
+                 can host DNS and CA services, but this is not required.
+             </para>
+             <para>
+                 After they are created, servers and replicas are equal peers in the server 
+                 topology. They are all read-write data masters and replicate information to 
+                 each other through multi-master replication. 
+                 Servers and replicas which host a CA are also equal peers in the topology.
+                 They can all issue certificates and keys to &IPA; clients, and they 
+                 all replicate information amongst themselves.
+             </para>
+             <para>
+                 The only difference between a server and a replica is which &IPA; server issues the CRL.
+             </para>
+             <para>
+                 When the first server is installed, it is configured to issue CRLs. In its
+                 CA configuration file (<filename>/var/lib/pki-ca/conf/CS.cfg</filename>), 
+                 it has CRL generation enabled:
+             </para>
+<screen>ca.crl.<replaceable>issuingPointId</replaceable>.enableCRLCache=true
+ca.crl.<replaceable>issuingPointId</replaceable>.enableCRLUpdates=true
+ca.certStatusUpdateInterval=600
+ca.listenToCloneModifications=false</screen>
+             <para>
+                 All replicas point to that master CA as the source for CRL information and disable
+                 the CRL settings:
+             </para>
+<screen>master.ca.agent.host=<replaceable>hostname</replaceable>
+master.ca.agent.port=<replaceable>port number</replaceable>
+ca.certStatusUpdateInterval=0
+ca.crl.<replaceable>issuingPointId</replaceable>.enableCRLUpdates=false</screen>
+             <para>
+                 <emphasis>Promoting</emphasis> a replica to a master server changes its configuration
+                 and enables it to issue CRLs and function as the root CA. 
+             </para>
+         </section>
+         <section id="promoting-pki"><title>Promoting a Replica</title>
+             <orderedlist>
+                <listitem>
+                    <para>
+                        If the replica was originally installed without a CA, then create a CA. This requires the replica file that was used to create the replica. (A new one can be created from the original &IPA; server, if need be.)
+                    </para>
+<screen>[root@ipareplica ~]# ipa-ca-install -p DMpassword -w adminpassword /var/lib/ipa/replica-info-ipareplica.example.com.gpg</screen>
+                </listitem>
+                <listitem>
+                    <para>
+                        On the replica server, stop the CA server.
+                    </para>
+<screen>service pki-cad stop</screen>
+                </listitem>
+                <listitem>
+                    <para>
+                        Open the CA's configuration directory.
+                    </para>
+<screen>cd /var/lib/pki-ca/conf</screen>
+                </listitem>
+                <listitem>
+                    <para>
+                        Edit the <filename>CS.cfg</filename> file to configure the replica's CA as a master.
+                    </para>
+                    <orderedlist>
+                        <listitem>
+                            <para>
+                                Delete each line which begins with the <filename>ca.crl.</filename> prefix.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Copy each line beginning with the <filename>ca.crl.</filename> prefix from the CA <filename>CS.cfg</filename> file on the master server into the replica server's CA <filename>CS.cfg</filename> file.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Enable control of the database maintenance thread; the default value for a master CA 
+                                is <command>600</command>.
+                            </para>
+<screen>ca.certStatusUpdateInterval=600</screen>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Enable monitoring database replication:
+                            </para>
+<screen>ca.listenToCloneModifications=true</screen>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Enable maintenance of the CRL cache:
+                            </para>
+<screen>ca.crl.<replaceable>IssuingPointId</replaceable>.enableCRLCache=true</screen>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Enable CRL generation:
+                            </para>
+<screen>ca.crl.<replaceable>IssuingPointId</replaceable>.enableCRLUpdates=true</screen>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Disable the redirect settings for CRL generation requests:
+                            </para>
+<screen>master.ca.agent.host=<replaceable>hostname</replaceable>
+master.ca.agent.port=<replaceable>port number</replaceable></screen>
+                        </listitem>
+                    </orderedlist>
+                </listitem>
+                <listitem>
+                    <para>
+                        Start the CA server.
+                    </para>
+<screen>service pki-cad start</screen>
+                </listitem>
+            </orderedlist>
+        </section>
+        -->
+    <section id="removing-replica">
+        <title>Removing a Replica</title>
+        <para>Deleting or 
+        <emphasis>demoting</emphasis>a replica removes the &IPA; replica from
+        the server/replica topology so that it no longer processes &IPA;
+        requests and it also removes the host machine itself from the &IPA;
+        domain.</para>
+        <orderedlist>
+            <listitem>
+                <para>On an &IPA; server, obtain a Kerberos ticket before
+                running &IPA; tools.</para>
+                <screen>[root@replica ~]#kinit admin</screen>
+            </listitem>
+            <listitem>
+                <para>List all of the configured replication agreements for the
+                &IPA; domain.</para>
+                <screen>[root@replica ~]# ipa-replica-manage list Directory
+                Manager password: ipaserver.example.com: master
+                ipaserver2.example.com: master replica.example.com: master
+                replica2.example.com: master</screen>
+            </listitem>
+            <listitem>
+                <para>Removing the replica from the topology involves deleting
+                all the agreements between the replica and the other servers in
+                the &IPA; domain and all of the data about the replica in the
+                domain configuration.</para>
+                <screen>[root@replica ~]# ipa-replica-manage del
+                replica.example.com</screen>
+            </listitem>
+            <listitem>
+                <para>
+                <emphasis>If the replica was configured with its own
+                CA</emphasis>, then also use the 
+                <command>ipa-csreplica-manage</command>command to remove all of
+                the replication agreements between the certificate databases
+                for the replica.</para>
+                <para>This is required if the replica itself was configured
+                with a &FCRTS; CA. It is not required if only the master server
+                or other replicas were configured with a CA.</para>
+                <screen>[root@replica ~]# ipa-csreplica-manage del
+                replica.example.com</screen>
+            </listitem>
+            <listitem>
+                <para>On the replica, uninstall the replica packages.</para>
+                <screen>[root@replica ~]# ipa-server-install --uninstall
+                -U</screen>
+            </listitem>
+        </orderedlist>
+    </section>
+    <section id="troubleshooting-servers-and-replicas">
+        <title>Troubleshooting</title>
+        <section id="expired-certs">
+            <title>Starting &IPA; with Expired Certificates</title>
+            <para>If &IPA; administrative server certificates expire, then most
+            &IPA; services will be inaccessible, including administrative
+            services. The underlying Apache and &DSF; services can be
+            configured to allow SSL access to those services, even if the
+            certificates are expired.</para>
+            <note>
+                <title>NOTE</title>
+                <para>Allowing limited access with expired certificates permits
+                Apache, Kerberos, DNS, and &DSF; services to continue working.
+                With those services active, users are able to log into the
+                domain.</para>
+                <para>Client services such as 
+                <command>sudo</command>that require SSL for access will still
+                fail because of the expired server certificates.</para>
+            </note>
+            <orderedlist>
+                <listitem>
+                    <para>Change the 
+                    <command>mod_nss</command>configuration for the Apache
+                    server to not enforce valid certificates, in the 
+                    <parameter>NSSEnforceValidCerts</parameter>parameter. If
+                    this parameter is not already in the file, then add
+                    it.</para>
+                    <para>Set the value to 
+                    <command>off</command>.</para>
+                    <screen>[root@ipaserver ~]# vim /etc/httpd/conf.d/nss.conf
+                    NSSEnforceValidCerts off</screen>
+                </listitem>
+                <listitem>
+                    <para>Restart Apache.</para>
+                    <screen>[root@ipaserver ~]# service httpd restart</screen>
+                </listitem>
+                <listitem>
+                    <para>Change the 
+                    <parameter>nsslapd-validate-cert</parameter>attribute in
+                    the &DSF; configuration to 
+                    <command>warn</command>instead of 
+                    <command>true</command>to disable validity checks.</para>
+                    <screen>[root@ipaserver ~]# ldapmodify -D "cn=directory
+                    manager" -w secret -p 389 -h ipaserver.example.com dn:
+                    cn=config changetype: modify replace: nsslapd-validate-cert
+                    nsslapd-validate-cert: warn</screen>
+                </listitem>
+                <listitem>
+                    <para>Restart &DSF;.</para>
+                    <screen>[root@ipaserver ~]# service dirsrv restart</screen>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section>
+            <title>There are SASL, GSS-API, and Kerberos errors in the &DSF;
+            logs when the replica starts.</title>
+            <para>When the replica starts, there can be a series of SASL bind
+            errors recorded in the &DSF; logs stating that the GSS-API
+            connection failed because it could not find a credentials
+            cache:</para>
+            <screen>slapd_ldap_sasl_interactive_bind - Error: could not perform
+            interactive bind for id [] mech [GSSAPI]: error -2 (Local error)
+            (SASL(-1): generic failure: GSSAPI Error: Unspecified GSS failure.
+            Minor code may provide more information (Credentials cache file
+            '/tmp/krb5cc_496' not found)) ...</screen>
+            <para>The replica is looking for a credentials cache in 
+            <filename>/tmp/krb5cc_496</filename>(where 496 is the &DSF; user
+            ID) and cannot find it.</para>
+            <para>There may also be messages that the server could not obtain
+            Kerberos credentials for the host principal:</para>
+            <screen>set_krb5_creds - Could not get initial credentials for
+            principal [ldap/ replica1.example.com] in keytab
+            [WRFILE:/etc/dirsrv/ds.keytab]: -1765328324 (Generic
+            error)</screen>
+            <para>These errors are both related to how and when the &DSF;
+            instance loads its Kerberos credentials cache.</para>
+            <para>While &DSF; itself supports multiple different authentication
+            mechanisms, &PROD; only uses GSS-API for Kerberos connections. The
+            &DSF; instance for &PROD; keeps its Kerberos credentials cache in
+            memory. When the &DSF; process ends &mdash; like when the &IPA;
+            replica is stopped &mdash; the credentials cache is
+            destroyed.</para>
+            <para>Also, the &DSF; is used as the backend storage for the
+            principal information for the KDC.</para>
+            <para>When the replica then restarts, the &DSF; instance starts
+            first, since it supplies information for the KDC, and then the KDC
+            server starts. This start order is what causes the GSS-API and
+            Kerberos connection errors.</para>
+            <para>The &DSF; attempts to open a GSS-API connection, but since
+            there is no credentials cache yet and the KDC is not started, the
+            GSS connection fails. Likewise, any attempt to obtain the host
+            credentials also fails.</para>
+            <para>These errors are transient. The &DSF; re-attempts the GSS-API
+            connection after the KDC starts and it has a credentials cache. The
+            &DSF; logs then record a 
+            <command>bind resumed</command>message.</para>
+            <para>These startup GSS-API connection failures can be ignored as
+            long as that connection is successfully established.</para>
+        </section>
+    </section>
+</chapter>

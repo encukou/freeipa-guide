@@ -1,0 +1,1837 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
+[
+]>
+<chapter id="hosts">
+    <title>Identity: Managing Hosts and Services</title>
+    <para>Both DNS and Kerberos are configured as part of the initial client
+    configuration. This is required because these are the two services that
+    bring the machine within the &IPA; domain and allow it to identify the
+    &IPA; server it will connect with. After the initial configuration, &IPA;
+    has tools to manage both of these services in response to changes in the
+    domain services, changes to the IT environment, or changes on the machines
+    themselves which affect Kerberos, certificate, and DNS services, like
+    changing the client hostname.</para>
+    <para>This chapter describes how to manage identity services that relate
+    directly to the client machine:</para>
+    <itemizedlist>
+        <listitem>
+            <para>DNS entries and settings</para>
+        </listitem>
+        <listitem>
+            <para>Machine authentication</para>
+        </listitem>
+        <listitem>
+            <para>Hostname changes (which affect domain services)</para>
+        </listitem>
+    </itemizedlist>
+    <section id="about-hosts">
+        <title>About Hosts, Services, and Machine Identity and
+        Authentication</title>
+        <para>The basic function of an enrollment process is to create a 
+        <emphasis>host</emphasis>entry for the client machine in the &IPA;
+        directory. This host entry is used to establish relationships between
+        other hosts and even services within the domain. These relationships
+        are part of 
+        <emphasis>delegating</emphasis>authorization and control to hosts
+        within the domain.</para>
+        <para>A host entry contains all of the information about the client
+        within &IPA;:</para>
+        <itemizedlist>
+            <listitem>
+                <para>Service entries associated with the host</para>
+            </listitem>
+            <listitem>
+                <para>The host and service principal</para>
+            </listitem>
+            <listitem>
+                <para>Access control rules</para>
+            </listitem>
+            <listitem>
+                <para>Machine information, such as its physical location and
+                operating system</para>
+            </listitem>
+        </itemizedlist>
+        <para>Some services that run on a host can also belong to the &IPA;
+        domain. Any service that can store a Kerberos principal or an SSL
+        certificate (or both) can be configured as an &IPA; service. Adding a
+        service to the &IPA; domain allows the service to request an SSL
+        certificate or keytab from the domain. (Only the public key for the
+        certificate is stored in the service record. The private key is local
+        to the service.)</para>
+        <para condition="fedora">&IPAB; domain establishes a commonality
+        between machines, with common identity information, common policies,
+        and shared services. Any machine which belongs to a domain functions as
+        a client of the domain, which means it uses the services that the
+        domain provides. &IPAB; domain provides three main services
+        specifically for machines:</para>
+        <para condition="redhat">&IPAB; domain establishes a commonality
+        between machines, with common identity information, common policies,
+        and shared services. Any machine which belongs to a domain functions as
+        a client of the domain, which means it uses the services that the
+        domain provides. &IPAB; domain (as described in 
+        <xref linkend="ipa-linux-services" />) provides three main services
+        specifically for machines:</para>
+        <itemizedlist>
+            <listitem>
+                <para>DNS</para>
+            </listitem>
+            <listitem>
+                <para>Kerberos</para>
+            </listitem>
+            <listitem>
+                <para>Certificate management</para>
+            </listitem>
+        </itemizedlist>
+        <para>Machines are treated as another identity that is managed by
+        &IPA;. Clients use DNS to identify &IPA; servers, services, and domain
+        members &mdash; which, like user identities are stored in the &DSF;
+        instance for the &IPA; server. Like users, machines can be
+        authenticated to the domain using Kerberos or certificates to verify
+        the machine's identity.</para>
+        <para>From the machine perspective, there are several tasks that can be
+        performed that access these domain services:</para>
+        <itemizedlist>
+            <listitem>
+                <para>Joining the DNS domain ( 
+                <emphasis>machine enrollment</emphasis>)</para>
+            </listitem>
+            <listitem>
+                <para>Managing DNS entries and zones</para>
+            </listitem>
+            <listitem>
+                <para>Managing machine authentication</para>
+            </listitem>
+        </itemizedlist>
+        <para>Authentication in &IPA; includes machines as well as users.
+        Machine authentication is required for the &IPA; server to trust the
+        machine and to accept &IPA; connections from the client software
+        installed on that machine. After authenticating the client, the &IPA;
+        server can respond to its requests. &IPA; supports three different
+        approaches to machine authentication:</para>
+        <itemizedlist>
+            <listitem>
+                <para>SSH keys. The SSH public key for the host is created and
+                uploaded to the host entry. From there, the System Security
+                Services Daemon (SSSD) uses &IPA; as an identity provider and
+                can work in conjunction with OpenSSH and other services to
+                reference the public keys located centrally in &PROD;. This is
+                described in 
+                <xref linkend="host-keys" />and the 
+                <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6-Beta/html/Deployment_Guide/openssh-sssd.html">
+                &OS; Deployment Guide</ulink>.</para>
+            </listitem>
+            <listitem>
+                <para>Key tables (or 
+                <firstterm>keytabs</firstterm>, a symmetric key resembling to
+                some extent a user password) and machine certificates. Kerberos
+                tickets are generated as part of the Kerberos services and
+                policies defined by the server. Initially granting a Kerberos
+                ticket, renewing the Kerberos credentials, and even destroying
+                the Kerberos session are all handled by the &IPA; services.
+                Managing Kerberos is covered in 
+                <xref linkend="kerberos" />.</para>
+            </listitem>
+            <listitem>
+                <para>Machine certificates. In this case, the machine uses an
+                SSL certificate that is issued by the &IPA; server's
+                certificate authority and then stored in &IPA;'s &DS;. The
+                certificate is then sent to the machine to present when it
+                authenticates to the server. On the client, certificates are
+                managed by a service called 
+                <emphasis>certmonger</emphasis>, which is described in 
+                <xref linkend="certmongerX" />.</para>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <section id="adding-host-entry">
+        <title>Adding Host Entries</title>
+        <para>A host entry is always created when a client is configured. On
+        &OS; systems, this is done automatically with the 
+        <command>ipa-client-install</command>script. On other platforms &mdash;
+        and in alternative enrollment scenarios, as in 
+        <xref linkend="enrolling-machines" />&mdash; the host entry is created
+        manually.</para>
+        <section id="adding-host-entry-ui">
+            <title>Adding Host Entries from the Web UI</title>
+            <orderedlist>
+                <listitem>
+                    <para>Open the 
+                    <guilabel>Identity</guilabel>tab, and select the 
+                    <guilabel>Hosts</guilabel>subtab.</para>
+                </listitem>
+                <listitem>
+                    <para>Click the 
+                    <guilabel>Add</guilabel>link at the top of the hosts
+                    list.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/hosts-list.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>Fill in the machine name and select the domain from
+                    the configured zones in the drop-down list. If the host has
+                    already been assigned a static IP address, then include
+                    that with the host entry so that the DNS entry is fully
+                    created.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/host-add.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                    <para>DNS zones can be created in &IPA;, which is described
+                    in 
+                    <xref linkend="Managing_DNS_Zones-Adding_DNS_Zones" />. If
+                    the &IPA; server does not manage the DNS server, the zone
+                    can be entered manually in the menu area, like a regular
+                    text field.</para>
+                    <note>
+                        <title>NOTE</title>
+                        <para>Select the 
+                        <guilabel>Force</guilabel>checkbox to add the host DNS
+                        record, even if the hostname cannot be resolved.</para>
+                        <para>This is useful for hosts which use DHCP and do
+                        not have a static IP address. This essentially creates
+                        a placeholder entry in the &IPA; DNS service. When the
+                        DNS service dynamically updates its records, the host's
+                        current IP address is detected and its DNS record is
+                        updated.</para>
+                    </note>
+                </listitem>
+                <listitem>
+                    <para>Click the 
+                    <guilabel>Add and Edit</guilabel>button to go directly to
+                    the expanded entry page and fill in more attribute
+                    information. Information about the host hardware and
+                    physical location can be included with the host
+                    entry.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/host-attr.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="adding-host-entry-cmd">
+            <title>Adding Host Entries from the Command Line</title>
+            <para>Host entries are created using the 
+            <command>host-add</command>command. This commands adds the host
+            entry to the &IPA; &DS;. The full list of options with 
+            <command>host-add</command>are listed in the 
+            <command>ipa host</command>manpage. At its most basic, an add
+            operation only requires the client hostname to add the client to
+            the Kerberos realm and to create an entry in the &IPA; LDAP
+            server:</para>
+            <screen>$ ipa host-add client1.example.com</screen>
+            <para>If the &IPA; server is configured to manage DNS, then the
+            host can also be added to the DNS resource records using the 
+            <option>--ip-address</option>and 
+            <option>--force</option>options.</para>
+            <example id="ex.host-dns">
+                <title>Creating Host Entries with Static IP Addresses</title>
+                <screen>$ ipa host-add --force --ip-address=192.168.166.31
+                client1.example.com</screen>
+            </example>
+            <indexterm>
+                <primary>hosts</primary>
+                <secondary>creating</secondary>
+                <tertiary>with DHCP</tertiary>
+            </indexterm>
+            <indexterm>
+                <primary>DNS</primary>
+                <secondary>hosts with DHCP</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>DHCP</primary>
+            </indexterm>
+            <para>Commonly, hosts may not have a static IP address or the IP
+            address may not be known at the time the client is configured. For
+            example, laptops may be preconfigured as &PROD; clients, but they
+            do not have IP addresses at the time they're configured. Hosts
+            which use DHCP can still be configured with a DNS entry by using 
+            <option>--force</option>. This essentially creates a placeholder
+            entry in the &IPA; DNS service. When the DNS service dynamically
+            updates its records, the host's current IP address is detected and
+            its DNS record is updated.</para>
+            <example id="ex.host-dns-dhcp">
+                <title>Creating Host Entries with DHCP</title>
+                <screen>$ ipa host-add --force client1.example.com</screen>
+            </example>
+            <para>Host records are deleted using the 
+            <command>host-del</command>command. If the &IPA; domain uses DNS,
+            then the 
+            <option>--updatedns</option>option also removes the associated
+            records of any kind for the host from the DNS. 
+            <screen>$ ipa host-del --updatedns
+            client1.example.com</screen></para>
+        </section>
+    </section>
+    <section id="enrolling-machines">
+        <title>Enrolling Clients Manually</title>
+        <para>Enrolling machines as clients in the &IPA; domain is a two-part
+        process. A host entry is created for the client (and stored in the
+        &DSF; instance), and then a keytab is created to provision the
+        client.</para>
+        <para>Both parts are performed automatically by the 
+        <command>ipa-client-install</command>command. It is also possible to
+        perform those steps separately; this allows for administrators to
+        prepare machines and &IPA; in advance of actually configuring the
+        clients. This allows more flexible setup scenarios, including bulk
+        deployments.</para>
+        <para>When performing a manual enrollment, the host entry is created
+        separately, and then enrollment is completed when the client script is
+        run, which creates the requisite keytab.</para>
+        <note>
+            <title>NOTE</title>
+            <para>There are two ways to set the password. You can either supply
+            your own or have &IPA; generate a random one.</para>
+        </note>
+        <section id="Enrollment_with_Separation_of_Duties">
+            <title>Performing a Split Enrollment</title>
+            <para>There may be a situation where an administrator in one group
+            is prohibited from 
+            <emphasis>creating</emphasis>a host entry and, therefore, from
+            simply running the 
+            <command>ipa-client-install</command>command and allowing it to
+            create the host. However, that administrator may have the right to
+            run the command 
+            <emphasis>after</emphasis>a host entry exists. In that case, one
+            administrator can create the host entry manually, then the second
+            administrator can complete the enrollment by running the 
+            <command>ipa-client-install</command>command.</para>
+            <orderedlist>
+                <listitem>
+                    <para>An administrator creates the host entry, as described
+                    in 
+                    <xref linkend="adding-host-entry" />.</para>
+                </listitem>
+                <listitem>
+                    <para>The second administrator installs the &IPA; client
+                    packages on the machine, as in 
+                    <xref linkend="Installing_the_IPA_Client_on_Linux" />.</para>
+                </listitem>
+                <listitem>
+                    <para>When the second administrator runs the setup script,
+                    he must pass his Kerberos password and username (principal)
+                    with the 
+                    <command>ipa-client-install</command>command. For
+                    example:</para>
+                    <screen>$ ipa-client-install -w secret -p admin2</screen>
+                </listitem>
+                <listitem>
+                    <para>The keytab is generated on the server and provisioned
+                    to the client machine, so that the client machine is not
+                    able to connect to the &IPA; domain. The keytab is saved
+                    with 
+                    <systemitem class="username">
+                    root:root</systemitem>ownership and 0600
+                    permissions.</para>
+                </listitem>
+            </orderedlist>
+        </section>
+    </section>
+    <section id="manually-unconfig-machines">
+        <title>Manually Unconfiguring Client Machines</title>
+        <para>A machine may need to be removed from one &IPA; domain and moved
+        to another domain or a virtual machine may be copied. There are a
+        number of different situations where &IPAA; client needs to be
+        reconfigured. The easiest solution is to uninstall the client and then
+        configure it afresh.</para>
+        <screen>ipa-client-install --uninstall</screen>
+        <para>If it is not possible to uninstall the client directly, then the
+        &IPA; configuration can be manually removed from the virtual
+        machine.</para>
+        <warning>
+            <title>WARNING</title>
+            <para>When a machine is unenrolled, the procedure cannot be undone.
+            The machine can only be enrolled again.</para>
+        </warning>
+        <orderedlist>
+            <listitem>
+                <para>Remove the old hostname from the main keytab. This can be
+                done by removing every principal in the realm or by removing
+                specific principals. For example, to remove all principals: 
+                <programlisting>$ ipa-rmkeytab -k /etc/krb5.keytab -r
+                EXAMPLE.COM</programlisting></para>
+                <para>To remove specific principals: 
+                <programlisting>$ ipa-rmkeytab -k /etc/krb5.keytab -p
+                host/server.example.com@EXAMPLE.COM</programlisting></para>
+            </listitem>
+            <listitem>
+                <para>Disable tracking in 
+                <systemitem class="daemon">certmonger</systemitem>for every
+                certificate. Each certificate must be removed from tracking
+                individually. 
+                <programlisting>$ ipa-getcert stop-tracking -n Server-Cert -d
+                /etc/pki/nssdb $ ipa-getcert stop-tracking -n Server2-Cert -d
+                /etc/pki/nssdb</programlisting></para>
+            </listitem>
+            <listitem>
+                <para>Remove the old host from the &IPA; DNS domain. While this
+                is optional, it cleans up the old &IPA; entries associated with
+                the system and allows it to be re-enrolled cleanly at a later
+                time. 
+                <programlisting>$ ipa host-del
+                server.example.com</programlisting></para>
+            </listitem>
+            <listitem>
+                <para>If the system should be re-added to a new &IPA; domain
+                &mdash; such as a virtual machine which was moved from one
+                location to another &mdash; then the system can be rejoined to
+                &IPA; using the 
+                <command>ipa-join</command>command.</para>
+                <programlisting>$ ipa-join</programlisting>
+            </listitem>
+        </orderedlist>
+    </section>
+    <section id="managing-services">
+        <title>Managing Services</title>
+        <!-- what to do here?
+             <para>
+                You can use the web interface to create service principals and also to search for existing service principals. For security and other reasons, however, it is not possible to retrieve a keytab using the web interface. This has to be done either on the command line on the system where the service is accessed, or on the &IPA; server itself, and the keytab then exported to the client host.
+            </para>
+-->
+        <section id="adding-service-entry">
+            <title>Adding and Editing Service Entries and Keytabs</title>
+            <para>As with host entries, service entries for the host (and any
+            other services on that host which will belong to the domain) must
+            be added manually to the &IPA; domain. This is a two step process.
+            First, the service entry must be created, and then a keytab must be
+            created for that service which it will use to access the
+            domain.</para>
+            <para>By default, &PROD; saves its HTTP keytab to 
+            <filename>/etc/httpd/conf/ipa.keytab</filename>.</para>
+            <note>
+                <title>NOTE</title>
+                <para>This keytab is used for the web UI. If a key were stored
+                in 
+                <filename>ipa.keytab</filename>and that keytab file is deleted,
+                the &IPA; web UI will stop working, because the original key
+                would also be deleted.</para>
+            </note>
+            <para>Similar locations can be specified for each service that
+            needs to be made Kerberos aware. There is no specific location that
+            must be used, but, when using 
+            <command>ipa-getkeytab</command>, you should avoid using 
+            <filename>/etc/krb5.keytab</filename>. This file should not contain
+            service-specific keytabs; each service should have its keytab saved
+            in a specific location and the access privileges (and possibly
+            SELinux rules) should be configured so that only this service has
+            access to the keytab.</para>
+            <section id="adding-service-entry-ui">
+                <title>Adding Services and Keytabs from the Web UI</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Open the 
+                        <guilabel>Identity</guilabel>tab, and select the 
+                        <guilabel>Services</guilabel>subtab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Add</guilabel>link at the top of the services
+                        list.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/services-list.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Select the service type from the drop-down menu,
+                        and give it a name.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/service-add1.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Select the hostname of the &IPA; host on which
+                        the service is running. The hostname is used to
+                        construct the full service principal name.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/service-add2.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Add</guilabel>button to save the new service
+                        principal.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Use the 
+                        <command>ipa-getkeytab</command>command to generate and
+                        assign the new keytab for the service principal.</para>
+                        <programlisting># ipa-getkeytab -s server.example.com
+                        -p HTTP/server.example.com -k
+                        /etc/httpd/conf/krb5.keytab -e
+                        des-cbc-crc</programlisting>
+                        <itemizedlist>
+                            <listitem>
+                                <para>The realm name is optional. The &IPA;
+                                server automatically appends the Kerberos realm
+                                for which it is configured. You cannot specify
+                                a different realm.</para>
+                            </listitem>
+                            <listitem>
+                                <para>The hostname must resolve to a DNS A
+                                record for it to work with Kerberos. You can
+                                use the 
+                                <option>--force</option>flag to force the
+                                creation of a principal should this prove
+                                necessary.</para>
+                            </listitem>
+                            <listitem>
+                                <para>The 
+                                <option>-e</option>argument can include a
+                                comma-separated list of encryption types to
+                                include in the keytab. This supersedes any
+                                default encryption type.</para>
+                            </listitem>
+                        </itemizedlist>
+                        <warning>
+                            <title>WARNING</title>
+                            <para>Creating a new key resets the secret for the
+                            specified principal. This means that all other
+                            keytabs for that principal are rendered
+                            invalid.</para>
+                        </warning>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="adding-service-entry-cmd">
+                <title>Adding Services and Keytabs from the Command
+                Line</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Create the service principal. The service is
+                        recognized through a name like 
+                        <emphasis>service/FQDN</emphasis>:</para>
+                        <programlisting># ipa service-add 
+                        <replaceable>
+                        serviceName/hostname</replaceable></programlisting>
+                        <para>For example:</para>
+                        <programlisting>$ ipa service-add
+                        HTTP/server.example.com
+                        -------------------------------------------------------
+                        Added service "HTTP/server.example.com@EXAMPLE.COM"
+                        -------------------------------------------------------
+                        Principal: HTTP/server.example.com@EXAMPLE.COM Managed
+                        by: ipaserver.example.com</programlisting>
+                    </listitem>
+                    <listitem>
+                        <para>Create the service keytab file using the 
+                        <command>ipa-getkeytab</command>command. This command
+                        is run on the client in the &IPA; domain. (Actually, it
+                        can be run on any &IPA; server or client, and then the
+                        keys copied to the appropriate machine. However, it is
+                        simplest to run the command on the machine with the
+                        service being created.)</para>
+                        <para>The command requires the Kerberos service
+                        principal ( 
+                        <option>-p</option>), the &IPA; server name ( 
+                        <option>-s</option>), the file to write ( 
+                        <option>-k</option>), and the encryption method ( 
+                        <option>-e</option>). Be sure to copy the keytab to the
+                        appropriate directory for the service.</para>
+                        <para>For example:</para>
+                        <programlisting># ipa-getkeytab -s server.example.com
+                        -p HTTP/server.example.com -k
+                        /etc/httpd/conf/krb5.keytab -e
+                        des-cbc-crc</programlisting>
+                        <itemizedlist>
+                            <listitem>
+                                <para>The realm name is optional. The &IPA;
+                                server automatically appends the Kerberos realm
+                                for which it is configured. You cannot specify
+                                a different realm.</para>
+                            </listitem>
+                            <listitem>
+                                <para>The hostname must resolve to a DNS A
+                                record for it to work with Kerberos. You can
+                                use the 
+                                <option>--force</option>flag to force the
+                                creation of a principal should this prove
+                                necessary.</para>
+                            </listitem>
+                            <listitem>
+                                <para>The 
+                                <option>-e</option>argument can include a
+                                comma-separated list of encryption types to
+                                include in the keytab. This supersedes any
+                                default encryption type.</para>
+                            </listitem>
+                        </itemizedlist>
+                        <warning>
+                            <title>WARNING</title>
+                            <para>The 
+                            <command>ipa-getkeytab</command>command resets the
+                            secret for the specified principal. This means that
+                            all other keytabs for that principal are rendered
+                            invalid.</para>
+                        </warning>
+                    </listitem>
+                </orderedlist>
+            </section>
+        </section>
+        <section id="request-service-service">
+            <title>Adding Services and Certificates for Services</title>
+            <para>While services can use keytabs, some services require
+            certificates for access. In that case, a service can be added (or
+            modified) to include a certificate with its service entry.</para>
+            <section id="request-service-service-ui">
+                <title>Adding Services and Certificates from the Web UI</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Open the 
+                        <guilabel>Identity</guilabel>tab, and select the 
+                        <guilabel>Services</guilabel>subtab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Add</guilabel>link at the top of the services
+                        list.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/services-list.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Select the service type from the drop-down menu,
+                        and give it a name.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/service-add1.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Select the hostname of the &IPA; host on which
+                        the service is running. The hostname is used to
+                        construct the full service principal name.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/service-add2.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Add and Edit</guilabel>button to go directly
+                        to the service entry page.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Scroll to the bottom of the page, to the 
+                        <guilabel>Service Certificate</guilabel>section.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>New Certificate</guilabel>button to create
+                        the service certificate.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/service-cert.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="request-service-service-cmd">
+                <title>Adding Services and Certificates from the Command
+                Line</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Create the service principal. The service is
+                        recognized through a name like 
+                        <emphasis>service/FQDN</emphasis>:</para>
+                        <programlisting>[jsmith@ipaserver ~]$ kinit admin
+                        [jsmith@ipaserver ~]$ ipa service-add 
+                        <replaceable>
+                        serviceName/hostname</replaceable></programlisting>
+                        <para>For example:</para>
+                        <programlisting language="Bash">$ ipa service-add
+                        HTTP/server.example.com
+                        -------------------------------------------------------
+                        Added service "HTTP/server.example.com@EXAMPLE.COM"
+                        -------------------------------------------------------
+                        Principal: HTTP/server.example.com@EXAMPLE.COM Managed
+                        by: ipaserver.example.com</programlisting>
+                        <!--programlisting># ipa service-add <replaceable>serviceName/hostname</replaceable> - -certificate="<replaceable>CSR</replaceable>"</programlisting>
+                            <para>
+                                For example (this example shortens the certificate):
+                            </para>
+<programlisting language="Bash">$ ipa service-add HTTP/server.example.com - -certificate="MIICbTCCAVUCAQ...IzSljdLMYNg=="
+
+Added service "HTTP/server.example.com@EXAMPLE.COM"
+  Principal: HTTP/server.example.com@EXAMPLE.COM
+  Managed by: ipaserver.example.com
+</programlisting>
+                            <para>
+                                Include the <emphasis>complete</emphasis> certificate request in the <option>- -certificate</option> option.
+                            </para-->
+                    </listitem>
+                    <listitem>
+                        <para>Create a certificate for the service. Be sure to
+                        copy the keytab to the appropriate directory for the
+                        service.</para>
+                        <para>For example:</para>
+                        <programlisting>$ ipa cert-request
+                        --principal=HTTP/web.example.com
+                        example.csr</programlisting>
+                        <note>
+                            <title>TIP</title>
+                            <para>Use the 
+                            <option>--add</option>option to create the service
+                            automatically when requesting the
+                            certificate.</para>
+                        </note>
+                        <para>Alternatively, use the 
+                        <command>getcert</command>command, which creates and
+                        manages the certificate through 
+                        <command>certmonger</command>. The options are
+                        described more in 
+                        <xref linkend="certmonger-req" />and 
+                        <xref linkend="getcert"
+                        condition="reviewing" />.</para>
+                        <screen>$ ipa-getcert request -d /etc/httpd/alias -n
+                        Server-Cert -K HTTP/client1.example.com -N
+                        'CN=client1.example.com,O=EXAMPLE.COM'</screen>
+                    </listitem>
+                </orderedlist>
+            </section>
+        </section>
+        <!--section id="Configuring_an_NFS_Service_Principal_on_the_IPA_Server">
+            <title>Configuring an NFS Service</title>
+             <orderedlist>
+                 <listitem>
+                    <para>
+                        Create a directory for the NFS information which is writable by all users.
+<screen># mkdir /export
+
+# chmod 777 /export</screen>
+
+                    </para>
+
+                </listitem>
+                 <listitem>
+                    <para>
+                        Edit the <filename>/etc/exports</filename> file and add the Kerberos information:
+                    </para>
+                     <para>
+                        
+<programlisting>/export  *(rw,fsid=0,insecure,no_subtree_check)
+/export  gss/krb5(rw,fsid=0,insecure,no_subtree_check)
+/export  gss/krb5i(rw,fsid=0,insecure,no_subtree_check)
+/export  gss/krb5p(rw,fsid=0,insecure,no_subtree_check)
+</programlisting>
+
+                    </para>
+
+                </listitem>
+                 <listitem>
+                    <para>
+                        To enable secure NFS, add the following line to <filename>/etc/sysconfig/nfs</filename>:
+                    </para>
+                     <para>
+                        
+<programlisting>SECURE_NFS=yes
+</programlisting>
+
+                    </para>
+
+                </listitem>
+                 <listitem>
+                    <para>
+                        Add a service principal and keytab for NFS, as in <xref linkend="adding-service-entry" />.
+<screen># ipa service-add nfs/ipaserver.example.com
+
+# ipa-getkeytab -s ipaserver.example.com -p nfs/ipaserver.example.com -k /etc/nfs/conf/nfs.keytab</screen>
+
+                    </para>
+                </listitem>
+                 <listitem>
+                    <para>
+                        Reload the NFS configuration, and restart the required services, <systemitem>services</systemitem>, <systemitem>nfs</systemitem>, and <systemitem>rpcgssd</systemitem>. 
+                            Use the <option>-k</option> option when restarting <systemitem class="daemon">rpcgssd</systemitem>; this updates the NFS configuration with the path to the NFS keytab.
+<screen># exportfs -a
+
+# restart services
+
+# service nfs restart
+
+# service rpcgssd restart -k /etc/nfs/conf/nfs.keytab</screen>
+
+                    </para>
+                </listitem>
+            </orderedlist>
+        </section-->
+        <section id="Creating_an_IPA_Service-Using_NSS">
+            <title>Storing Certificates in NSS Databases</title>
+            <para>When services use certificates, the certificates and keys can
+            be stored in NSS databases (which may also be used by the services
+            themselves, as well as &PROD;).</para>
+            <orderedlist>
+                <listitem>
+                    <para>Create the NSS databases.</para>
+                    <screen>$ certutil -N -d 
+                    <replaceable>/path/to/database/dir</replaceable></screen>
+                </listitem>
+                <listitem>
+                    <para>Request the certificate using 
+                    <command>certutil</command>, an NSS tool.</para>
+                    <screen>$ certutil -R -s
+                    "CN=client1.example.com,O=EXAMPLE.COM" -d 
+                    <replaceable>/path/to/database/dir</replaceable>-a &gt;
+                    example.csr</screen>
+                </listitem>
+            </orderedlist>
+            <para>If the &IPA; domain is using &CRTS; for its CA, only the CN
+            of the subject name is used. With a self-signed CA, the subject
+            must match the configured certificate subject base. The &IPA;
+            server rejects requests with a subject base that differs from this
+            value.</para>
+        </section>
+        <section id="ipa-cluster">
+            <title>Configuring Clustered Services</title>
+            <para>The &IPA; server is not 
+            <firstterm>cluster aware</firstterm>. However, it is possible to
+            configure a clustered service to be part of &IPA; by synchronizing
+            Kerberos keys across all of the participating hosts and configuring
+            services running on the hosts to respond to whatever names the
+            clients use.</para>
+            <orderedlist>
+                <listitem>
+                    <para>Enroll all of the hosts in the cluster into the &IPA;
+                    domain.</para>
+                </listitem>
+                <listitem>
+                    <para>Create any service principals and generate the
+                    required keytabs.</para>
+                </listitem>
+                <listitem>
+                    <para>Collect any keytabs that have been set up for
+                    services on the host, including the host keytab at 
+                    <filename>/etc/krb5.keytab</filename>.</para>
+                </listitem>
+                <listitem>
+                    <para>Use the 
+                    <command>ktutil</command>command to produce a single keytab
+                    file that contains the contents of all of the keytab
+                    files.</para>
+                    <orderedlist>
+                        <listitem>
+                            <para>For each file, use the 
+                            <command>rkt</command>command to read the keys from
+                            that file.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Use the 
+                            <command>wkt</command>command to write all of the
+                            keys which have been read to a new keytab
+                            file.</para>
+                        </listitem>
+                    </orderedlist>
+                </listitem>
+                <listitem>
+                    <para>Replace the keytab files on each host with the
+                    newly-created combined keytab file.</para>
+                </listitem>
+                <listitem>
+                    <para>At this point, each host in this cluster can now
+                    impersonate any other host.</para>
+                </listitem>
+                <listitem>
+                    <para>Some services require additional configuration to
+                    accommodate cluster members which do not reset hostnames
+                    when taking over a failed service. 
+                    <itemizedlist>
+                        <listitem>
+                            <para>For 
+                            <systemitem class="daemon">sshd</systemitem>, set 
+                            <parameter>GSSAPIStrictAcceptorCheck
+                            no</parameter>in 
+                            <filename>/etc/ssh/sshd_config</filename>.</para>
+                        </listitem>
+                        <listitem>
+                            <para>For 
+                            <systemitem>mod_auth_kerb</systemitem>, set 
+                            <parameter>KrbServiceName Any</parameter>in 
+                            <filename>
+                            /etc/httpd/conf.d/auth_kerb.conf</filename>.</para>
+                        </listitem>
+                    </itemizedlist></para>
+                </listitem>
+            </orderedlist>
+            <note>
+                <title>NOTE</title>
+                <para>For SSL servers, the subject name or a subject
+                alternative name for the server's certificate must appear
+                correct when a client connects to the clustered host. If
+                possible, share the private key among all of the hosts. If each
+                cluster member contains a subject alternative name which
+                includes the names of all the other cluster members will
+                satisfy any client connection requirements.</para>
+            </note>
+        </section>
+        <section id="Using_the_Same_Service_Principal_for_Multiple_Services">
+            <title>Using the Same Service Principal for Multiple
+            Services</title>
+            <para>Within a cluster, the same service principal can be used for
+            multiple services, spread across different machines.</para>
+            <orderedlist>
+                <listitem>
+                    <para>Retrieve a service principal using the 
+                    <command>ipa-getkeytab</command>command.</para>
+                    <screen># ipa-getkeytab -s kdc.example.com -p
+                    HTTP/server.example.com -k /etc/httpd/conf/krb5.keytab -e
+                    des-cbc-crc</screen>
+                </listitem>
+                <listitem>
+                    <para>Either direct multiple servers or services to use the
+                    same file, or copy the file to individual servers as
+                    required.</para>
+                </listitem>
+            </orderedlist>
+        </section>
+    </section>
+    <section id="host-disable">
+        <title>Disabling and Re-enabling Host and Service Entries</title>
+        <indexterm>
+            <primary>services</primary>
+            <secondary>disabling</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>hosts</primary>
+            <secondary>disabling</secondary>
+        </indexterm>
+        <para>Active services and hosts can be accessed by other services,
+        hosts, and users within the domain. There can be situations when it is
+        necessary to remove a host or a service from activity. However,
+        deleting a service or a host removes the entry and all the associated
+        configuration, and it removes it permanently.</para>
+        <section id="host-disable-proc">
+            <title>Disabling Host and Service Entries</title>
+            <para>Disabling a host or service prevents domain users from access
+            it without permanently removing it from the domain. This can be
+            done by using the 
+            <command>host-disable</command>and 
+            <command>service-disable</command>commands.</para>
+            <para>For example, for a host:</para>
+            <screen>[jsmith@ipaserver ~]$ kinit admin [jsmith@ipaserver ~]$ ipa
+            host-disable server.example.com</screen>
+            <para>For a service, specify the principal rather than the
+            hostname:</para>
+            <screen>$ ipa service-disable http/server.example.com</screen>
+            <important>
+                <title>IMPORTANT</title>
+                <para>Disabling a host entry not only disables that host. It
+                disables every configured service on that host as well.</para>
+            </important>
+        </section>
+        <section id="reenabling-hosts">
+            <title>Re-enabling Hosts and Services</title>
+            <para>Disabling a service or host essentially kills its current,
+            active keytabs. Removing the keytabs effectively removes the host
+            or service from the &IPA; domain without otherwise touching its
+            configuration entry.</para>
+            <para>To re-enable a host or service, simply use the 
+            <command>ipa-getkeytab</command>command. The 
+            <option>-s</option>option sets which &IPA; server to request the
+            keytab, 
+            <option>-p</option>gives the principal name, and 
+            <option>-k</option>gives the file to which to save the
+            keytab.</para>
+            <para>For example, requesting a new host keytab:</para>
+            <screen>[jsmith@ipaserver ~]$ ipa-getkeytab -s
+            ipaserver.example.com -p host/server.example.com -k
+            /etc/krb5.keytab -D
+            fqdn=server.example.com,cn=computers,cn=accounts,dc=example,dc=com
+            -w password</screen>
+            <para>If the 
+            <command>ipa-getkeytab</command>command is run on an active &IPA;
+            client or server, then it can be run without any LDAP credentials (
+            
+            <option>-D</option>and 
+            <option>-w</option>). The &IPA; user uses Kerberos credentials to
+            authenticate to the domain. To run the command directly on the
+            disabled host, then supply LDAP credentials to authenticate to the
+            &IPA; server. The credentials should correspond to the host or
+            service which is being re-enabled.</para>
+        </section>
+    </section>
+    <section id="Extending_the_Permissions_of_IPA_Managed_Hosts">
+        <title>Extending Access Permissions over Other Hosts and
+        Services</title>
+        <para>As discussed in 
+        <xref linkend="service-interactions" />, within the &IPA; domain, 
+        <emphasis>manage</emphasis>means being able to retrieve a keytab and
+        certificates for another host or service. Every host and service has a 
+        <parameter>managedby</parameter>entry which lists what hosts or
+        services can manage it. By default, a host can manage itself and all of
+        its services. It is also possible to allow a host to manage other
+        hosts, or services on other hosts, by updating the appropriate
+        delegations or providing a suitable 
+        <parameter>managedby</parameter>entry.</para>
+        <para>&IPAB; service can be managed from any &IPA; host, as long as
+        that host has been granted, or 
+        <emphasis>delegated</emphasis>, permission to access the service.
+        Likewise, hosts can be delegated permissions to other hosts within the
+        domain.</para>
+        <figure id="fig.host-service">
+            <title>Host and Service Delegation</title>
+            <mediaobject>
+                <imageobject>
+                    <imagedata fileref="images/host-services.png" />
+                </imageobject>
+            </mediaobject>
+        </figure>
+        <note>
+            <title>NOTE</title>
+            <para>If a host is delegated authority to another host through a 
+            <command>managedBy</command>entry, it does not mean that the host
+            has also been delegated management for all services on that host.
+            Each delegation has to be performed independently.</para>
+        </note>
+        <section id="Delegating_Service_Management">
+            <title>Delegating Service Management</title>
+            <para>A host is delegated control over a service using the 
+            <command>service-add-host</command>command. There are two parts to
+            delegating the service: specifying the principal and identifying
+            the hosts (in a comma-separated list) with control:</para>
+            <screen># ipa service-add-host 
+            <replaceable>principal</replaceable>--hosts= 
+            <replaceable>hostnames</replaceable></screen>
+            <para>For example:</para>
+            <screen># ipa service-add-host http/web.example.com
+            --hosts=client1.example.com</screen>
+            <para>Once the host is delegated authority, the host principal can
+            be used to manage the service:</para>
+            <screen># kinit -kt /etc/krb5.keytab host/`hostname` #
+            ipa-getkeytab -s `hostname` -k /tmp/test.keytab -p
+            http/web.example.com Keytab successfully retrieved and stored in:
+            /tmp/test.keytab</screen>
+            <para>To create a ticket for this service, create a certificate
+            request on the host with the delegated authority and use the 
+            <command>cert-request</command>command to create a service entry
+            and load the certification information:</para>
+            <screen># ipa cert-request --add --principal=http/web.example.com
+            web.csr Certificate: MIICETCCAXqgA...[snip] Subject:
+            CN=web.example.com,O=EXAMPLE.COM Issuer: CN=EXAMPLE.COM Certificate
+            Authority Not Before: Tue Feb 08 18:51:51 2011 UTC Not After: Mon
+            Feb 08 18:51:51 2016 UTC Fingerprint (MD5):
+            c1:46:8b:29:51:a6:4c:11:cd:81:cb:9d:7c:5e:84:d5 Fingerprint (SHA1):
+            01:43:bc:fa:b9:d8:30:35:ee:b6:54:dd:a4:e7:d2:11:b1:9d:bc:38 Serial
+            number: 1005</screen>
+        </section>
+        <section id="Delegating_Host_Management">
+            <title>Delegating Host Management</title>
+            <para>Hosts are delegated authority over other hosts through the 
+            <command>host-add-managedby</command>command. This creates a 
+            <command>managedby</command>entry. Once the 
+            <command>managedby</command>entry is created, then the host can
+            retrieve a keytab for the host it has delegated authority
+            over.</para>
+            <orderedlist>
+                <listitem>
+                    <para>Log in as the admin user. 
+                    <screen># kinit admin</screen></para>
+                </listitem>
+                <listitem>
+                    <para>Add the 
+                    <parameter>managedby</parameter>entry. For example, this
+                    delegates authority 
+                    <emphasis>over</emphasis>client2 
+                    <emphasis>to</emphasis>client1. 
+                    <screen># ipa host-add-managedby client2.example.com
+                    --hosts=client1.example.com</screen></para>
+                </listitem>
+                <listitem>
+                    <para>Obtain a ticket as the host 
+                    <systemitem>client1</systemitem>and then retrieve a keytab
+                    for 
+                    <systemitem>client2</systemitem>: 
+                    <screen># kinit -kt /etc/krb5.keytab host/`hostname` #
+                    ipa-getkeytab -s `hostname` -k /tmp/client2.keytab -p
+                    host/client2.example.com Keytab successfully retrieved and
+                    stored in: /tmp/client2.keytab</screen></para>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="delegating-management-ui">
+            <title>Delegating Host or Service Management in the Web UI</title>
+            <para>Each host and service entry has a configuration tab that
+            indicates what hosts have been delegated management control over
+            that host or service.</para>
+            <orderedlist>
+                <listitem>
+                    <para>Open the 
+                    <guilabel>Identity</guilabel>tab, and select the 
+                    <guilabel>Hosts</guilabel>or 
+                    <guilabel>Services</guilabel>subtab.</para>
+                </listitem>
+                <listitem>
+                    <para>Click the name of the host or service 
+                    <emphasis>that you are going to grant delegated management
+                    to</emphasis>.</para>
+                </listitem>
+                <listitem>
+                    <para>Click the 
+                    <guilabel>Hosts</guilabel>subtab on the far right of the
+                    host/service entry. This is the tab which lists hosts 
+                    <emphasis>which can manage</emphasis>the selected
+                    host/service.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/host-managedby.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>Click the 
+                    <guilabel>Add</guilabel>link at the top of the list.</para>
+                </listitem>
+                <listitem>
+                    <para>Click the checkbox by the names of the hosts to which
+                    to delegate management for the host/service. Click the
+                    right arrows button, 
+                    <guibutton>&gt;&gt;</guibutton>, to move the hosts to the
+                    selection box.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/host-managedby2.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>Click the 
+                    <guibutton>Add</guibutton>button to close the selection box
+                    and to save the delegation settings.</para>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="accessing-service">
+            <title>Accessing Delegated Services</title>
+            <para>For both services and hosts, if a client has delegated
+            authority, it can obtain a keytab for that principal on the local
+            machine. For services, this has the format 
+            <emphasis>service/hostname@REALM</emphasis>. For hosts, the 
+            <emphasis>service</emphasis>is 
+            <systemitem>host</systemitem>.</para>
+            <para>With 
+            <command>kinit</command>, use the 
+            <option>-k</option>option to load a keytab and the 
+            <option>-t</option>option to specify the keytab.</para>
+            <para>For example, to access a host: 
+            <screen># kinit -kt /etc/krb5.keytab
+            host/ipa.example.com@EXAMPLE.COM</screen></para>
+            <para>To access a service: 
+            <screen># kinit -kt /etc/httpd/conf/krb5.keytab
+            http/ipa.example.com@EXAMPLE.COM</screen></para>
+        </section>
+    </section>
+    <section id="host-keys">
+        <title>Managing Public SSH Keys for Hosts</title>
+        <para>OpenSSH uses 
+        <emphasis>public-private key pairs</emphasis>to authenticate hosts. One
+        machine attempts to access another machine and presents its key pair.
+        The first time the host authenticates, the administrator on the target
+        machine has to approve the request manually. The machine then stores
+        the host's public key in a 
+        <filename>known_hosts</filename>file. Any time that the remote machine
+        attempts to access the target machine again, the target machine simply
+        checks its 
+        <filename>known_hosts</filename>file and then grants access
+        automatically to approved hosts.</para>
+        <para>There are a few problems with this system:</para>
+        <itemizedlist>
+            <listitem>
+                <para>The 
+                <filename>known_hosts</filename>file stores host entries in a
+                triplet of the host IP address, hostname, and key. This file
+                can rapidly become out of date if the IP address changes (which
+                is common in virtual environments and data centers) or if the
+                key is updated.</para>
+            </listitem>
+            <listitem>
+                <para>SSH keys have to be distributed manually and separately
+                to all machines in an environment.</para>
+            </listitem>
+            <listitem>
+                <para>Administrators have to approve host keys to add them to
+                the configuration, but it is difficult to verify either the
+                host or key issuer properly, which can create security
+                problems.</para>
+            </listitem>
+        </itemizedlist>
+        <para>On &OS;, the System Security Services Daemon (SSSD) can be
+        configured to cache and retrieve host SSH keys so that applications and
+        services only have to look in one location for host keys. Because SSSD
+        can use &PROD; as one of its identity information providers, &PROD;
+        provides a universal and centralized repository of keys. Administrators
+        do not need to worry about distributing, updating, or verifying host
+        SSH keys.</para>
+        <section id="host-keys-format">
+            <title>About the SSH Key Format</title>
+            <para>When keys are uploaded to the &IPA; entry, the key format can
+            be either an 
+            <ulink url="http://openssh.com/txt/rfc4716.txt">OpenSSH-style
+            key</ulink>or a raw 
+            <ulink url="http://www.ietf.org/rfc/rfc4253.txt">RFC 4253-style
+            blob</ulink>. Any RFC 4253-style key is automatically converted
+            into an OpenSSH-style key before it is imported and saved into the
+            &IPA; LDAP server.</para>
+            <para>The &IPA; server can identify the type of key, such as an RSA
+            or DSA key, from the uploaded key blob. However, in a key file such
+            as 
+            <filename>~/.ssh/known_hosts</filename>, a key entry is identified
+            by the hostname and IP address of the server, its type, then lastly
+            the key itself. For example:</para>
+            <screen>host.example.com,1.2.3.4 ssh-rsa AAA...ZZZ==</screen>
+            <para>This is slightly different than a user public key entry,
+            which has the elements in the order 
+            <emphasis>type key== comment</emphasis>:</para>
+            <screen>"ssh-rsa ABCD1234...== ipaclient.example.com"</screen>
+            <para>All three parts from the key file can be uploaded to and
+            viewed for the host entry. In that case, the host public key entry
+            from the 
+            <filename>~/.ssh/known_hosts</filename>file needs to be reordered
+            to match the format of a user key, 
+            <emphasis>type key== comment</emphasis>:</para>
+            <screen>ssh-rsa AAA...ZZZ== host.example.com,1.2.3.4</screen>
+            <para>The key type can be determined automatically from the content
+            of the public key, and the comment is optional, to make identifying
+            individual keys easier. The only required element is the public key
+            blob itself.</para>
+        </section>
+        <section id="installing-host-keys">
+            <title>About ipa-client-install and OpenSSH</title>
+            <indexterm>
+                <primary>installing clients</primary>
+                <secondary>disabling OpenSSH</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>SSH</primary>
+                <secondary>disabling at client install</secondary>
+            </indexterm>
+            <para>The 
+            <command>ipa-client-install</command>script, by default, configures
+            an OpenSSH server and client on the &IPA; client machine. It also
+            configures SSSD to perform host and user key caching. Essentially,
+            simply configuring the client does all of the configuration
+            necessary for the host to use SSSD, OpenSSH, and &PROD; for key
+            caching and retrieval.</para>
+            <note>
+                <title>NOTE</title>
+                <para>Even if the machine is added as an &IPA; client using 
+                <command>ipa-client-install</command>, the client is not
+                created with any SSH keys. These keys need to be created
+                separately and added to the host account, as described in 
+                <xref linkend="adding-host-keys" />.</para>
+            </note>
+            <para>There is an additional client configuration option, 
+            <option>--ssh-trust-dns</option>, which can be run with 
+            <command>ipa-client-install</command>and automatically configures
+            OpenSSH to trust the &IPA; DNS records, where the host keys are
+            stored.</para>
+            <para>Alternatively, it is possible to disable OpenSSH at the time
+            the client is installed, using the 
+            <option>--no-sshd</option>option. This prevents the install script
+            from configuring the OpenSSH server.</para>
+            <para>Another option, 
+            <option>--no-dns-sshfp</option>, prevents the host from creating
+            DNS SSHFP records with its own DNS entries. This can be used with
+            or without the 
+            <option>--no-sshd</option>option.</para>
+        </section>
+        <section id="uploading-host-keys-ui">
+            <title>Uploading Host SSH Keys Through the Web UI</title>
+            <orderedlist>
+                <listitem>
+                    <para>The key for a host can probably be retrieved from a 
+                    <filename>~/.ssh/known_hosts</filename>. For
+                    example:</para>
+                    <screen>server.example.com,1.2.3.4 ssh-rsa
+                    AAAAB3NzaC1yc2EAAAABIwAAAQEApvjBvSFSkTU0WQW4eOweeo0DZZ08F9Ud21xlLy6FOhzwpXFGIyxvXZ52+siHBHbbqGL5+14N7UvElruyslIHx9LYUR/pPKSMXCGyboLy5aTNl5OQ5EHwrhVnFDIKXkvp45945R7SKYCUtRumm0Iw6wq0XD4o+ILeVbV3wmcB1bXs36ZvC/M6riefn9PcJmh6vNCvIsbMY6S+FhkWUTTiOXJjUDYRLlwM273FfWhzHK+SSQXeBp/zIn1gFvJhSZMRi9HZpDoqxLbBB9QIdIw6U4MIjNmKsSI/ASpkFm2GuQ7ZK9KuMItY2AoCuIRmRAdF8iYNHBTXNfFurGogXwRDjQ==</screen>
+                    <para>If necessary, generate a host key. When using the
+                    OpenSSH tools, make sure to use a blank passphrase and to
+                    save the key to a different location than the user's 
+                    <filename>~/.ssh/</filename>directory, so it will not
+                    overwrite any existing keys.</para>
+                    <screen>[jsmith@server ~]$ ssh-keygen -t rsa -C
+                    "server.example.com,1.2.3.4" Generating public/private rsa
+                    key pair. Enter file in which to save the key
+                    (/home/jsmith/.ssh/id_rsa): /home/jsmith/.ssh/host_keys
+                    Enter passphrase (empty for no passphrase): Enter same
+                    passphrase again: Your identification has been saved in
+                    /home/jsmith/.ssh/host_keys. Your public key has been saved
+                    in /home/jsmith/.ssh/host_keys.pub. The key fingerprint is:
+                    4f:61:ee:2c:f7:d7:da:41:17:93:de:1d:19:ac:2e:c8
+                    server.example.com The key's randomart image is: +--[ RSA
+                    2048]----+ | .. | | .+| | o .* | | o . .. *| | S + . o+| |
+                    E . .. .| | . = . o | | o . ..o| | .....|
+                    +-----------------+</screen>
+                </listitem>
+                <listitem>
+                    <para>Copy the public key from the key file. The full key
+                    entry has the form 
+                    <emphasis>hostname,IP type key==</emphasis>. Only the 
+                    <emphasis>key==</emphasis>is required, but the entire entry
+                    can be stored. To use all elements in the entry, rearrange
+                    the entry so it has the order 
+                    <emphasis>type key== [hostname,IP]</emphasis></para>
+                    <screen>[jsmith@server ~]$ cat
+                    /home/jsmith/.ssh/host_keys.pub ssh-rsa
+                    AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ==
+                    server.example.com,1.2.3.4</screen>
+                </listitem>
+                <listitem>
+                    <para>Open the 
+                    <guilabel>Identity</guilabel>tab, and select the 
+                    <guilabel>Hosts</guilabel>subtab.</para>
+                </listitem>
+                <listitem>
+                    <para>Click the name of the host to edit.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/hosts-list.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>In the 
+                    <guilabel>Host Settings</guilabel>area of the 
+                    <guilabel>Settings</guilabel>tab, click the 
+                    <guilabel>SSH public keys: Add</guilabel>link.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/sshkeys-host1.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>The UI opens a new link, 
+                    <guilabel>New: key not set Show/Set key</guilabel>. Click
+                    the 
+                    <guilabel>Show/Set key</guilabel>link.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/sshkeys-host2.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>Paste in the public key for the host, and click the 
+                    <guibutton>Set</guibutton>button.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/sshkeys-host3.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                    <para>The 
+                    <guilabel>SSH public keys</guilabel>field now shows 
+                    <guilabel>New: key set</guilabel>. Clicking the 
+                    <guilabel>Show/Set key</guilabel>link opens the submitted
+                    key.</para>
+                </listitem>
+                <listitem>
+                    <para>To upload multiple keys, click the 
+                    <guilabel>Add</guilabel>link below the list of public keys,
+                    and upload the other keys.</para>
+                </listitem>
+                <listitem>
+                    <para>When all the keys have been submitted, click the 
+                    <guilabel>Update</guilabel>link at the top of the host's
+                    page to save the changes.</para>
+                </listitem>
+            </orderedlist>
+            <para>When the public key is saved, the entry is displayed as the
+            key fingerprint, the comment (if one was included), and the key
+            type 
+            <footnote>
+                <para>The key type is determined automatically from the key
+                itself, if it is not included in the uploaded key.</para>
+            </footnote>.</para>
+            <figure>
+                <title>Saved Public Key</title>
+                <mediaobject>
+                    <imageobject>
+                        <imagedata fileref="images/sshkeys-host4.png" />
+                    </imageobject>
+                </mediaobject>
+            </figure>
+            <para condition="fedora">After uploading the host keys, configure
+            SSSD to use &PROD; as one of its identity domains and set up
+            OpenSSH to use the SSSD tooling for managing host keys.</para>
+            <para condition="redhat">After uploading the host keys, configure
+            SSSD to use &PROD; as one of its identity domains and set up
+            OpenSSH to use the SSSD tooling for managing host keys. This is
+            covered in the 
+            <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6-Beta/html/Deployment_Guide/openssh-sssd.html">
+            &OS; Deployment Guide</ulink>.</para>
+        </section>
+        <section id="adding-host-keys">
+            <title>Adding Host Keys from the Command Line</title>
+            <para>Host SSH keys are added to host entries in &IPA;, either when
+            the host is created using 
+            <command>host-add</command>or by modifying the entry later.</para>
+            <note>
+                <title>NOTE</title>
+                <para>Host keys are not created by the 
+                <filename>ipa-client-install</filename>command.</para>
+            </note>
+            <orderedlist>
+                <listitem>
+                    <para>Run the 
+                    <command>host-mod</command>command with the 
+                    <option>--sshpubkey</option>option to upload the 64
+                    bit-encoded public key to the host entry.</para>
+                    <para>Adding a host key also changes the DNS SSHFP entry
+                    for the host, so also use the 
+                    <option>--updatedns</option>option to update the host's DNS
+                    entry.</para>
+                    <para>For example:</para>
+                    <screen>[jsmith@server ~]$ ipa host-mod
+                    --sshpubkey="ssh-rsa 12345abcde== ipaclient.example.com"
+                    --updatedns host1.example.com</screen>
+                    <para>With a real key, the key is longer and usually ends
+                    with an equals sign (=).</para>
+                    <para>To upload multiple keys, pass a comma-separated list
+                    of keys with a single 
+                    <option>--sshpubkey</option>option:</para>
+                    <screen>--sshpubkey="12345abcde==,key2==,key3=="</screen>
+                    <note>
+                        <title>TIP</title>
+                        <para>A host can have multiple public keys.</para>
+                    </note>
+                </listitem>
+                <listitem condition="redhat">
+                    <para>After uploading the host keys, configure SSSD to use
+                    &PROD; as one of its identity domains and set up OpenSSH to
+                    use the SSSD tooling for managing host keys. This is
+                    covered in the 
+                    <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6-Beta/html/Deployment_Guide/openssh-sssd.html">
+                    &OS; Deployment Guide</ulink>.</para>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="removing-host-keys">
+            <title>Removing Host Keys</title>
+            <para>Host keys can be removed once they expire or are no longer
+            valid.</para>
+            <para>To remove an individual host key, it is easiest to remove the
+            key through the web UI:</para>
+            <orderedlist>
+                <listitem>
+                    <para>Open the 
+                    <guilabel>Identity</guilabel>tab, and select the 
+                    <guilabel>Hosts</guilabel>subtab.</para>
+                </listitem>
+                <listitem>
+                    <para>Click the name of the host to edit.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/hosts-list.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>Open the 
+                    <guilabel>Host Settings</guilabel>area of the 
+                    <guilabel>Settings</guilabel>tab.</para>
+                </listitem>
+                <listitem>
+                    <para>Click the 
+                    <guilabel>Delete</guilabel>link by the fingerprint of the
+                    key to remove.</para>
+                    <informalfigure>
+                        <mediaobject>
+                            <imageobject>
+                                <imagedata fileref="images/sshkeys-host4.png" />
+                            </imageobject>
+                        </mediaobject>
+                    </informalfigure>
+                </listitem>
+                <listitem>
+                    <para>Click the 
+                    <guilabel>Update</guilabel>link at the top of the host's
+                    page to save the changes.</para>
+                </listitem>
+            </orderedlist>
+            <para>The command-line tools can be used to remove all keys. This
+            is done by running 
+            <command>ipa host-mod</command>with the 
+            <option>--sshpubkey=</option>set to a blank value; this removes 
+            <emphasis>all</emphasis>public keys for the host. Also, use the 
+            <option>--updatedns</option>option to update the host's DNS entry.
+            For example:</para>
+            <screen>[jsmith@server ~]$ kinit admin [jsmith@server ~]$ ipa
+            host-mod --sshpubkey= --updatedns host1.example.com</screen>
+        </section>
+    </section>
+    <section id="renaming-machines">
+        <title>Renaming Machines and Reconfiguring &IPA; Client
+        Configuration</title>
+        <para>The hostname of a system is critical for the correct operation of
+        Kerberos and SSL. Both of these security mechanisms rely on the
+        hostname to ensure that communication is occurring between the
+        specified hosts. Infrastructures which use virtual machines or
+        clustered servers will commonly have hosts which are renamed because
+        systems are copied, moved, or renamed.</para>
+        <para>&OS; does not provide a simple rename command to facilitate the
+        renaming of &IPAA; host. Renaming a host in &IPAA; domain involves
+        deleting the entry in &IPA;, uninstalling the client software, changing
+        the hostname, and re-enrolling using the new name. Additionally, part
+        of renaming hosts requires regenerating service principals.</para>
+        <para>To reconfigure the client:</para>
+        <orderedlist>
+            <listitem>
+                <para>Identify which services are running on the machine. These
+                need to be re-created when the machine is re-enrolled. 
+                <screen># ipa service-find server.example.com</screen></para>
+                <para>Each host has a default service which does not appear in
+                the list of services. This service can be referred to as the
+                "host service". The service principal for the host service is 
+                <systemitem>host/&lt;hostname&gt;</systemitem>, such as 
+                <systemitem>host/server.example.com</systemitem>. This
+                principal can also be referred to as the 
+                <emphasis>host principal</emphasis>.</para>
+            </listitem>
+            <listitem>
+                <para>Identify all host groups to which the machine belongs. 
+                <screen># ipa hostgroup-find server.example.com</screen></para>
+                <para>Identify which of the services have certificates
+                associated with them. This can be done using the 
+                <command>ldapsearch</command>command to check the entries in
+                the &IPA; LDAP database directly:</para>
+                <screen># ldapsearch -x -b "cn=accounts,dc=example,dc=com"
+                "(&amp;(objectclass=ipaservice)(userCertificate=*))"
+                krbPrincipalName</screen>
+            </listitem>
+            <listitem>
+                <para>For any service principals (in addition to the host
+                principal), determine the location of the corresponding keytabs
+                on 
+                <systemitem class="systemname">server.example.com</systemitem>.
+                The keytab location is different for each service, and &IPA;
+                does not store this information.</para>
+                <para>Each service on the client system has a Kerberos
+                principal in the form 
+                <emphasis>service name/hostname@REALM</emphasis>, such as 
+                <systemitem>
+                ldap/server.example.com@EXAMPLE.COM</systemitem>.</para>
+            </listitem>
+            <listitem>
+                <para>Unenroll the client machine from the &IPA; domain: 
+                <screen># ipa-client-install --uninstall</screen></para>
+            </listitem>
+            <listitem>
+                <para>For each identified keytab other than 
+                <filename>/etc/krb5.keytab</filename>, remove the old
+                principals: 
+                <screen># ipa-rmkeytab -k 
+                <replaceable>/path/to/keytab</replaceable>-r
+                EXAMPLE.COM</screen></para>
+            </listitem>
+            <listitem>
+                <para>On another &IPA; machine, as &IPAA; administrator, remove
+                the host entry. This removes all services and revokes all
+                certificates issued for that host: 
+                <screen># ipa host-del server.example.com</screen></para>
+                <para>At this point, the host is completely removed from
+                &IPA;.</para>
+            </listitem>
+            <listitem>
+                <para>Rename the machine.</para>
+            </listitem>
+            <listitem>
+                <para>Re-enroll the system with &IPA;: 
+                <screen># ipa-client-install</screen></para>
+                <para>This generates a host principal for with the new hostname
+                in 
+                <filename>/etc/krb5.keytab</filename>.</para>
+            </listitem>
+            <listitem>
+                <para>For every service that needs a new keytab, run the
+                following command: 
+                <screen># ipa service-add 
+                <replaceable>
+                serviceName/new-hostname</replaceable></screen></para>
+            </listitem>
+            <listitem>
+                <para>To generate certificates for services, use either 
+                <command>certmonger</command>or the &IPA; administration
+                tools.</para>
+            </listitem>
+            <listitem>
+                <para>Re-add the host to any applicable host groups.</para>
+            </listitem>
+        </orderedlist>
+    </section>
+    <section id="host-groups">
+        <title>Managing Host Groups</title>
+        <para>Host groups are a way of centralizing control over important
+        management tasks, particularly access control.</para>
+        <para>All groups in &PROD; are essentially 
+        <emphasis>static</emphasis>groups, meaning that the members of the
+        group are manually and explicitly added to the group. Tangentially,
+        &IPA; allows 
+        <emphasis>nested groups</emphasis>, where a group is a member of
+        another group. In that case, all of the group members of the member
+        group automatically belong to the parent group, as well.</para>
+        <para>Because groups are easy to create, it is possible to be very
+        flexible in what groups to create and how they are organized. Groups
+        can be defined around organizational divisions like departments,
+        physical locations, or &IPA; or infrastructure usage guidelines for
+        access controls.</para>
+        <section id="creating-host-groups">
+            <title>Creating Host Groups</title>
+            <section id="creating-host-groups-ui">
+                <title>Creating Host Groups from the Web UI</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Open the 
+                        <guilabel>Identity</guilabel>tab, and select the 
+                        <guilabel>Host Groups</guilabel>subtab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Add</guilabel>link at the top of the groups
+                        list.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/hostgroup-list.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Enter the name and a description for the
+                        group.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/hostgroup-add.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guibutton>Add and Edit</guibutton>button to go
+                        immediately to the member selection page.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Select the members, as described in 
+                        <xref linkend="hostgroup-members-ui" />.</para>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="creating-host-groups-cmd">
+                <title>Creating Host Groups from the Command Line</title>
+                <para>New groups are created using the 
+                <command>hostgroup-add</command>command. (This adds only the
+                group; members are added separately.)</para>
+                <para>Two attributes are always required: the group name and
+                the group description. If those attributes are not given as
+                arguments, then the script prompts for them.</para>
+                <screen>$ ipa hostgroup-add 
+                <replaceable>groupName</replaceable>--desc=" 
+                <replaceable>description</replaceable>"</screen>
+            </section>
+        </section>
+        <section id="hg-adding-members">
+            <title>Adding Group Members</title>
+            <section id="hostgroup-members-ui">
+                <title>Adding Group Members from the Web UI</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Open the 
+                        <guilabel>Identity</guilabel>tab, and select the 
+                        <guilabel>Host Groups</guilabel>subtab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Click the name of the group to which to add
+                        members.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/hostgroup-list.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Add</guilabel>link at the top of the task
+                        area.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/hostgroups-menu.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the checkbox by the names of the hosts to
+                        add, and click the right arrows button, 
+                        <guibutton>&gt;&gt;</guibutton>, to move the hosts to
+                        the selection box.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/hostgroups-addmembers.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guibutton>Add</guibutton>button.</para>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="hostgroup-members-cmd">
+                <title>Adding Group Members from the Command Line</title>
+                <para>Members are added to a host group using the 
+                <command>hostgroup-add-member</command>command. This command
+                can add both hosts as group members and other groups as group
+                members.</para>
+                <para>The syntax of the 
+                <command>hostgroup-add-member</command>command requires only
+                the group name and a comma-separated list of hosts to
+                add:</para>
+                <screen>$ ipa hostgroup-add-member 
+                <replaceable>groupName</replaceable>[--hosts= 
+                <replaceable>list</replaceable>] [--hostgroups= 
+                <replaceable>list</replaceable>]</screen>
+                <para>For example, this adds three hosts to the 
+                <command>caligroup</command>group:</para>
+                <screen>$ ipa hostgroup-add-member caligroup
+                --hosts=ipaserver.example.com,client1.example.com,client2.example.com
+                Group name: caligroup Description: for machines in california
+                GID: 387115842 Member hosts:
+                ipaserver.example.com,client1.example.com,client2.example.com
+                ------------------------- Number of members added 3
+                -------------------------</screen>
+                <para>Likewise, other groups can be added as members, which
+                creates nested groups:</para>
+                <screen>$ ipa hostgroup-add-member caligroup
+                --groups=mountainview,sandiego Group name: caligroup
+                Description: for machines in california GID: 387115842 Member
+                groups: mountainview,sandiego ------------------------- Number
+                of members added 2 -------------------------</screen>
+            </section>
+        </section>
+    </section>
+    <section id="hosts-troubleshooting">
+        <title>Troubleshooting Host Problems</title>
+        <section id="host-cert-not-found">
+            <title>Certificate Not Found/Serial Number Not Found Errors</title>
+            <para>The &IPA; information is stored in a separate LDAP directory
+            than the certificate information, and these two LDAP databases are
+            replicated separately. It is possible for a replication agreement
+            to be broken for one directory and working for another, which can
+            cause problems with managing clients.</para>
+            <para>Specifically, if the replication agreement between the two CA
+            databases is broken, then a server may not be able to find
+            certificate information about a valid &IPA; client, causing
+            certificate errors:</para>
+            <screen>Certificate operation cannot be completed: EXCEPTION
+            (Certificate serial number 0x2d not found)</screen>
+            <para>For example, &IPAA; server and replica have a function
+            replication agreement between their &IPA; databases, but the
+            replication agreement between their CA databases is broken. If a
+            host is created on the server, the host entry is replicated over to
+            the replica &mdash; but the certificate for that host is not
+            replicated. The replica is aware of the client, but any management
+            operations for that client will fail because the replica doesn't
+            have a copy of its certificate.</para>
+        </section>
+        <section id="Client_Problems">
+            <title>Debugging Client Connection Problems</title>
+            <para>Client connection problems are apparent immediately. This can
+            mean that users cannot log into a machine or attempts to access
+            user and group information fails (for example, 
+            <command>getent passwd admin</command>).</para>
+            <para>Authentication in &IPA; is managed with the SSSD daemon,
+            which is described in the 
+            <citetitle>&RHEL; &DPG;</citetitle>. If there are problems with
+            client authentication, then check the SSSD information.</para>
+            <para>First, check the SSSD logs in 
+            <filename>/var/log/sssd/</filename>. There is a specific log file
+            for the DNS domain, such as 
+            <filename>sssd_example.com.log</filename>. If there is not enough
+            information in the logs at the default logging level, then increase
+            the log level.</para>
+            <para>To increase the log level:</para>
+            <orderedlist>
+                <listitem>
+                    <para>Open the 
+                    <filename>sssd.conf</filename>file.</para>
+                    <screen>vim /etc/sssd/sssd.conf</screen>
+                </listitem>
+                <listitem>
+                    <para>In the 
+                    <command>[domain/</command>
+                    <emphasis>example.com</emphasis>
+                    <command>]</command>section, set 
+                    <varname>debug_level</varname>.</para>
+                    <screen>debug_level = 9</screen>
+                </listitem>
+                <listitem>
+                    <para>Restart the 
+                    <systemitem class="daemon">sssd</systemitem>daemon.</para>
+                    <screen>service sssd restart</screen>
+                </listitem>
+                <listitem>
+                    <para>Check the 
+                    <filename>/var/log/sssd/sssd_example.com.log</filename>file
+                    for the debug messages.</para>
+                </listitem>
+            </orderedlist>
+        </section>
+    </section>
+</chapter>

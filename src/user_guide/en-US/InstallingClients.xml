@@ -1,0 +1,2569 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
+[
+]>
+<chapter id="setting-up-clients">
+    <title>Setting up Systems as &IPA; Clients</title>
+    <para>A 
+    <emphasis>client</emphasis>is any system which is a member of the &PROD;
+    domain. While this is frequently a &OS; system (and &IPA; has special tools
+    to make configuring &OS; clients very simple), machines with other
+    operating systems can also be added to the &IPA; domain.</para>
+    <para>One important aspect of &IPAA; client is that 
+    <emphasis>only</emphasis>the system configuration determines whether the
+    system is part of the domain. (The configuration includes things like
+    belonging to the Kerberos domain, DNS domain, and having the proper
+    authentication and certificate setup.)</para>
+    <note>
+        <title>NOTE</title>
+        <para>&IPA; does not require any sort of agent or daemon running on a
+        client for the client to join the domain. However, for the best
+        management options, security, and performance, clients should run the
+        System Security Services Daemon (SSSD).</para>
+        <para>For more information on SSSD, see 
+        <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/SSSD-Introduction.html"
+        condition="redhat">the SSSD chapter in the Deployment Guide</ulink>
+        <ulink url="https://fedorahosted.org/sssd/" condition="fedora">the SSSD
+        project page</ulink>.</para>
+    </note>
+    <para>This chapter explains how to configure a system to join &IPAA;
+    domain.</para>
+    <note>
+        <title>NOTE</title>
+        <para>Clients can only be configured after at least one &IPA; server
+        has been installed.</para>
+    </note>
+    <section id="what-happens-clients">
+        <title>What Happens in Client Setup</title>
+        <para>Whether the client configuration is performed automatically on
+        &OS; systems using the client setup script or manually on other
+        systems, the general process of configuring a machine to serve as
+        &IPAA; client is mostly the same, with slight variation depending on
+        the platform:</para>
+        <itemizedlist>
+            <listitem>
+                <para>Retrieve the CA certificate for the &IPA; CA.</para>
+            </listitem>
+            <listitem>
+                <para>Create a separate Kerberos configuration to test the
+                provided credentials. This enables a Kerberos connection to the
+                &IPA; XML-RPC server, necessary to join the &IPA; client to the
+                &IPA; domain. This Kerberos configuration is ultimately
+                discarded.</para>
+                <para>Setting up the Kerberos configuration includes specifying
+                the realm and domain details, and default ticket attributes.
+                Forwardable tickets are configured by default, which
+                facilitates connection to the administration interface from any
+                operating system, and also provides for auditing of
+                administration operations. For example, this is the Kerberos
+                configuration for &OS; systems:</para>
+                <programlisting>[libdefaults] default_realm = EXAMPLE.COM
+                dns_lookup_realm = false dns_lookup_kdc = false rdns = false
+                forwardable = yes ticket_lifetime = 24h [realms] EXAMPLE.COM =
+                { kdc = ipaserver.example.com:88 admin_server =
+                ipaserver.example.com:749 } [domain_realm] .example.com =
+                EXAMPLE.COM example.com = EXAMPLE.COM</programlisting>
+            </listitem>
+            <listitem>
+                <para>Run the 
+                <command>ipa-join</command>command to perform the actual
+                join</para>
+            </listitem>
+            <listitem>
+                <para>Obtain a service principal for the host service and
+                installs it into 
+                <filename>/etc/krb5.keytab</filename>. For example, 
+                <systemitem>
+                host/ipa.example.com@EXAMPLE.COM</systemitem>.</para>
+            </listitem>
+            <listitem>
+                <para>Enable certmonger, retrieve an SSL server certificate,
+                and install the certificate in 
+                <filename>/etc/pki/nssdb</filename>.</para>
+            </listitem>
+            <listitem>
+                <para>Disable the nscd daemon.</para>
+            </listitem>
+            <listitem>
+                <para>Configures SSSD or LDAP/KRB5, including NSS and PAM
+                configuration files.</para>
+            </listitem>
+            <listitem>
+                <para>Configures an OpenSSH server and client, as well as
+                enabling the host to create DNS SSHFP records.</para>
+            </listitem>
+            <listitem>
+                <para>Configure NTP.</para>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <section id="supported-clients" condition="fedora">
+        <title>Supported Platforms for &IPA; Clients</title>
+        <para>These platforms can be configured to be &IPA; clients:</para>
+        <itemizedlist>
+            <!--
+            <listitem>
+                <para>
+                    &OS; 5 and 6
+                </para>
+            </listitem>
+            -->
+            <listitem>
+                <para>&OS; 14, 15, 16, and 17</para>
+            </listitem>
+            <listitem>
+                <para>Windows XP and later</para>
+            </listitem>
+            <listitem>
+                <para>Solaris 9 and 10</para>
+            </listitem>
+            <listitem>
+                <para>HP-UX 11i</para>
+            </listitem>
+            <listitem>
+                <para>AIX 5.3 and 6.1</para>
+            </listitem>
+            <!--
+            <listitem>
+                <para>
+                    Mac OS X 10.4
+                </para>
+            </listitem>
+-->
+        </itemizedlist>
+    </section>
+    <section id="prereq-ports-clients">
+        <title>System Ports</title>
+        <para>&IPA; uses a number of ports to communicate with its services.
+        These ports, listed in 
+        <xref linkend="tab.ipa-ports-client" />, must be open and available for
+        &IPA; to work. They cannot be in use by another service or blocked by a
+        firewall. To make sure that these ports are available, try 
+        <command>iptables</command>to list the available ports or 
+        <command>nc</command>, 
+        <command>telnet</command>, or 
+        <command>nmap</command>to connect to a port or run a port scan.</para>
+        <para>To open a port:</para>
+        <screen># iptables -A INPUT -p tcp --dport 389 -j ACCEPT</screen>
+        <para>The 
+        <command>iptables</command>man page has more information on opening and
+        closing ports on a system.</para>
+        <table id="tab.ipa-ports-client">
+            <title>&IPA; Ports</title>
+            <tgroup cols="3">
+                <thead>
+                    <row>
+                        <entry>Service</entry>
+                        <entry>Ports</entry>
+                        <entry>Type</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>HTTP/HTTPS</entry>
+                        <entry>
+                            <simplelist>
+                                <member>80</member>
+                                <member>443</member>
+                            </simplelist>
+                        </entry>
+                        <entry>TCP</entry>
+                    </row>
+                    <row>
+                        <entry>LDAP/LDAPS</entry>
+                        <entry>
+                            <simplelist>
+                                <member>389</member>
+                                <member>636</member>
+                            </simplelist>
+                        </entry>
+                        <entry>TCP</entry>
+                    </row>
+                    <row>
+                        <entry>Kerberos</entry>
+                        <entry>
+                            <simplelist>
+                                <member>88</member>
+                                <member>464</member>
+                            </simplelist>
+                        </entry>
+                        <entry>TCP and UDP</entry>
+                    </row>
+                    <row>
+                        <entry>DNS</entry>
+                        <entry>53</entry>
+                        <entry>TCP and UDP</entry>
+                    </row>
+                    <row>
+                        <entry>NTP</entry>
+                        <entry>123</entry>
+                        <entry>UDP</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
+    <section id="Installing_the_IPA_Client_on_Linux">
+        <title>Configuring a &OS; System as &IPAA; Client</title>
+        <para>There are two elements to prepare before beginning the client
+        setup process for the &OS; client:</para>
+        <itemizedlist>
+            <listitem>
+                <para>There must be a way to connect the client machine to the
+                Kerberos domain, either by having an available Kerberos
+                identity (such as the admin user) or by manually adding the
+                client machine to the KDC on the server with a one-time
+                password before beginning the enrollment process for the client
+                machine.</para>
+            </listitem>
+            <listitem>
+                <para>If there is an &AD; server on the same network that
+                serves DNS records, the &AD; DNS records could prevent the
+                client from automatically detecting the &IPA; server address.
+                The 
+                <command>ipa-client-install</command>script retrieves the &AD;
+                DNS records instead of any records that were added for
+                &IPA;.</para>
+                <para>In this case, it is necessary to pass the &IPA; server
+                address directly to the 
+                <command>ipa-client-install</command>script.</para>
+            </listitem>
+        </itemizedlist>
+        <para>To configure the client:</para>
+        <orderedlist>
+            <listitem>
+                <para>Install the client packages. These packages provide a
+                simple way to configure the system as a client; they also
+                install and configure SSSD.</para>
+                <para>For a regular user system, this requires only the 
+                <filename>ipa-client</filename>package:</para>
+                <programlisting language="Bash" condition="fedora"># yum
+                install freeipa-client</programlisting>
+                <programlisting language="Bash" condition="redhat"># yum
+                install ipa-client</programlisting>
+                <para>An administrator machine requires the 
+                <filename condition="redhat">ipa-admintools</filename>
+                <filename condition="fedora">
+                freeipa-admintools</filename>package, as well:</para>
+                <programlisting language="Bash" condition="fedora"># yum
+                install freeipa-client freeipa-admintools</programlisting>
+                <programlisting language="Bash" condition="redhat"># yum
+                install ipa-client ipa-admintools</programlisting>
+            </listitem>
+            <listitem>
+                <para>If the &IPA; server is configured as the DNS server and
+                is in the same domain as the client, add the server's IP
+                address as the first entry in the client's 
+                <filename>/etc/resolv.conf</filename>file.</para>
+                <note>
+                    <title>TIP</title>
+                    <para>If every machine in the domain will be &IPAA; client,
+                    then add the &IPA; server address to the DHCP
+                    configuration.</para>
+                </note>
+            </listitem>
+            <listitem>
+                <para>Run the client setup command.</para>
+                <programlisting language="Bash"># ipa-client-install
+                --enable-dns-updates</programlisting>
+                <para>The 
+                <option>--enable-dns-updates</option>option updates DNS with
+                the client machine's IP address. This option should only be
+                used if the &IPA; server was installed with integrated DNS or
+                if the DNS server on the network accepts DNS entry updates with
+                the GSS-TSIG protocol.</para>
+                <para>When using the 
+                <option>--server</option>option to specify the &IPA; server to
+                register with, the server name must be a fully-qualified domain
+                name.</para>
+                <important>
+                    <title>IMPORTANT</title>
+                    <para>This must be a valid DNS name, which means only
+                    numbers, alphabetic characters, and hyphens (-) are
+                    allowed. Other characters, like underscores, in the
+                    hostname will cause DNS failures.</para>
+                </important>
+                <para>Other options for 
+                <command>ipa-client-install</command>are listed in the 
+                <command>ipa-client-install</command>manpage.</para>
+                <note>
+                    <title>NOTE</title>
+                    <para>There is an 
+                    <option>--on-master</option>option that is used as part of
+                    configuring an &IPA; server (which also is an &IPA; client,
+                    since it is within the domain). This option should 
+                    <emphasis>never</emphasis>be used when configuring a
+                    regular &IPA; client, because it results in slightly
+                    different client configuration which may not work on a
+                    non-&IPA; server machine.</para>
+                </note>
+            </listitem>
+            <listitem>
+                <para>If prompted, enter the domain name for the &IPA; DNS
+                domain.</para>
+                <programlisting language="Bash">DNS discovery failed to
+                determine your DNS domain Please provide the domain name of
+                your IPA server (ex: example.com): example.com</programlisting>
+            </listitem>
+            <listitem>
+                <para>If prompted, enter the fully-qualified domain name of the
+                &IPA; server. Alternatively, use the 
+                <option>--server</option>option with the client installation
+                script to supply the fully-qualified domain name of the &IPA;
+                server.</para>
+                <programlisting language="Bash">DNS discovery failed to find
+                the IPA Server Please provide your IPA server name (ex:
+                ipa.example.com): ipaserver.example.com</programlisting>
+                <important>
+                    <title>IMPORTANT</title>
+                    <para>This must be a valid DNS name, which means only
+                    numbers, alphabetic characters, and hyphens (-) are
+                    allowed. Other characters, like underscores, in the
+                    hostname will cause DNS failures.</para>
+                </important>
+            </listitem>
+            <listitem>
+                <para>The client script then prompts for a Kerberos identity to
+                use to contact and then join the Kerberos realm. When these
+                credentials are supplied, then the client is able to join the
+                &IPA; Kerberos domain and then complete the
+                configuration:</para>
+                <screen>Continue to configure the system with these values?
+                [no]: yes User authorized to enroll computers: admin Password
+                for admin@EXAMPLE.COM: Enrolled in &IPA; realm EXAMPLE.COM
+                Created /etc/ipa/default.conf Configured /etc/sssd/sssd.conf
+                Configured /etc/krb5.conf for &IPA; realm EXAMPLE.COM SSSD
+                enabled Kerberos 5 enabled NTP enabled Client configuration
+                complete.</screen>
+            </listitem>
+            <listitem>
+                <para>Test that the client can connect successfully to the
+                &IPA; domain and can perform basic tasks. For example, check
+                that the &IPA; tools can be used to get user and group
+                information:</para>
+                <programlisting language="Bash">$ id $ getent passwd 
+                <replaceable>userID</replaceable>$ getent group
+                ipausers</programlisting>
+            </listitem>
+            <listitem>
+                <para>Set up NFS to work with Kerberos.</para>
+                <note>
+                    <title>TIP</title>
+                    <para>To help troubleshoot potential NFS setup errors,
+                    enable debug information in the 
+                    <filename>/etc/sysconfig/nfs</filename>file.</para>
+                    <programlisting>RPCGSSDARGS="-vvv"
+                    RPCSVCGSSDARGS="-vvv"</programlisting>
+                </note>
+                <orderedlist>
+                    <listitem>
+                        <para>On &IPAA; server, add an NFS service principal
+                        for the NFS client.</para>
+                        <programlisting language="Bash"># ipa service-add
+                        nfs/ipaclient.example.com@EXAMPLE</programlisting>
+                        <note>
+                            <title>NOTE</title>
+                            <para>This must be run from a machine with the 
+                            <package>ipa-admintools</package>package installed
+                            so that the 
+                            <command>ipa</command>command is available.</para>
+                        </note>
+                    </listitem>
+                    <listitem>
+                        <para>On the &IPA; server, obtain a keytab for the NFS
+                        service principal.</para>
+                        <para>
+                            <programlisting language="Bash"># ipa-getkeytab -s
+                            ipaserver.example.com -p
+                            nfs/ipaclient.example.com@EXAMPLE -k
+                            /tmp/krb5.keytab</programlisting>
+                        </para>
+                        <note>
+                            <title>NOTE</title>
+                            <para>Some versions of the Linux NFS implementation
+                            have limited encryption type support. If the NFS
+                            server is hosted on a version older than &OS;
+                            &OVER;, use the 
+                            <option>-e&nbsp;des-cbc-crc</option>option to the 
+                            <command>ipa-getkeytab</command>command for any
+                            nfs/&lt;FQDN&gt; service keytabs to set up, both on
+                            the server and on all clients. This instructs the
+                            KDC to generate only DES keys.</para>
+                            <para>When using DES keys, all clients and servers
+                            that rely on this encryption type need to have the 
+                            <option>allow_weak_crypto</option>option enabled in
+                            the 
+                            <command>[libdefaults]</command>section of the 
+                            <filename>/etc/krb5.conf</filename>file. Without
+                            these configuration changes, NFS clients and
+                            servers are unable to authenticate to each other,
+                            and attempts to mount NFS filesystems may fail. The
+                            client's 
+                            <command>rpc.gssd</command>and the server's 
+                            <command>rpc.svcgssd</command>daemons may log
+                            errors indicating that DES encryption types are not
+                            permitted.</para>
+                        </note>
+                    </listitem>
+                    <listitem>
+                        <para>Copy the keytab from the &IPA; server to the
+                        &IPA; client. For example: 
+                        <programlisting language="Bash"># scp /tmp/krb5.keytab
+                        root@client.example.com:/etc/krb5.keytab</programlisting></para>
+                    </listitem>
+                    <listitem>
+                        <para>Configure the 
+                        <filename>/etc/exports</filename>file on the NFS
+                        server.</para>
+                        <programlisting language="Bash">/ipashare
+                        gss/krb5p(rw,no_root_squash,subtree_check,fsid=0)</programlisting>
+                    </listitem>
+                    <listitem>
+                        <para>On the client, mount the NFS share. Use the same 
+                        <option>-o sec</option>setting as is used in the 
+                        <filename>/etc/exports</filename>file for the NFS
+                        server.</para>
+                        <programlisting language="Bash">[root@client ~]# mount
+                        -v -t nfs4 -o sec=krb5p nfs.example.com:/
+                        /mnt/ipashare</programlisting>
+                    </listitem>
+                </orderedlist>
+            </listitem>
+        </orderedlist>
+    </section>
+    <section id="linux-manual">
+        <title>Manually Configuring a Linux Client</title>
+        <para>The 
+        <command>ipa-client-install</command>command automatically configures
+        services like Kerberos, SSSD, PAM, and NSS. However, if the 
+        <command>ipa-client-install</command>command cannot be used on a system
+        for some reason, then the &IPA; client entries and the services can be
+        configured manually.</para>
+        <orderedlist>
+            <listitem>
+                <para>Install SSSD 1.5.x or later, if it is not already
+                installed.</para>
+            </listitem>
+            <listitem>
+                <para>
+                <emphasis>Optional.</emphasis>Install the &IPA; tools so that
+                administrative tasks can be performed from the host.</para>
+                <programlisting language="Bash" condition="fedora"># yum
+                install freeipa-admintools</programlisting>
+                <programlisting language="Bash" condition="redhat"># yum
+                install ipa-admintools</programlisting>
+            </listitem>
+            <listitem>
+                <para>
+                <emphasis>On &IPAA; server.</emphasis>Create a host entry for
+                the client.</para>
+                <screen>$ ipa host-add --force --ip-address=192.168.166.31
+                ipaclient.example.com</screen>
+                <para>Creating hosts manually is covered in 
+                <xref linkend="adding-host-entry" />.</para>
+            </listitem>
+            <listitem>
+                <para>
+                <emphasis>On &IPAA; server.</emphasis>Create keytabs for the
+                client.</para>
+                <orderedlist>
+                    <listitem>
+                        <para>Log in as &IPA; administrator.</para>
+                        <screen>$ kinit admin</screen>
+                    </listitem>
+                    <listitem>
+                        <para>Set the client host to be managed by the
+                        server.</para>
+                        <screen>$ ipa host-add-managedby
+                        --hosts=ipaserver.example.com
+                        ipaclient.example.com</screen>
+                    </listitem>
+                    <listitem>
+                        <para>Generate the keytab for the client.</para>
+                        <screen>$ ipa-getkeytab -s ipaserver.example.com -p
+                        host/ipaclient.example.com -k
+                        /tmp/ipaclient.keytab</screen>
+                    </listitem>
+                </orderedlist>
+            </listitem>
+            <listitem>
+                <para>Copy the keytab to the client machine and rename it 
+                <filename>/etc/krb5.keytab</filename>.</para>
+                <note>
+                    <title>TIP</title>
+                    <para>If there is an existing 
+                    <filename>/etc/krb5.keytab</filename>that should be
+                    preserved, the two files can be combined using 
+                    <command>ktutil</command>.</para>
+                </note>
+            </listitem>
+            <listitem>
+                <para>Set the correct user permissions and, if necessary,
+                SELinux contexts for the 
+                <filename>/etc/krb5.keytab</filename>file.</para>
+                <screen>chown root:root 0600
+                system_u:object_r:krb5_keytab_t:s0</screen>
+            </listitem>
+            <listitem>
+                <para>Configure SSSD by editing the 
+                <filename>/etc/sssd/sssd.conf</filename>file to point to the
+                &IPA; domain.</para>
+                <screen>[sssd] config_file_version = 2 services = nss, pam
+                domains = example.com [nss] [pam] [domain/example.com]
+                cache_credentials = True krb5_store_password_if_offline = True
+                ipa_domain = example.com id_provider = ipa auth_provider = ipa
+                access_provider = ipa ipa_hostname = ipaclient.example.com
+                chpass_provider = ipa ipa_server = ipaserver.example.com
+                ldap_tls_cacert = /etc/ipa/ca.crt</screen>
+            </listitem>
+            <listitem>
+                <para>Configure NSS to use SSSD for passwords, groups, users,
+                and netgroups.</para>
+                <screen>vim /etc/nsswitch.conf ... passwd: files sss shadow:
+                files sss group: files sss ... netgroup: files sss ...</screen>
+            </listitem>
+            <listitem>
+                <para>Configure the 
+                <filename>/etc/krb5.conf</filename>file to point to the &IPA;
+                KDC.</para>
+                <screen>[logging] default = FILE:/var/log/krb5libs.log kdc =
+                FILE:/var/log/krb5kdc.log admin_server =
+                FILE:/var/log/kadmind.log [libdefaults] default_realm =
+                EXAMPLE.COM dns_lookup_realm = false dns_lookup_kdc = false
+                rdns = false ticket_lifetime = 24h forwardable = yes
+                allow_weak_crypto = true [realms] EXAMPLE.COM = { kdc =
+                ipaserver.example.com:88 admin_server =
+                ipaserver.example.com:749 default_domain = example.com }
+                [domain_realm] .example.com = EXAMPLE.COM example.com =
+                EXAMPLE.COM</screen>
+            </listitem>
+            <listitem>
+                <para>Update the 
+                <filename>/etc/pam.d</filename>configuration to use the 
+                <filename>pam_sss.so</filename>modules.</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>For 
+                        <filename>
+                        /etc/pam.d/fingerprint-auth</filename>:</para>
+                        <screen>... account [default=bad success=ok
+                        user_unknown=ignore] pam_sss.so ... session optional
+                        pam_sss.so</screen>
+                    </listitem>
+                    <listitem>
+                        <para>For 
+                        <filename>/etc/pam.d/system-auth</filename>:</para>
+                        <screen>... auth sufficient pam_sss.so use_first_pass
+                        ... account [default=bad success=ok
+                        user_unknown=ignore] pam_sss.so ... password sufficient
+                        pam_sss.so use_authtok ... session optional
+                        pam_sss.so</screen>
+                    </listitem>
+                    <listitem>
+                        <para>For 
+                        <filename>/etc/pam.d/password-auth</filename>:</para>
+                        <screen>... auth sufficient pam_sss.so use_first_pass
+                        ... account [default=bad success=ok
+                        user_unknown=ignore] pam_sss.so ... password sufficient
+                        pam_sss.so use_authtok ... session optional
+                        pam_sss.so</screen>
+                    </listitem>
+                    <listitem>
+                        <para>For 
+                        <filename>/etc/pam.d/smartcard-auth</filename>:</para>
+                        <screen>... account [default=bad success=ok
+                        user_unknown=ignore] pam_sss.so ... session optional
+                        pam_sss.so</screen>
+                    </listitem>
+                </itemizedlist>
+            </listitem>
+            <listitem>
+                <para>Install the &IPA; server's CA certificate.</para>
+                <orderedlist>
+                    <listitem>
+                        <para>Obtain the certificate from the server.</para>
+                        <screen>[root@ipaclient ~]# wget -O /etc/ipa/ca.crt
+                        http://ipa.example.com/ipa/config/ca.crt</screen>
+                    </listitem>
+                    <listitem>
+                        <para>Install the certificate in the system's NSS
+                        database.</para>
+                        <screen>[root@ipaclient ~]# certutil -A -d
+                        /etc/pki/nssdb -n "IPA CA" -t CT,C,C -a -i
+                        /etc/ipa/ca.crt</screen>
+                    </listitem>
+                </orderedlist>
+            </listitem>
+            <listitem>
+                <para>Set up a host certificate for the host in &IPA;.</para>
+                <orderedlist>
+                    <listitem>
+                        <para>Make sure 
+                        <command>certmonger</command>is running.</para>
+                        <screen>[root@ipaclient ~]# service certmonger
+                        start</screen>
+                        <note>
+                            <title>TIP</title>
+                            <para>Configure 
+                            <command>chkconfig</command>so that the 
+                            <command>certmonger</command>service starts by
+                            default.</para>
+                            <screen>[root@ipaclient ~]# chkconfig certmonger
+                            on</screen>
+                        </note>
+                    </listitem>
+                    <listitem>
+                        <para>Use the 
+                        <command>ipa-getcert</command>command, which creates
+                        and manages the certificate through 
+                        <command>certmonger</command>. The options are
+                        described more in 
+                        <xref linkend="certmonger-req" />.</para>
+                        <screen>$ ipa-getcert request -d /etc/pki/nssdb -n
+                        Server-Cert -K HOST/ipaclient.example.com -N
+                        'CN=ipaclient.example.com,O=EXAMPLE.COM'</screen>
+                    </listitem>
+                </orderedlist>
+                <para>If administrative tools were not installed on the client,
+                then the certificate can be generated on &IPAA; server, copied
+                over to the host, and installed using 
+                <command>certutil</command>.</para>
+            </listitem>
+            <listitem>
+                <para>Set up NFS to work with Kerberos.</para>
+                <note>
+                    <title>TIP</title>
+                    <para>To help troubleshoot potential NFS setup errors,
+                    enable debug information in the 
+                    <filename>/etc/sysconfig/nfs</filename>file.</para>
+                    <programlisting>RPCGSSDARGS="-vvv"
+                    RPCSVCGSSDARGS="-vvv"</programlisting>
+                </note>
+                <orderedlist>
+                    <listitem>
+                        <para>On &IPAA; server, add an NFS service principal
+                        for the NFS client.</para>
+                        <programlisting language="Bash"># ipa service-add
+                        nfs/ipaclient.example.com@EXAMPLE</programlisting>
+                        <note>
+                            <title>NOTE</title>
+                            <para>This must be run from a machine with the 
+                            <package>ipa-admintools</package>package installed
+                            so that the 
+                            <command>ipa</command>command is available.</para>
+                        </note>
+                    </listitem>
+                    <listitem>
+                        <para>On the &IPA; server, obtain a keytab for the NFS
+                        service principal.</para>
+                        <para>
+                            <programlisting language="Bash"># ipa-getkeytab -s
+                            ipaserver.example.com -p
+                            nfs/ipaclient.example.com@EXAMPLE -k
+                            /tmp/krb5.keytab</programlisting>
+                        </para>
+                        <note>
+                            <title>NOTE</title>
+                            <para>Some versions of the Linux NFS implementation
+                            have limited encryption type support. If the NFS
+                            server is hosted on a version older than &OS;
+                            &OVER;, use the 
+                            <option>-e&nbsp;des-cbc-crc</option>option to the 
+                            <command>ipa-getkeytab</command>command for any
+                            nfs/&lt;FQDN&gt; service keytabs to set up, both on
+                            the server and on all clients. This instructs the
+                            KDC to generate only DES keys.</para>
+                            <para>When using DES keys, all clients and servers
+                            that rely on this encryption type need to have the 
+                            <option>allow_weak_crypto</option>option enabled in
+                            the 
+                            <command>[libdefaults]</command>section of the 
+                            <filename>/etc/krb5.conf</filename>file. Without
+                            these configuration changes, NFS clients and
+                            servers are unable to authenticate to each other,
+                            and attempts to mount NFS filesystems may fail. The
+                            client's 
+                            <command>rpc.gssd</command>and the server's 
+                            <command>rpc.svcgssd</command>daemons may log
+                            errors indicating that DES encryption types are not
+                            permitted.</para>
+                        </note>
+                    </listitem>
+                    <listitem>
+                        <para>Copy the keytab from the &IPA; server to the NFS
+                        server. For example, if the &IPA; and NFS servers are
+                        on different machines: 
+                        <programlisting language="Bash"># scp /tmp/krb5.keytab
+                        root@nfs.example.com:/etc/krb5.keytab</programlisting></para>
+                    </listitem>
+                    <listitem>
+                        <para>Copy the keytab from the &IPA; server to the
+                        &IPA; client. For example: 
+                        <programlisting language="Bash"># scp /tmp/krb5.keytab
+                        root@client.example.com:/etc/krb5.keytab</programlisting></para>
+                    </listitem>
+                    <listitem>
+                        <para>Configure the 
+                        <filename>/etc/exports</filename>file on the NFS
+                        server.</para>
+                        <programlisting language="Bash">/ipashare
+                        gss/krb5p(rw,no_root_squash,subtree_check,fsid=0)</programlisting>
+                    </listitem>
+                    <listitem>
+                        <para>On the client, mount the NFS share. 
+                        <itemizedlist>
+                            <listitem>
+                                <para>Always specify the share as 
+                                <emphasis>nfs_server:/
+                                /mountpoint</emphasis>.</para>
+                            </listitem>
+                            <listitem>
+                                <para>Use the same 
+                                <option>-o sec</option>setting as is used in
+                                the 
+                                <filename>/etc/exports</filename>file for the
+                                NFS server.</para>
+                            </listitem>
+                        </itemizedlist></para>
+                        <programlisting language="Bash">[root@client ~]# mount
+                        -v -t nfs4 -o sec=krb5p nfs.example.com:/
+                        /mnt/ipashare</programlisting>
+                    </listitem>
+                </orderedlist>
+            </listitem>
+        </orderedlist>
+    </section>
+    <section id="kickstart">
+        <title>Setting up a Linux Client Through Kickstart</title>
+        <para>A kickstart enrollment automatically adds a new system to the
+        &IPA; domain at the time it is provisioned.</para>
+        <para>This requires pre-creating the hosts on the &IPA; server, with a
+        predefined password that can be used to authenticate to complete the
+        enrollment operation.</para>
+        <orderedlist>
+            <listitem>
+                <para>Create the host entry on the &IPA; server and set a
+                temporary Kerberos password for the entry.</para>
+                <para>When the 
+                <command>ipa-client-install</command>script is run normally
+                (interactively), it prompts for authentication credentials to
+                access the &IPA; domain. However, when the script is run
+                automatically, the system has to have some way to access the
+                &IPA; domain without using an existing &IPA; user; this is done
+                by setting the host principal in the script and using a
+                Kerberos password (configured for the host account) to access
+                the &IPA; domain.</para>
+                <para>For example:</para>
+                <screen>[jsmith@ipaserver ~]$ ipa host-add
+                kickstart-server.example.com --password=secret</screen>
+                <!-- if a random password is set, where is it set? is it in plaintext? -->
+                <para>The password expires after the first authentication
+                attempt. After enrollment completes, the host is authenticated
+                using its keytab.</para>
+            </listitem>
+            <listitem>
+                <para>Include the 
+                <command>ipa-client</command>package with the other install
+                packages.</para>
+                <screen>%packages @ X Window System @ Desktop @ Sound and Video
+                ipa-client ...</screen>
+            </listitem>
+            <listitem>
+                <para>Create a post-install instruction that runs the 
+                <command>ipa-client-install</command>script, passes all the
+                required information to access and configure the &IPA; domain
+                services, and specifies the pre-set password. Use the 
+                <option>--unattended</option>option to instruct the script to
+                run non-interactively.</para>
+                <screen>%post --log=/root/ks-post.log # Get the hostname to set
+                as the host principal /bin/hostname &gt; /tmp/hostname.txt #
+                Run the client install script /usr/sbin/ipa-client-install
+                --domain=EXAMPLEDOMAIN --enable-dns-updates --mkhomedir -w
+                secret --realm=EXAMPLEREALM --server=ipaserver.example.com
+                --unattended</screen>
+            </listitem>
+            <listitem>
+                <para>Run the kickstart script.</para>
+            </listitem>
+        </orderedlist>
+    </section>
+    <section id="Configuring_Microsoft_Windows">
+        <title>Configuring a Microsoft Windows System to Join the &IPA;
+        Realm</title>
+        <orderedlist>
+            <listitem>
+                <para>Download the MIT Kerberos 3.x package for Windows.</para>
+                <screen>http://web.mit.edu/kerberos/dist/index.html</screen>
+            </listitem>
+            <listitem>
+                <para>Run the 
+                <filename>kfw-3.x-exe</filename>file to launch the MIT Kerberos
+                Installation Wizard.</para>
+            </listitem>
+            <listitem>
+                <para>Read and accept the license agreement.</para>
+            </listitem>
+            <listitem>
+                <para>Install the KfW client. All other components are
+                optional.</para>
+            </listitem>
+            <listitem>
+                <para>Accept the default destination path.</para>
+            </listitem>
+            <listitem>
+                <para>Select 
+                <guilabel>Download from web path</guilabel>, and enter the URL
+                to the &IPA; server. For example:</para>
+                <programlisting>
+                http://ipaserver.example.com/ipa/config/</programlisting>
+                <para>Include the trailing backslash, or the configuration will
+                fail.</para>
+            </listitem>
+            <listitem>
+                <para>Select 
+                <guilabel>Autostart the Network Identity Manager each time you
+                login to Windows</guilabel>.</para>
+            </listitem>
+            <listitem>
+                <para>Click 
+                <guibutton>Install</guibutton>to begin the installation. When
+                the installation is complete, click 
+                <guibutton>Finish</guibutton>to exit the Wizard.</para>
+            </listitem>
+            <listitem>
+                <para>Edit the hosts file and add the &IPA; server. For
+                example:</para>
+                <programlisting>1.2.3.4 ipaserver.example.com
+                ipaserver</programlisting>
+                <para>Depending on the version of Windows, the HOSTS file could
+                be located in different directories. For Windows XP and later
+                systems, this is in 
+                <filename>C:\WINDOWS\system32\drivers\etc\</filename>.</para>
+            </listitem>
+        </orderedlist>
+        <indexterm>
+            <primary>Kerberos</primary>
+            <secondary>troubleshooting Windows problems</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>Windows</primary>
+            <secondary>troubleshooting Kerberos problems</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>troubleshooting</primary>
+            <secondary>Kerberos on Windows</secondary>
+        </indexterm>
+        <note>
+            <title>NOTE</title>
+            <para>One potential problem is that a ticket is not generated by
+            Kerberos on Windows. Windows can use multiple ticket caches with
+            MIT Kerberos. This can create odd scenarios, where it is possible
+            to authenticate against &IPA;'s domain in the command line, but not
+            to open the web UI.</para>
+            <para>MIT Kerberos for Windows provides some debugging tools which
+            can be used to troubleshoot Windows Kerberos problems, available at
+            
+            <ulink url="http://web.mit.edu/Kerberos/dist/index.html#kfw-3.2" />.</para>
+        </note>
+    </section>
+    <section id="Configuring_an_IPA_Client_on_Solaris" condition="fedora">
+        <title>Configuring a Solaris System as &IPAA; Client</title>
+        <section id="Configuring_an_IPA_Client_on_Solaris_10">
+            <title>Configuring Solaris 10</title>
+            <orderedlist>
+                <listitem id="st.sol1">
+                    <para>&IPA; provides an example profile for configuring
+                    Solaris 10 as &IPAA; client. This can be loaded using 
+                    <command>ldapclient</command>and the 
+                    <command>init</command>command:</para>
+                    <programlisting language="Bash">[root@solaris ~]#
+                    ldapclient init ipa.example.com</programlisting>
+                    <para>The 
+                    <command>ldapclient</command>can also be run to enter the
+                    information for the &IPA; domain manually:</para>
+                    <programlisting language="Bash">[root@solaris ~]#
+                    ldapclient manual -a credentialLevel=proxy -a
+                    authenticationMethod=tls:simple -a
+                    defaultSearchBase=dc=example,dc=com -a
+                    domainName=example.com -a defaultServerList=192.168.0.1 -a
+                    proxyDN=cn=proxyagent,ou=profile,dc=example,dc=com -a
+                    proxyPassword={NS1}fbc123a92116812 -a
+                    attributeMap=group:memberuid=memberUid -a
+                    attributeMap=group:gidnumber=gidNumber -a
+                    attributeMap=passwd:gidnumber=gidNumber -a
+                    attributeMap=passwd:uidnumber=uidNumber -a
+                    attributeMap=passwd:homedirectory=homeDirectory -a
+                    attributeMap=passwd:loginshell=loginShell -a
+                    attributeMap=shadow:userpassword=userPassword -a
+                    objectClassMap=group:posixGroup=posixgroup -a
+                    objectClassMap=passwd:posixAccount=posixaccount -a
+                    objectClassMap=shadow:shadowAccount=posixaccount -a
+                    serviceSearchDescriptor=passwd:cn=users,cn=accounts,dc=example,dc=com
+                    -a
+                    serviceSearchDescriptor=group:cn=groups,cn=accounts,dc=example,dc=com
+                    -a
+                    serviceSearchDescriptor=netgroup:cn=sysaccounts,cn=etc,dc=example,dc=com
+                    -a
+                    serviceSearchDescriptor=shadow:cn=sysaccounts,cn=etc,dc=example,dc=com
+                    -a
+                    serviceSearchDescriptor=sudoers:cn=sysaccounts,cn=etc,dc=example,dc=com</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Create a Solaris profile in the &IPA; &DS; instance
+                    for the Solaris domain clients to use. The LDAP entry
+                    should reflect the configuration that was passed to the
+                    Solaris machine in the 
+                    <command>ldapclient</command>command.</para>
+                    <screen>[root@ipaserver ~]# ldapadd -h 192.168.0.1 -p 389
+                    -D "cn=directory manager" -w secret dn:
+                    cn=solaris,ou=profile,dc=example,dc=com objectClass: top
+                    objectClass: DUAConfigProfile cn: solaris credentialLevel:
+                    proxy authenticationMethod: tls:simple defaultSearchBase:
+                    dc=example,dc=com defaultServerList: 192.168.0.1
+                    objectclassMap: group:posixGroup=posixgroup objectclassMap:
+                    passwd:posixAccount=posixaccount objectclassMap:
+                    shadow:shadowAccount=posixAccount serviceSearchDescriptor:
+                    passwd:cn=users,cn=accounts,dc=example,dc=com
+                    serviceSearchDescriptor:
+                    group:cn=groups,cn=accounts,dc=example,dc=com
+                    serviceSearchDescriptor:
+                    shadow:cn=sysaccounts,cn=etc,dc=example,dc=com
+                    serviceSearchDescriptor:
+                    netgroup:cn=sysaccounts,cn=etc,dc=example,dc=com
+                    serviceSearchDescriptor:
+                    sudoers:cn=sysaccounts,cn=etc,dc=example,dc=com
+                    bindTimeLimit: 10 profileTTL: 43200 searchTimeLimit: 30
+                    defaultSearchScope: one followReferrals: FALSE</screen>
+                </listitem>
+                <listitem>
+                    <para>Create the 
+                    <command>cn=proxyagent</command>account in the &IPA; &DS;
+                    instance.</para>
+                    <screen>[root@ipaserver ~]# ldapadd -h 192.168.0.1 -p 389
+                    -D "cn=directory manager" -w secret dn:
+                    cn=proxyagent,ou=profile,dc=example,dc=com objectClass: top
+                    objectClass: person sn: proxyagent cn: proxyagent
+                    userPassword::
+                    e1NTSEF9Mm53KytGeU81Z1dka1FLNUZlaDdXOHJkK093TEppY2NjRmt6Wnc9PQ=</screen>
+                </listitem>
+                <listitem>
+                    <para>On the &IPA; server, use the 
+                    <command>certutil</command>command to create 
+                    <filename>cert8.db</filename>and 
+                    <filename>key3.db</filename>databases.</para>
+                    <screen>[root@ipaserver ~]# certutil -N -d .</screen>
+                    <para>Then, copy the database over to the Solaris machine
+                    in the 
+                    <filename>/var/ldap</filename>directory. For
+                    example:</para>
+                    <screen>[root@ipaserver ~]# scp cert8.db
+                    solaris.example.com:/var/ldap [root@ipaserver ~]# scp
+                    key3.db solaris.example.com:/var/ldap</screen>
+                </listitem>
+                <listitem>
+                    <para>Remove the 
+                    <option>ldap</option>option from all entries in 
+                    <filename>/etc/nsswitch.conf</filename>except for the 
+                    <option>passwd</option>, 
+                    <option>group</option>, 
+                    <option>shadow</option>, 
+                    <option>netgroup</option>, and 
+                    <option>sudoers</option>entries.</para>
+                </listitem>
+                <listitem>
+                    <para>Configure and enable NTP and synchronize the time
+                    between the client and the &IPA; server.</para>
+                    <screen>[root@solaris ~]# ntpdate
+                    ipaserver.example.com</screen>
+                </listitem>
+                <listitem>
+                    <para>Configure the Kerberos client. The Kerberos
+                    configuration includes specifying the realm and domain
+                    details and default ticket attributes.</para>
+                    <programlisting>[root@solaris ~]# vim /etc/krb5/krb5.conf
+                    [libdefaults] default_realm = EXAMPLE.COM
+                    verify_ap_req_nofail = false [realms] EXAMPLE.COM = { kdc =
+                    ipaserver.example.com admin_server = ipaserver.example.com
+                    } [domain_realm] example.com = EXAMPLE.COM .example.com =
+                    EXAMPLE.COM [logging] default = FILE:/var/krb5/kdc.log kdc
+                    = FILE:/var/krb5/kdc.log [appdefaults] kinit = { renewable
+                    = true forwardable= true }</programlisting>
+                    <para>The default file created by 
+                    <command>ldapclient</command>configures forwardable tickets
+                    by default, which makes it possible to connect to the UI
+                    from any system and provides a way to audit administration
+                    operations.</para>
+                </listitem>
+                <listitem id="st.sol3">
+                    <para>Configure PAM to use Kerberos authentication. For
+                    example:</para>
+                    <programlisting language="Bash">[root@solaris ~]# vim
+                    /etc/pam.conf # login service (explicit because of
+                    pam_dial_auth) # login auth requisite pam_authtok_get.so.1
+                    login auth required pam_dhkeys.so.1 login auth sufficient
+                    pam_krb5.so.1 try_first_pass login auth required
+                    pam_unix_auth.so.1 login auth required pam_dial_auth.so.1 #
+                    Default definitions for Authentication management # Used
+                    when service name is not explicitly mentioned for
+                    authentication # other auth requisite pam_authtok_get.so.1
+                    other auth required pam_dhkeys.so.1 other auth required
+                    pam_unix_cred.so.1 other auth sufficient pam_krb5.so.1
+                    other auth required pam_unix_auth.so.1 # Default definition
+                    for Account management # Used when service name is not
+                    explicitly mentioned for account management # other account
+                    requisite pam_roles.so.1 other account required
+                    pam_unix_account.so.1 other account required pam_krb5.so.1
+                    # Password construction requirements apply to all users. #
+                    Remove force_check to have the traditional authorized
+                    administrator # bypass of construction requirements. other
+                    password requisite pam_authtok_check.so.1 force_check other
+                    password sufficient pam_krb5.so.1 other password required
+                    pam_authtok_store.so.1</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Configure NFS to work with the Kerberos
+                    domain.</para>
+                    <orderedlist>
+                        <listitem>
+                            <para>Add an NFS service principal for the client. 
+                            <programlisting language="Bash">[root@ipaserver ~]#
+                            ipa service-add
+                            nfs/client.example.com</programlisting></para>
+                        </listitem>
+                        <listitem>
+                            <para>Create the NFS keytab file. 
+                            <programlisting language="Bash">[root@ipaserver ~]#
+                            ipa-getkeytab -s ipaserver.example.com -p
+                            nfs/client.example.com -k /tmp/krb5.keytab -e
+                            des-cbc-crc</programlisting></para>
+                        </listitem>
+                        <listitem>
+                            <para>Copy the keytab from the server to the
+                            client. 
+                            <programlisting language="Bash">[root@ipaserver ~]#
+                            scp /tmp/krb5.keytab
+                            root@client.example.com:/tmp/krb5.keytab</programlisting></para>
+                        </listitem>
+                        <listitem>
+                            <para>On the &IPA; client, use the 
+                            <command>ktutil</command>command to import the
+                            contents into the main host keytab. 
+                            <programlisting language="Bash"># ktutil ktutil:
+                            read_kt /tmp/krb5.keytab ktutil: write_kt
+                            /etc/krb5/krb5.keytab ktutil:
+                            q</programlisting></para>
+                        </listitem>
+                        <listitem>
+                            <para>Verify that the NFS service keytab was
+                            created: 
+                            <programlisting language="Bash">[root@solaris ~]#
+                            klist -ket
+                            /etc/krb5/krb5.keytab</programlisting></para>
+                        </listitem>
+                        <listitem>
+                            <para>Verify that the NFS server is accessible: 
+                            <programlisting language="Bash">[root@solaris ~]#
+                            showmount -e
+                            ipaserver.example.com</programlisting></para>
+                        </listitem>
+                        <listitem>
+                            <para>Make sure that this line is uncommented in
+                            the 
+                            <filename>/etc/nfssec.conf</filename>file. 
+                            <programlisting language="Bash">krb5 390003
+                            kerberos_v5 default - #
+                            RPCSEC_GSS</programlisting></para>
+                        </listitem>
+                        <listitem>
+                            <para>Mount the NFS share. 
+                            <programlisting language="Bash">[root@solaris ~]#
+                            mount -t nfs4 ipaserver.example.com:/ /mnt/ -o
+                            sec=krb5</programlisting></para>
+                        </listitem>
+                    </orderedlist>
+                </listitem>
+                <listitem>
+                    <para>Configure 
+                    <command>sudo</command>on the Solaris machine to work with
+                    the &IPA; server.</para>
+                    <orderedlist>
+                        <listitem>
+                            <para>If necessary, install the required packages
+                            for SASL, OpenSSL, sudo and LDAP, and
+                            BerkeleyDB:</para>
+                            <itemizedlist>
+                                <listitem>
+                                    <para>CSWbdb4 (BerkeleyDB 4)</para>
+                                </listitem>
+                                <listitem>
+                                    <para>CSWcommon</para>
+                                </listitem>
+                                <listitem>
+                                    <para>CSWlibnet</para>
+                                </listitem>
+                                <listitem>
+                                    <para>CSWoldaprt</para>
+                                </listitem>
+                                <listitem>
+                                    <para>CSWossl</para>
+                                </listitem>
+                                <listitem>
+                                    <para>CSWossldevel</para>
+                                </listitem>
+                                <listitem>
+                                    <para>CSWosslrt</para>
+                                </listitem>
+                                <listitem>
+                                    <para>CSWosslutils</para>
+                                </listitem>
+                                <listitem>
+                                    <para>CSWsasl</para>
+                                </listitem>
+                                <listitem>
+                                    <para>CSWsudo-common</para>
+                                </listitem>
+                                <listitem>
+                                    <para>CSWsudoldap</para>
+                                </listitem>
+                            </itemizedlist>
+                            <para>These are available from 
+                            <ulink url="http://www.blastwave.org/">
+                            Blastwave</ulink>.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Edit the OpenLDAP 
+                            <filename>ldap.conf</filename>file to use the
+                            secure URL for the &IPA; &DS; instance and to use
+                            the &IPA; CA certificate.</para>
+                            <screen>[root@solaris ~]# vim
+                            /opt/csw/etc/openldap/ldap.conf base
+                            dc=example,dc=com timelimit 120 bind_timelimit 120
+                            idle_timelimit 3600 uri
+                            ldaps://ipaserver.example.com ssl start_tls
+                            sudoers_base ou=SUDOers,dc=example,dc=com ssl on
+                            TLS_REQCERT allow TLS_CACERT
+                            /etc/openldap/cacerts/ca.crt TLS_CACERTFILE
+                            /etc/openldap/cacerts/ca.crt TLS_CACERTDIR
+                            /etc/openldap/cacerts ...</screen>
+                        </listitem>
+                        <listitem>
+                            <para>Download the &IPA; CA certificate:</para>
+                            <screen>
+                            http://ipaserver.example.com/ipa/config.ca.cert</screen>
+                        </listitem>
+                        <listitem>
+                            <para>Copy the &IPA; CA certificate to the 
+                            <filename>
+                            /etc/openldap/cacerts</filename>directory.</para>
+                        </listitem>
+                    </orderedlist>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="Configuring_an_IPA_Client_on_Solaris-Configuring_an_IPA_Client_on_Solaris_9">
+
+            <title>Configuring Solaris 9</title>
+            <orderedlist>
+                <listitem>
+                    <para>Perform steps 
+                    <xref linkend="st.sol1" />through 
+                    <xref linkend="st.sol3" />in 
+                    <xref linkend="Configuring_an_IPA_Client_on_Solaris_10" />to
+                    set up the Solaris 9 client.</para>
+                </listitem>
+                <listitem>
+                    <para>Configure the NFS client.</para>
+                    <orderedlist>
+                        <listitem>
+                            <para>Configure the 
+                            <filename>/etc/exports</filename>file on the NFS
+                            server.</para>
+                            <programlisting language="Bash">/nfs
+                            client.example.com(sec=krb5p,rw,sync,fsid=0,no_subtree_check)</programlisting>
+                        </listitem>
+                        <listitem>
+                            <para>Add an NFS service principal for the client. 
+                            <programlisting language="Bash">[root@ipaserver ~]#
+                            ipa service-add
+                            nfs/client.example.com</programlisting></para>
+                        </listitem>
+                        <listitem>
+                            <para>Create the NFS keytab file. 
+                            <programlisting language="Bash">[root@ipaserver ~]#
+                            ipa-getkeytab -s ipaserver.example.com -p
+                            nfs/client.example.com -k /tmp/krb5.keytab -e
+                            des-cbc-crc</programlisting></para>
+                        </listitem>
+                        <listitem>
+                            <para>Copy the keytab from the server to the
+                            client. 
+                            <programlisting language="Bash">[root@ipaserver ~]#
+                            scp /tmp/krb5.keytab
+                            root@client.example.com:/tmp/krb5.keytab</programlisting></para>
+                        </listitem>
+                        <listitem>
+                            <para>Make sure that this line is uncommented in
+                            the 
+                            <filename>/etc/nfssec.conf</filename>file. 
+                            <programlisting language="Bash">krb5 390005
+                            kerberos_v5 default - #
+                            RPCSEC_GSS</programlisting></para>
+                        </listitem>
+                        <listitem>
+                            <para>Obtain a ticket for the NFS client. 
+                            <programlisting language="Bash">[root@solaris ~]#
+                            kinit -k
+                            nfs/client.example.com</programlisting></para>
+                        </listitem>
+                        <listitem>
+                            <para>Mount the NFS share. 
+                            <programlisting language="Bash">[root@solaris ~]#
+                            mount -F nfs -o sec=krb5p
+                            ipaserver.example.com:/nfs
+                            /mnt/</programlisting></para>
+                        </listitem>
+                        <listitem>
+                            <para>On the &IPA; client, use the 
+                            <command>ktutil</command>command to import the
+                            contents into the main host keytab. 
+                            <programlisting language="Bash"># ktutil ktutil:
+                            read_kt /tmp/krb5.keytab ktutil: write_kt
+                            /etc/krb5/krb5.keytab ktutil:
+                            q</programlisting></para>
+                        </listitem>
+                    </orderedlist>
+                </listitem>
+            </orderedlist>
+        </section>
+    </section>
+    <section id="Configuring_an_IPA_Client_on_HP_UX" condition="fedora">
+        <title>Configuring an HP-UX System as &IPAA; Client</title>
+        <note>
+            <para>The &IPA; client installation process requires that &IPAA;
+            server already exist.</para>
+        </note>
+        <section id="Configuring_an_IPA_Client_on_HP_UX-Configuring_NTP">
+            <title>Configuring NTP</title>
+            <para>Configure and enable NTP and make sure that time is
+            synchronized between the client and the &IPA; server.</para>
+        </section>
+        <section id="Configuring_an_IPA_Client_on_HP_UX-Configuring_LDAP_Authentication">
+
+            <title>Configuring LDAP Authentication</title>
+            <orderedlist>
+                <listitem>
+                    <para>Install the 
+                    <filename>ldapux</filename>client.</para>
+                    <programlisting language="Bash">[root@hp-server ~]#
+                    swinstall -s 
+                    <replaceable>
+                    /path/to/</replaceable>J4269AA_B.04.15.01_HP-UX_B.11.23_IA_PA.depot</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Change to the configuration directory, and run the
+                    setup script.</para>
+                    <programlisting language="Bash">[root@hp-server ~]# cd
+                    /opt/ldapux/config/ # ./setup</programlisting>
+                    <note>
+                        <title>NOTE</title>
+                        <para>Running the setup script is only necessary for
+                        the first HP-UX client. Every subsequent HP-UX client
+                        only needs to know where the LDAP profile is stored.
+                        All clients will then use the same
+                        configuration.</para>
+                        <para>For more information on this, see the HP-UX
+                        documentation at 
+                        <ulink url="http://docs.hp.com/en/J4269-90075/ch02s07.html">
+                        http://docs.hp.com/en/J4269-90075/ch02s07.html</ulink>.</para>
+                    </note>
+                    <para>The setup script prompts for information about the
+                    &IPA; LDAP service, such as its port and host, Directory
+                    Manager credentials, and schema and directory
+                    suffixes.</para>
+                    <programlisting>Would you like to continue with the setup?
+                    [Yes] Select which Directory Server you want to connect to
+                    ? [RedHat Directory] Directory server host ?
+                    [ipaserver.example.com] Directory Server port number [389]
+                    Would you like to extend the printer schema in this
+                    directory server? [No] Would you like to install PublicKey
+                    schema in this directory server? [No] Would you like to
+                    install the new automount schema ? [No] Profile Entry DN:
+                    [cn=ldapuxprofile,cn=etc,dc=example,dc=com] User DN
+                    [cn=Directory Manager] Password ? [Directory Manager's
+                    Password] Authentication method ? [ SIMPLE ] Enter the
+                    number of the hosts you want to specify [1] Default Base DN
+                    ? [dc=example,dc=com] Accept remaining defaults ? [n]
+                    Client binding [Anonymous] Bind time limit [5 seconds]
+                    Search time limit [no limit] Do you want client searches of
+                    the directory to follow referrals? [Yes] Profile TTL [0 =
+                    infinite] Do you want to remap any of the standard RFC 2307
+                    attribute? [Yes] Specify the service you want to map? [ 3 ]
+                    [ group ] Specify the attribute you want to map [3 for
+                    memberuid ] Type the name of the attribute memberuid should
+                    be mapped to [member] Specify the service you want to map?
+                    [ 0 = exit ] Do you want to remap any of the standard RFC
+                    2307 attribute? [ no this time ] Do you want to create
+                    custom search descriptors? [ No ]</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Ensure that the LDAP client daemon is running.</para>
+                    <programlisting language="Bash"># ps -ef | grep
+                    ldapclientd</programlisting>
+                    <para>If necessary, start the daemon:</para>
+                    <programlisting language="Bash">#
+                    /opt/ldapux/bin/ldapclientd</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Check that the user and group entries in the LDAP
+                    client are correct and available:</para>
+                    <programlisting language="Bash"># nsquery passwd admin #
+                    nsquery group admins</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Create a new group on the &IPA; server.</para>
+                    <programlisting language="Bash"># ipa group-add
+                    testgroup</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Add a test user to the new group.</para>
+                    <programlisting language="Bash"># ipa group-add-member -a
+                    testuser testgroup</programlisting>
+                    <para>Validate the new user and group:</para>
+                    <programlisting language="Bash"># nsquery passwd testuser #
+                    nsquery group testgroup</programlisting>
+                </listitem>
+                <listitem>
+                    <para>To ensure that the LDAP client daemon starts when the
+                    system boots, add the following lines to the 
+                    <filename>/etc/opt/ldapux/ldapclientd.conf</filename>file: 
+                    <programlisting>[StartOnBoot]
+                    enable=yes</programlisting></para>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="Configuring_Kerberos_and_PAM-Configuring_Kerberos">
+            <title>Configuring Kerberos</title>
+            <para>Edit the 
+            <filename>/etc/krb5.conf</filename>file to reflect the Kerberos
+            domain used by the &IPA; server. Setting up the Kerberos
+            configuration includes specifying the realm and domain details, and
+            default ticket attributes. Forwardable tickets are configured by
+            default, which facilitates connection to the administration
+            interface from any operating system, and also provides for auditing
+            of administration operations. For example:</para>
+            <programlisting>[libdefaults] default_realm = EXAMPLE.COM
+            default_keytab_name = FILE:/etc/krb5.keytab default_tkt_enctypes =
+            des3-cbc-sha1 arcfour-hmac aes256-cts des-cbc-md5 des-cbc-crc
+            default_tgs_enctypes = des3-cbc-sha1 arcfour-hmac aes256-cts
+            des-cbc-md5 des-cbc-crc ccache_type = 2 [realms] EXAMPLE.COM = {
+            kpasswd_server = ipaserver.example.com kdc =
+            ipaserver.example.com:88 admin_server = ipaserver.example.com:749
+            default_domain = example.com } [domain_realm] .example.com =
+            EXAMPLE.COM example.com = EXAMPLE.COM [appdefaults] kinit = {
+            forwardable = true }</programlisting>
+        </section>
+        <section id="Configuring_Kerberos_and_PAM-Configuring_PAM">
+            <title>Configuring PAM</title>
+            <para>The PAM configuration differs slightly between different
+            versions of HP-UX.</para>
+            <section id="Configuring_PAM-HP_UX_11i_v2">
+                <title>HP-UX 11i v2</title>
+                <para>Edit the 
+                <filename>/etc/pam.conf</filename>file so that all of the
+                required modules are loaded for authentication. For
+                example:</para>
+                <programlisting># # PAM configuration # # This pam.conf file is
+                intended as an example only. # see pam.conf(4) for more details
+                # Authentication management # login auth required
+                libpam_hpsec.so.1 login auth sufficient libpam_krb5.so.1 login
+                auth required libpam_unix.so.1 try_first_pass su auth required
+                libpam_hpsec.so.1 su auth sufficient libpam_krb5.so.1 su auth
+                required libpam_unix.so.1 try_first_pass dtlogin auth required
+                libpam_hpsec.so.1 dtlogin auth sufficient libpam_krb5.so.1
+                dtlogin auth required libpam_unix.so.1 try_first_pass dtaction
+                auth required libpam_hpsec.so.1 dtaction auth sufficient
+                libpam_krb5.so.1 dtaction auth required libpam_unix.so.1
+                try_first_pass ftp auth required libpam_hpsec.so.1 ftp auth
+                sufficient libpam_krb5.so.1 ftp auth required libpam_unix.so.1
+                try_first_pass sshd auth required libpam_hpsec.so.1 sshd auth
+                sufficient libpam_krb5.so.1 sshd auth required libpam_unix.so.1
+                try_first_pass OTHER auth required libpam_unix.so.1 # # Account
+                management # login account required libpam_hpsec.so.1 login
+                account sufficient libpam_krb5.so.1 login account required
+                libpam_unix.so.1 su account required libpam_hpsec.so.1 su
+                account sufficient libpam_krb5.so.1 su account required
+                libpam_unix.so.1 dtlogin account required libpam_hpsec.so.1
+                dtlogin account sufficient libpam_krb5.so.1 dtlogin account
+                required libpam_unix.so.1 dtaction account required
+                libpam_hpsec.so.1 dtaction account sufficient libpam_krb5.so.1
+                dtaction account required libpam_unix.so.1 ftp account required
+                libpam_hpsec.so.1 ftp account sufficient libpam_krb5.so.1 ftp
+                account required libpam_unix.so.1 sshd account required
+                libpam_hpsec.so.1 sshd account sufficient libpam_krb5.so.1 sshd
+                account required libpam_unix.so.1 OTHER account required
+                libpam_unix.so.1 # # Session management # login session
+                required libpam_hpsec.so.1 login session sufficient
+                libpam_krb5.so.1 login session required libpam_unix.so.1
+                dtlogin session required libpam_hpsec.so.1 dtlogin session
+                sufficient libpam_krb5.so.1 dtlogin session required
+                libpam_unix.so.1 dtaction session required libpam_hpsec.so.1
+                dtaction session sufficient libpam_krb5.so.1 dtaction session
+                required libpam_unix.so.1 sshd session required
+                libpam_hpsec.so.1 sshd session sufficient libpam_krb5.so.1 sshd
+                session required libpam_unix.so.1 OTHER session required
+                libpam_unix.so.1 # # Password management # login password
+                required libpam_hpsec.so.1 login password sufficient
+                libpam_krb5.so.1 login password required libpam_unix.so.1
+                passwd password required libpam_hpsec.so.1 passwd password
+                sufficient libpam_krb5.so.1 passwd password required
+                libpam_unix.so.1 dtlogin password required libpam_hpsec.so.1
+                dtlogin password sufficient libpam_krb5.so.1 dtlogin password
+                required libpam_unix.so.1 dtaction password required
+                libpam_hpsec.so.1 dtaction password sufficient libpam_krb5.so.1
+                dtaction password required libpam_unix.so.1 OTHER password
+                required libpam_unix.so.1</programlisting>
+            </section>
+            <section id="Configuring_PAM-HP_UX_11i_v1">
+                <title>HP-UX 11i v1</title>
+                <para>Edit the 
+                <filename>/etc/pam.conf</filename>file to reflect the following
+                example:</para>
+                <programlisting># # PAM configuration # # This pam.conf file is
+                intended as an example only. # see pam.conf(4) for more details
+                # # Authentication management # login auth sufficient
+                /usr/lib/security/libpam_krb5.1 login auth required
+                /usr/lib/security/libpam_unix.1 try_first_pass su auth
+                sufficient /usr/lib/security/libpam_krb5.1 su auth required
+                /usr/lib/security/libpam_unix.1 try_first_pass dtlogin auth
+                sufficient /usr/lib/security/libpam_krb5.1 dtlogin auth
+                required /usr/lib/security/libpam_unix.1 try_first_pass
+                dtaction auth sufficient /usr/lib/security/libpam_krb5.1
+                dtaction auth required /usr/lib/security/libpam_unix.1
+                try_first_pass ftp auth sufficient
+                /usr/lib/security/libpam_krb5.1 ftp auth required
+                /usr/lib/security/libpam_unix.1 try_first_pass OTHER auth
+                required /usr/lib/security/libpam_unix.1 # # Account management
+                # login account sufficient /usr/lib/security/libpam_krb5.1
+                login account required /usr/lib/security/libpam_unix.1 su
+                account sufficient /usr/lib/security/libpam_krb5.1 su account
+                required /usr/lib/security/libpam_unix.1 dtlogin account
+                sufficient /usr/lib/security/libpam_krb5.1 dtlogin account
+                required /usr/lib/security/libpam_unix.1 dtaction account
+                sufficient /usr/lib/security/libpam_krb5.1 dtaction account
+                required /usr/lib/security/libpam_unix.1 ftp account sufficient
+                /usr/lib/security/libpam_krb5.1 ftp account required
+                /usr/lib/security/libpam_unix.1 OTHER account required
+                /usr/lib/security/libpam_unix.1 # # Session management # login
+                session sufficient /usr/lib/security/libpam_krb5.1 login
+                session required /usr/lib/security/libpam_unix.1 dtlogin
+                session sufficient /usr/lib/security/libpam_krb5.1 dtlogin
+                session required /usr/lib/security/libpam_unix.1 dtaction
+                session sufficient /usr/lib/security/libpam_krb5.1 dtaction
+                session required /usr/lib/security/libpam_unix.1 OTHER session
+                required /usr/lib/security/libpam_unix.1 # # Password
+                management # login password sufficient
+                /usr/lib/security/libpam_krb5.1 login password required
+                /usr/lib/security/libpam_unix.1 passwd password sufficient
+                /usr/lib/security/libpam_krb5.1 passwd password required
+                /usr/lib/security/libpam_unix.1 dtlogin password sufficient
+                /usr/lib/security/libpam_krb5.1 dtlogin password required
+                /usr/lib/security/libpam_unix.1 dtaction password sufficient
+                /usr/lib/security/libpam_krb5.1 dtaction password required
+                /usr/lib/security/libpam_unix.1 OTHER password required
+                /usr/lib/security/libpam_unix.1</programlisting>
+            </section>
+        </section>
+        <section id="Configuring_an_IPA_Client_on_HP_UX-Configuring_SSH">
+            <title>Configuring SSH</title>
+            <orderedlist>
+                <listitem>
+                    <para>Ensure that you have version A.05.10.007 or later of 
+                    <command>ssh</command>installed. A current package can be
+                    downloaded from the HP website at 
+                    <ulink url="http://software.hp.com/portal/swdepot/displayProductInfo.do?productNumber=T1471AA" />.</para>
+                </listitem>
+                <listitem>
+                    <para>Edit the 
+                    <filename>/etc/opt/ssh/ssh_config</filename>file:</para>
+                    <itemizedlist>
+                        <listitem>
+                            <para>Remove any 
+                            <command>
+                            PreferredAuthentications</command>entries.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Add the following lines: 
+                            <programlisting>Host * GSSAPIAuthentication yes
+                            GSSAPITrustDNS no PreferredAuthentications
+                            "gssapi-with-mic,publickey,password"</programlisting></para>
+                            <important>
+                                <title>IMPORTANT</title>
+                                <para>Include the tab character before the 
+                                <command>GSSAPIAuthentication</command>, 
+                                <command>GSSAPITrustDNS</command>, and 
+                                <command>
+                                PreferredAuthentications</command>lines, and
+                                include the double quotes around the 
+                                <command>
+                                PreferredAuthentications</command>value.</para>
+                            </important>
+                        </listitem>
+                    </itemizedlist>
+                </listitem>
+                <listitem>
+                    <para>Remove the 
+                    <filename>/etc/krb5.keytab</filename>file.</para>
+                </listitem>
+                <listitem>
+                    <para>Set up the NFS/Kerberos mapping for the Solaris
+                    client 
+                    <emphasis>on the &IPA; server</emphasis>.</para>
+                    <orderedlist>
+                        <listitem>
+                            <para>Add a host service principal for the HP-UX
+                            client.</para>
+                            <programlisting language="Bash"># ipa service-add
+                            host/hpuxipaclient.example.com</programlisting>
+                        </listitem>
+                        <listitem>
+                            <para>Create the host keytab file.</para>
+                            <programlisting language="Bash"># ipa-getkeytab -s
+                            ipaserver.example.com -p
+                            host/hpuxipaclient.example.com -k /tmp/krb5.keytab
+                            -e des-cbc-crc</programlisting>
+                        </listitem>
+                        <listitem>
+                            <para>Copy this keytab to the HP-UX machine, and
+                            save it as 
+                            <filename>/etc/krb5/krb5.keytab</filename>.</para>
+                            <programlisting language="Bash"># scp
+                            /tmp/krb5.keytab
+                            root@hpuxipaclient.example.com:/etc/krb5/krb5.keytab</programlisting>
+                        </listitem>
+                    </orderedlist>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section id="Configuring_an_IPA_Client_on_HP_UX-Configuring_Access_Control">
+
+            <title>Configuring Access Control</title>
+            <para>HP-UX systems provide the 
+            <systemitem>pam_authz</systemitem>PAM module, which can be used to
+            control login access to the system based on a user's group
+            membership. For details on how to configure access control with
+            this module, see the HP documentation at 
+            <ulink url="http://h20000.www2.hp.com/bc/docs/support/SupportManual/c02261530/c02261530.pdf" />.</para>
+            <example id="ex.hp-pam-authz-mod">
+                <title>pam_authz.policy File: Allow User Access, Deny Admin
+                Access</title>
+                <para>This configuration in 
+                <filename>/etc/opt/ldapux/pam_authz.policy</filename>prevents
+                the admin user from logging in while still allowing regular
+                users to log in.</para>
+                <programlisting># pam_authz.policy.template: # # An example
+                file that could be copied over to
+                /etc/opt/ldapux/pam_authz.policy. # pam_authz.policy is a local
+                policy file that PAM_AUTHZ would use to help # determine which
+                users would be allowed to login to the local host. # # In this
+                template file, by default, the only active access rule is #
+                "allow:unix_local_user" # All the local users are authorized to
+                login. # # The policy file contains one or more access rule.
+                The format of an access # rule is
+                &lt;action&gt;:&lt;type&gt;:&lt;object&gt; # # where
+                &lt;action&gt; could be "deny", "allow", "status" #
+                "PAM_SUCCESS", "PAM_PERM_DENIED", "PAM_MAXTRIES" #
+                "PAM_AUTH_ERR", "PAM_NEW_AUTHTOK_REQD", # "PAM_AUTHTOKEN_REQD,
+                "PAM_CRED_INSUFFICIENT", # "PAM_AUTHINFO_UNAVAIL",
+                "PAM_USER_UNKNOWN" # "PAM_ACCT_EXPIRED", "PAM_AUTHOK_EXPIRED" #
+                # Note: "status" must use along with "rhds" or # "ads"
+                &lt;type&gt;. # &lt;type&gt; could be "unix_user",
+                "unix_local_user", "unix_group", # "netgroup", ldap_filter",
+                "ldap_group" # "rhds" or "ads" # # Note: When &lt;type&gt; is
+                set to "rhds" or "ads", # the &lt;action&gt; filed must set to
+                "status". # &lt;object&gt; contains search information. For
+                example, # deny:unix_group:admins
+                allow:unix_local_user</programlisting>
+            </example>
+        </section>
+        <section id="hp-test">
+            <title>Testing the Configuration</title>
+            <note>
+                <title>NOTE</title>
+                <para>By default, the admin user is given 
+                <command>/bin/bash</command>as the shell to use and 
+                <filename>/home/admin</filename>as the home directory. It may
+                be necessary to install bash to be able to log in.</para>
+            </note>
+            <para>There are two quick ways to check the Kerberos and PAM
+            configuration for the HP client:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Authenticate as an administrator on a Linux box that
+                    is a client in the &IPA; domain, and then attempt to SSH
+                    into the HP machine. The admin user should be able to log
+                    in using SSH without being asked for a password.</para>
+                    <programlisting language="Bash"># kinit admin # ssh
+                    admin@hpuxipaclient.example.com</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Log into the &IPA; web UI using the administrator
+                    credentials on the HP machine.</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+    </section>
+    <section id="Configuring_an_IPA_Client_on_AIX" condition="fedora">
+        <title>Configuring an AIX System as &IPAA; Client</title>
+        <section id="Configuring_an_IPA_Client_on_AIX-Prerequisites">
+            <title>Prerequisites</title>
+            <para>Make sure that all of these packages are installed on the AIX
+            machine before beginning the client configuration:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>v5.3 OS</para>
+                </listitem>
+                <listitem>
+                    <para>v5.3 Updates</para>
+                </listitem>
+                <listitem>
+                    <para>krb5 client packages</para>
+                </listitem>
+                <listitem>
+                    <para>openssh</para>
+                </listitem>
+                <listitem>
+                    <para>wget</para>
+                </listitem>
+                <listitem>
+                    <para>bash</para>
+                </listitem>
+                <listitem>
+                    <para>krb5 server</para>
+                </listitem>
+                <listitem>
+                    <para>ldap.client</para>
+                </listitem>
+                <listitem>
+                    <para>openssl</para>
+                </listitem>
+                <listitem>
+                    <para>modcrypt.base (for gssd)</para>
+                </listitem>
+            </itemizedlist>
+            <para>Configure and enable NTP and make sure that time is
+            synchronized between the client and the &IPA; server.</para>
+        </section>
+        <section id="Configuring_an_IPA_Client_on_AIX-Configuring_Client_Authentication">
+
+            <title>Configuring the AIX Client</title>
+            <para>Setting up an AIX client requires setting up the client to
+            work in the &IPA; Kerberos domain and, optionally, to enable SSH
+            authentication to the AIX client using &IPA; credentials.</para>
+            <para>Kerberos configuration includes specifying the realm and
+            domain details, and default ticket attributes. Forwardable tickets
+            are configured by default, which facilitates connection to the
+            administration interface from any operating system, and also
+            provides for auditing of administration operations. For
+            example:</para>
+            <orderedlist>
+                <listitem>
+                    <para>Configure the krb5 client settings to use the &IPA;
+                    Kerberos domain:</para>
+                    <programlisting language="Bash"># mkkrb5clnt -r EXAMPLE.COM
+                    -d example.com -c ipaclient.example.com -s
+                    ipaserver.example.com</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Get a Kerberos ticket:</para>
+                    <programlisting language="Bash"># kinit
+                    admin</programlisting>
+                </listitem>
+                <listitem>
+                    <para>On the &IPA; server, add a user that is only used for
+                    authentication. (This can be substituted with krb5
+                    authentication if that works from the LDAP client).
+                    Otherwise go to the &IPA; server and use 
+                    <command>ldapmodify</command>, bind as Directory Manager
+                    and create this user. The user should be assigned a shared
+                    password.</para>
+                    <programlisting># ldapmodify -D "cn=directory manager" -w
+                    secret -p 389 -h ipaserver.example.com -x -a dn:
+                    uid=nss,cn=sysaccounts,cn=etc,dc=example,dc=com
+                    objectClass: account objectClass: simplesecurityobject
+                    objectClass: top uid: nss userPassword:
+                    secretpassword</programlisting>
+                </listitem>
+                <listitem>
+                    <para>On the AIX system, configure the LDAP client settings
+                    to use the &IPA; directory services:</para>
+                    <programlisting language="Bash"># mksecldap -c -h
+                    ipaserver.example.com -d cn=accounts,dc=example,dc=com -a
+                    uid=nss,cn=sysaccounts,cn=etc,dc=example,dc=com -p
+                    secret</programlisting>
+                </listitem>
+                <listitem>
+                    <para>In the 
+                    <filename>/etc/security/ldap</filename>directory, create
+                    user and group map files:</para>
+                    <itemizedlist>
+                        <listitem>
+                            <para>For example, for the 
+                            <filename>&IPA;user.map</filename>file:</para>
+                            <programlisting>#&IPA;user.map file keyobjectclass
+                            SEC_CHAR posixaccount s # The following attributes
+                            are required by AIX to be functional username
+                            SEC_CHAR uid s id SEC_INT uidnumber s pgrp SEC_CHAR
+                            gidnumber s home SEC_CHAR homedirectory s shell
+                            SEC_CHAR loginshell s gecos SEC_CHAR gecos s
+                            spassword SEC_CHAR userpassword s lastupdate
+                            SEC_INT shadowlastchange s</programlisting>
+                        </listitem>
+                        <listitem>
+                            <para>For example, for the 
+                            <filename>&IPA;group.map</filename>file:</para>
+                            <programlisting>#&IPA;group.map file groupname
+                            SEC_CHAR cn s id SEC_INT gidNumber s users SEC_LIST
+                            member m</programlisting>
+                        </listitem>
+                    </itemizedlist>
+                </listitem>
+                <listitem>
+                    <para>Modify the 
+                    <filename>/etc/security/ldap/ldap.cfg</filename>file to set
+                    the REALM and base DN values for the &IPA; domain.</para>
+                    <programlisting>
+                    userbasedn:cn=users,cn=accounts,dc=example,dc=com
+                    groupbasedn:cn=groups,cn=accounts,dc=example,dc=com
+                    userattrmappath:/etc/security/ldap/&IPA;user.map
+                    groupattrmappath:/etc/security/ldap/&IPA;group.map
+                    userclasses:posixaccount</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Start the LDAP client daemon:</para>
+                    <programlisting language="Bash">#
+                    start-secldapclntd</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Test the LDAP client connection to the &IPA;
+                    server:</para>
+                    <programlisting language="Bash"># lsldap -a
+                    passwd</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Add the following sections to the 
+                    <filename>/usr/lib/security/methods.cfg</filename>file to
+                    configure the system login to use Kerberos and LDAP: 
+                    <programlisting>KRB5A: program = /usr/lib/security/KRB5A
+                    program_64 = /usr/lib/security/KRB5A_64 options = authonly
+                    LDAP: program = /usr/lib/security/LDAP program_64
+                    =/usr/lib/security/LDAP64 KRB5ALDAP: options =
+                    auth=KRB5A,db=LDAP</programlisting></para>
+                </listitem>
+                <listitem>
+                    <para>Edit the 
+                    <filename>/etc/security/user</filename>file, and modify the
+                    
+                    <command>default</command>section to use the Kerberos/LDAP
+                    system and the LDAP user registry. 
+                    <programlisting>SYSTEM = "KRB5ALDAP" registry =
+                    LDAP</programlisting></para>
+                </listitem>
+                <listitem>
+                    <para>To test the Kerberos configuration, log in as &IPAA;
+                    user and verify that the user and group information is
+                    correct:</para>
+                    <programlisting language="Bash">$ id</programlisting>
+                </listitem>
+                <listitem>
+                    <para>Optionally, configure the &IPA; client to accept
+                    incoming SSH requests and authenticate with the user's
+                    Kerberos credentials.</para>
+                    <orderedlist>
+                        <listitem>
+                            <para>Set the SSH syslog configuration:</para>
+                            <programlisting>auth.info /var/log/sshd.log
+                            auth.info /var/log/sshd.log auth.crit
+                            /var/log/sshd.log auth.warn /var/log/sshd.log
+                            auth.notice /var/log/sshd.log auth.err
+                            /var/log/sshd.log</programlisting>
+                        </listitem>
+                        <listitem>
+                            <para>Set the SSH logging configuration:</para>
+                            <programlisting>SyslogFacility AUTH LogLevel
+                            INFO</programlisting>
+                        </listitem>
+                        <listitem>
+                            <para>Configure 
+                            <systemitem>sshd</systemitem>to use GSS-API,
+                            including disabling DNS for GSS-API:</para>
+                            <programlisting>vim /etc/ssh/sshd_config # GSSAPI
+                            options GSSAPIAuthentication yes
+                            #GSSAPICleanupCredentials yes</programlisting>
+                        </listitem>
+                        <listitem>
+                            <para>Restart the 
+                            <filename>sshd</filename>daemon:</para>
+                            <programlisting language="Bash"># stopsrc -s sshd #
+                            startsrc -s sshd</programlisting>
+                        </listitem>
+                        <listitem>
+                            <para>Restart the 
+                            <filename>syslogd</filename>daemon:</para>
+                            <programlisting language="Bash"># stopsrc -s
+                            syslogd # startsrc -s syslogd</programlisting>
+                        </listitem>
+                        <listitem>
+                            <para>Add the client to the &IPA; server's Kerberos
+                            configuration.</para>
+                            <orderedlist>
+                                <listitem>
+                                    <para>Add a host service principal for the
+                                    client.</para>
+                                    <programlisting language="Bash"># ipa
+                                    service-add
+                                    host/ipaclient.example.com</programlisting>
+                                </listitem>
+                                <listitem>
+                                    <para>Retrieve the host keytab.</para>
+                                    <programlisting language="Bash">#
+                                    ipa-getkeytab -s ipaserver -p
+                                    host/ipaclient.example.com -k
+                                    /tmp/krb5.keytab -e
+                                    des-cbc-crc</programlisting>
+                                </listitem>
+                                <listitem>
+                                    <para>Copy the keytab from the server to
+                                    the client.</para>
+                                    <programlisting language="Bash"># scp
+                                    /tmp/krb5.keytab
+                                    root@ipaclient.example.com:/tmp/krb5.keytab</programlisting>
+                                </listitem>
+                            </orderedlist>
+                        </listitem>
+                        <listitem>
+                            <para>On the &IPA; client, use the 
+                            <command>ktutil</command>command to import the
+                            contents into the main host keytab.</para>
+                            <screen># ktutil ktutil: read_kt /tmp/krb5.keytab
+                            ktutil: write_kt /etc/krb5/krb5.keytab ktutil:
+                            q</screen>
+                        </listitem>
+                        <listitem>
+                            <para>On the &IPA; server, get a ticket for the
+                            admin user.</para>
+                            <programlisting language="Bash"># kinit
+                            admin</programlisting>
+                        </listitem>
+                        <listitem>
+                            <para>To test the SSH configuration, try to log in
+                            as the admin user using SSH without providing a
+                            password.</para>
+                            <programlisting language="Bash"># ssh
+                            admin@ipaclient.example.com</programlisting>
+                        </listitem>
+                    </orderedlist>
+                </listitem>
+            </orderedlist>
+            <note>
+                <title>NOTE</title>
+                <para>By default, the admin user is given 
+                <command>/bin/bash</command>as the shell to use and 
+                <filename>/home/admin</filename>as the home directory. It may
+                be necessary to install bash to be able to log in.</para>
+            </note>
+        </section>
+    </section>
+    <!--    
+     <section id="Configuring_an_IPA_Client_on_Macintosh_OS_X">
+        <title>Configuring a Macintosh OS X System as &IPAA; Client</title>
+         <para>
+            These instructions are specific to Mac OS X 10.4 (Tiger) because this version includes the required Kerberos tools by default.
+        </para>
+         <section id="Configuring_an_IPA_Client_on_Macintosh_OS_X-Configuring_Kerberos_Authentication">
+            <title>Configuring Kerberos Authentication</title>
+                 <para>
+                    Configuring the Macintosh to use Kerberos for authentication with &IPA; is a two-step process. First, Kerberos needs to be correctly installed and configured. 
+                    Then, Kerberos authentication needs to be enabled.
+                </para>
+             <section id="Configuring_Kerberos_Authentication-Configuring_Kerberos">
+                <title>Configuring Kerberos</title>
+                 <para>
+                    Setting up the Kerberos configuration includes specifying the realm and domain details, and default ticket attributes. Forwardable tickets are configured by default, which facilitates connection to the administration interface from any operating system, and also provides for auditing of administration operations. For example, this is the Kerberos configuration for &OS; systems:
+                </para>
+                 <orderedlist>
+                    <listitem>
+                        <para>
+                            Make sure that the Kerberos version is 4.2 or higher. The Kerberos directory is <filename>/System/Library/CFMSupport/Kerberos</filename>. If that directory does not exist or is the wrong version, install the Kerberos Extras support.
+                        </para>
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Launch the Kerberos management application. This is in <filename>/System/Library/Coreservices/Kerberos</filename>.
+                        </para>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            From the <guimenu>Edit</guimenu> menu, choose <guimenuitem>Edit Realms</guimenuitem>.
+                        </para>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            In the <guilabel>Settings</guilabel> tab, enter the &IPA; server's Kerberos realm, for example, EXAMPLE.COM.
+                        </para>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            In the <guilabel>Servers</guilabel> tab, enter the &IPA; server's hostname for the <guilabel>kdc</guilabel> and <guilabel>admin</guilabel> values:
+                        </para>
+                         
+<programlisting>kdc  ipaserver.example.com 88
+admin ipaserver.example.com 749
+</programlisting>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            In the <guilabel>Domains</guilabel> tab, replace the existing domains with the &IPA; server's actual domain, such as example.com:
+                        </para>
+                         
+<programlisting>.example.com
+example.com
+</programlisting>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Click <guibutton>Make default</guibutton> to create the necessary configuration file, and then close the Kerberos tool.
+                        </para>
+                         <para>
+                            This creates the <filename>/Library/Preferences/edu.mit.kerberos</filename> file. Check this file manually to ensure that it is correct. For example:
+                        </para>
+                         
+<programlisting>[domain_realm]
+example.com = EXAMPLE.COM
+.example.com = .EXAMPLE.COM
+
+[libdefaults]
+default_realm = EXAMPLE.COM
+dns_lookup_realm = true
+dns_lookup_kdc = true
+ticket_lifetime = 24h
+forwardable = yes
+
+[realms]
+EXAMPLE.COM = {
+      admin_server = ipaserver.example.com:749
+      default_domain = example.com
+      kdc = ipaserver.example.com:88
+      }
+</programlisting>
+
+                    </listitem>
+
+                </orderedlist>
+            </section>
+            
+             <section id="Configuring_Kerberos_Authentication-Enabling_Kerberos_Authentication">
+                <title>Enabling Kerberos Authentication</title>
+                 <orderedlist>
+                    <listitem>
+                        <para>
+                            Log in as the admin user and launch a terminal.
+                        </para>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Change to the <filename>/private/etc</filename> directory and make a backup of the existing authorization file.
+                        </para>
+                        
+<programlisting language="Bash"># cd /private/etc
+
+# cp -p authorization authorization_bak</programlisting>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Open the authorization file.
+                        </para>
+<programlisting language="Bash"># vim /private/etc/authorization</programlisting>
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Locate the string <command>system.login.console</command>, and then edit the <parameter>dict</parameter> and the <parameter>mechanisms</parameter> entry just beneath this line.
+                        </para>
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Change <parameter>authinternal</parameter> to <parameter>builtin:krb5authnoverify,privileged</parameter>.
+                        </para>
+                         <warning><title>WARNING</title>
+                            <para>
+                                Several instances of <parameter>authinternal</parameter> may occur in this file. Change only the instance for <command>system.login.console</command>. 
+                            </para>
+                        </warning>
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Save and close the file.
+                        </para>
+
+                    </listitem>
+                    
+                        <listitem>
+                            <para>
+                                Edit the SSH configuration to pass the username directly to GSS-API rather than attempting reverse DNS lookups. Add or edit the <parameter>GSSAPITrustDNS</parameter> directive and set the value to <command>no</command>.
+                            </para>
+<screen># vim /etc/ssh/ssh_config 
+    
+GSSAPITrustDNS no </screen>
+                        </listitem>
+                     <listitem>
+                        <para>
+                            Restart the machine to enable Kerberos authentication.
+                        </para>
+
+                    </listitem>
+
+                </orderedlist>
+
+            </section>
+            
+
+        </section>
+        
+         <section id="Configuring_an_IPA_Client_on_Macintosh_OS_X-Configuring_LDAP_Authorization">
+            <title>Configuring LDAP Authorization</title>
+             <section id="Configuring_LDAP_Authorization-Creating_the_LDAP_Configuration">
+                <title>Creating the LDAP Configuration</title>
+                 <orderedlist>
+                    <listitem>
+                        <para>
+                            Launch the Directory Access utility. 
+                        </para>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            In the <guilabel>Services</guilabel> tab, clear all check boxes except LDAPv3 and Bonjour.
+                        </para>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Select the <guilabel>LDAPv3</guilabel> entry, and click <guibutton>Configure</guibutton>.
+                        </para>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Make sure the <guilabel>Add DHCP-supplied LDAP servers</guilabel> checkbox is not selected.
+                        </para>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Click the arrow next to the <guilabel>Show Options</guilabel> label, and then click <guibutton>New</guibutton>.
+                        </para>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Enter the server hostname in the <guilabel>Server Name</guilabel> field, such as <command>ipaserver.example.com</command>.
+                        </para>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Clear the <guilabel>Encrypt using SSL</guilabel> checkbox, and then click <guibutton>Manual</guibutton>.
+                        </para>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Enter the configuration name, such as <command>&IPA; LDAP</command>.
+                        </para>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Select the <guilabel>Enable</guilabel> checkbox, and clear the <guilabel>SSL</guilabel> checkbox.
+                        </para>
+
+                    </listitem>
+
+                </orderedlist>
+
+            </section>
+            
+            <section id="Configuring_LDAP_Authorization-Setting_up_the_LDAP_Service_Configuration_Options">
+                <title>Setting up the LDAP Service Configuration Options</title>
+                 <orderedlist>
+                    <listitem>
+                        <para>
+                            Select the newly-created LDAP configuration, and click <guibutton>Edit</guibutton>.
+                        </para>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            In the <guilabel>Connection</guilabel> tab, specify the connection settings:
+                        </para>
+                         <orderedlist>
+                            <listitem>
+                                <para>
+                                    Open/close times out in 10 seconds
+                                </para>
+
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    Query times out in 10 seconds
+                                </para>
+
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    Re-bind attempted in 10 seconds
+                                </para>
+
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    Connection idles out in 1 minute
+                                </para>
+
+                            </listitem>
+                        </orderedlist>
+                        <para>
+                            Clear all checkboxes.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            In the <guilabel>Search &amp; Mappings</guilabel> tab, set the <guilabel>Access this LDAP server using</guilabel> value to <command>CUSTOM</command>.
+                        </para>
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Still in the <guilabel>Search &amp; Mappings</guilabel> tab, configure the naming attributes used by entries:
+                        </para>
+                         <orderedlist>
+                             <listitem>
+                                <para>
+                                    In the <guilabel>Record Types and Attributes</guilabel> panel, select <guilabel>Default Attribute Types</guilabel>.
+                                </para>
+
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    Click <guibutton>Add</guibutton>.
+                                </para>
+
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    Select the <guilabel>Attribute Types</guilabel> option, then select <guilabel>RecordName</guilabel> from the list.
+                                </para>
+
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    Select the newly-added <command>RecordName</command> attribute, and then click <guibutton>Add</guibutton> under the <guilabel>Map to any items in list</guilabel> panel.
+                                </para>
+
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    Type <parameter>uid</parameter> in the text box to set the LDAP attribute used for naming. Click outside the text box to set the value.
+                                </para>
+
+                            </listitem>
+
+                        </orderedlist>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Still in the <guilabel>Search &amp; Mappings</guilabel> tab, add a users record:
+                        </para>
+                         <orderedlist>
+                            <listitem>
+                                <para>
+                                    Under the <guilabel>Record Types and Attributes</guilabel> panel, click <guibutton>Add</guibutton>.
+                                </para>
+
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    Select the <guilabel>Record Types</guilabel> option, and select <guilabel>Users</guilabel> from the list.
+                                </para>
+
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    Select the newly-added <guilabel>Users</guilabel> record type, and then click <guibutton>Add</guibutton> under the <guilabel>Map to any items in list</guilabel> panel.
+                                </para>
+
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    Type <parameter>inetOrgPerson</parameter> in the text box. Click outside the text box to set the value.
+                                </para>
+
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    In the <guilabel>Search base</guilabel> field, type the base DN of the &IPA; LDAP service, such as <command>dc=example,dc=com</command> 
+                                </para>
+
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    Select the <guilabel>Search in all subtrees</guilabel> option.
+                                </para>
+                            </listitem>
+                        </orderedlist>
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Add attributes to the users record as appropriate.
+                        </para>
+                         <orderedlist>
+                            <listitem>
+                                <para>
+                                    Under the <guilabel>Record Types and Attributes</guilabel> panel, click <guibutton>Add</guibutton>.
+                                </para>
+
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    Select the <guilabel>Attribute Types</guilabel> option, and then use <keycap>Ctrl</keycap> to select multiple attributes. Common attributes to add include:
+                                </para>
+                                 <itemizedlist>
+                                    <listitem>
+                                        <para>
+                                            AuthenticationAuthority
+                                        </para>
+
+                                    </listitem>
+                                     <listitem>
+                                        <para>
+                                            PrimaryGroupID
+                                        </para>
+
+                                    </listitem>
+                                     <listitem>
+                                        <para>
+                                            RealName
+                                        </para>
+
+                                    </listitem>
+                                     <listitem>
+                                        <para>
+                                            RecordName
+                                        </para>
+
+                                    </listitem>
+                                     <listitem>
+                                        <para>
+                                            UniqueID
+                                        </para>
+
+                                    </listitem>
+                                     <listitem>
+                                        <para>
+                                            UserShell
+                                        </para>
+
+                                    </listitem>
+
+                                </itemizedlist>
+
+                            </listitem>
+                        </orderedlist>
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Specify appropriate mappings for the new attributes.
+                                    Select the <guilabel>Authentication Authority</guilabel> record 
+                            type, and then click <guibutton>Add</guibutton> under the <guilabel>Map to any items in list</guilabel> 
+                            panel. The attribute mappings have the format <command>#;</command><emphasis>Mac-attribute</emphasis><command>;;$</command><emphasis>LDAP-attribute</emphasis><command>$;</command><emphasis>value</emphasis>. 
+                            For example, for the Kerberosv5 principal, the UID, and the realm, the mapping is <command>#;Kerberosv5;;$uid$;EXAMPLE.COM</command>. These are common mappings:
+                        </para>
+                         <itemizedlist>
+                             <listitem>
+                                <para>
+                                    Kerberosv5 and UID
+                                </para>
+
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    PrimaryGroupID and gidNumber
+                                </para>
+
+                            </listitem>
+                             <listitem>
+                                <para>
+                                    UniqueID and uidNumber
+                                </para>
+
+                            </listitem>
+                        </itemizedlist>
+
+                    </listitem>
+                     <listitem>
+                        <para>
+                            Click <guibutton>OK</guibutton> to finish setting up the LDAP service configuration options.
+                        </para>
+
+                    </listitem>
+
+                </orderedlist>
+
+            </section>
+            
+
+        </section>
+        
+         <section id="Configuring_an_IPA_Client_on_Macintosh_OS_X-Configuring_the_LDAP_Authorization_Options">
+            <title>Configuring the LDAP Authorization Options</title>
+             <orderedlist>
+                <listitem>
+                    <para>
+                        In the <guilabel>Authentication</guilabel> tab, change the <guilabel>Search</guilabel> value to <guilabel>Custom path</guilabel>.
+                    </para>
+
+                </listitem>
+                <listitem>
+                    <para>
+                        Click <guibutton>Add</guibutton>.
+                    </para>
+
+                </listitem>
+                 <listitem>
+                    <para>
+                        Select the configuration created in <xref linkend="Configuring_LDAP_Authorization-Setting_up_the_LDAP_Service_Configuration_Options" />, and click <guibutton>Add</guibutton>.
+                    </para>
+
+                </listitem>
+                 <listitem>
+                    <para>
+                        Click <guibutton>Apply</guibutton> to update the LDAP configuration.
+                    </para>
+
+                </listitem>
+
+            </orderedlist>
+
+        </section>
+        
+         <section id="Configuring_an_IPA_Client_on_Macintosh_OS_X-Configuring_NTP">
+            <title>Configuring NTP</title>
+             <para>
+                Open the Date and Time utility and point it to the &IPA; server URL to set the date and time automatically.
+            </para>
+
+        </section>
+        
+         <section id="testing-config-on-mac">
+            <title>Testing the Configuration</title>
+             <para>
+                If client authentication is properly configured, a user can connect to the &IPA; server using SSH without being prompted for a password.
+            </para>
+             <orderedlist>
+                <listitem>
+                    <para>
+                        Obtain a Kerberos ticket for the admin user.
+                    </para>
+                    
+<programlisting language="Bash"> # kinit admin</programlisting>
+
+                </listitem>
+                 <listitem>
+                    <para>
+                        Log into the server using SSH.
+                    </para>
+                    
+<programlisting language="Bash"># ssh admin@ipaserver.example.com</programlisting>
+
+                </listitem>
+
+            </orderedlist>
+
+            <para>
+                Also, check the system login. 
+            </para>
+        
+             <orderedlist>
+                <listitem>
+                    <para>
+                        Log in as &IPAA; user.
+                    </para>
+
+                </listitem>
+                 <listitem>
+                    <para>
+                        Check the user ID to make sure that both the user and group IDs are correct for the current account.
+                    </para>
+                    
+<programlisting language="Bash">$ id
+
+uid=10678(jsmith) gid=10678(jsmith) groups=3(sys),100(users),1070(devel2),10678(jsmith)</programlisting>
+
+                </listitem>
+                 <listitem>
+                    <para>
+                        Then, check that there is a valid Kerberos ticket. 
+<programlisting language="Bash">$ klist
+
+Ticket cache: FILE:/tmp/krb5cc_10678
+Default principal: jsmith@EXAMPLE.COM
+
+Valid starting     Expires            Service principal
+05/12/11 12:12:26  05/12/11 22:12:26  krbtgt/EXAMPLE.COM@EXAMPLE.COM
+        renew until 05/12/11 12:12:26
+
+
+Kerberos 4 ticket cache: /tmp/tkt10678
+klist: You have no tickets cached</programlisting>
+
+                    </para>
+
+                </listitem>
+
+            </orderedlist>
+
+        </section>
+        
+
+    </section>
+    -->
+    <section id="troubleshooting-client-install">
+        <title>Troubleshooting Client Installations</title>
+        <indexterm>
+            <primary>client</primary>
+            <secondary>troubleshooting</secondary>
+            <tertiary>installation</tertiary>
+        </indexterm>
+        <indexterm>
+            <primary>troubleshooting</primary>
+            <secondary>client installation</secondary>
+        </indexterm>
+        <para>For clients configured using 
+        <command>ipa-client-install</command>, the client installation log is
+        located in 
+        <filename>/var/log/ipaclient-install.log</filename>. The &IPA; logs,
+        both for the server and client and for &IPA;-associated services, are
+        covered in 
+        <xref linkend="logging" />.</para>
+        <para>These are some issues and workarounds for client installation
+        problems.</para>
+        <!-- from https://www.redhat.com/archives/freeipa-users/2011-June/msg00259.html -->
+        <section>
+            <title>The client can't resolve reverse hostnames when using an
+            external DNS.</title>
+            <para>While &IPA; can host its own DNS server as part of the domain
+            services, it can also use external DNS name server. However,
+            because of some of the limitations of reverse DNS, there can be
+            problems with resolving reverse lookups if the external DNS is
+            listed in the client's 
+            <filename>/etc/resolv.conf</filename>file or if there are other
+            resources on the network with SRV records, like &AD;.</para>
+            <para>The problem is that the external DNS name server returns the
+            wrong hostname for the &IPA; server.</para>
+            <indexterm>
+                <primary>troubleshooting</primary>
+                <secondary>resolving hostnames on client</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>troubleshooting</primary>
+                <secondary>Kerberos, unknown server error</secondary>
+            </indexterm>
+            <para>One way this exhibits is errors with finding the &IPA; server
+            in the Kerberos database:</para>
+            <screen>Jun 30 11:11:48 server1 krb5kdc[1279](info): AS_REQ (4
+            etypes {18 17 16 23}) 192.168.60.135: NEEDED_PREAUTH: admin EXAMPLE
+            COM for krbtgt/EXAMPLE COM EXAMPLE COM, Additional
+            pre-authentication required Jun 30 11:11:48 server1
+            krb5kdc[1279](info): AS_REQ (4 etypes {18 17 16 23})
+            192.168.60.135: ISSUE: authtime 1309425108, etypes {rep=18 tkt=18
+            ses=18}, admin EXAMPLE COM for krbtgt/EXAMPLE COM EXAMPLE COM Jun
+            30 11:11:49 server1 krb5kdc[1279](info): TGS_REQ (4 etypes {18 17
+            16 23}) 192.168.60.135: UNKNOWN_SERVER: authtime 0, admin EXAMPLE
+            COM for HTTP/server1.wrong.example.com@EXAMPLE.COM, Server not
+            found in Kerberos database</screen>
+            <para>There are several ways to work around this issue:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Edit the 
+                    <filename>/etc/resolv.conf</filename>file to remove the
+                    external DNS name server references.</para>
+                </listitem>
+                <listitem>
+                    <para>Add reverse lookup records for each &IPA;
+                    server.</para>
+                </listitem>
+                <listitem>
+                    <para>Give the &IPA; client or domain a subnet and forward
+                    all requests for that subnet.</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+        <section>
+            <title>The client is not added to the DNS zone.</title>
+            <para>If a client is in a subnet not controlled by &IPAA; DNS
+            server, then the 
+            <command>nsupdate</command>command may fail to add the client to
+            the DNS zone when 
+            <command>ipa-client-install</command>runs.</para>
+            <para>If &IPA; is managing the DNS domain, then add a zone entry
+            for the client manually, as described in 
+            <xref linkend="managing-dnsrecord-entries" />. For example:</para>
+            <screen>[jsmith@ipaserver ~]$ kinit admin [jsmith@ipaserver ~]$ ipa
+            dnsrecord-add ipaclient.example.com www --a-rec 1.2.3.4</screen>
+            <para>If the DNS domain is managed outside of &IPA;, the resource
+            record can be added manually to the zone configuration. For
+            information on DNS in &OS;, see 
+            <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/s2-bind-zone.html">
+            the DNS chapter in the Deployment Guide</ulink>.</para>
+        </section>
+    </section>
+    <section id="uninstalling-clients">
+        <title>Uninstalling &IPAA; Client</title>
+        <indexterm>
+            <primary>uninstalling</primary>
+            <secondary>clients</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>client</primary>
+            <secondary>uninstalling</secondary>
+        </indexterm>
+        <para>For &OS; clients, the 
+        <command>ipa-client-install</command>utility can be used to uninstall
+        the client and remove it from the &IPA; domain. To remove the client,
+        use the 
+        <option>--uninstall</option>option.</para>
+        <programlisting language="Bash"># ipa-client-install
+        --uninstall</programlisting>
+        <note>
+            <title>NOTE</title>
+            <!-- for bz712162 -->
+            <para>There is an uninstall option with the 
+            <command>ipa-join</command>command. This is called by 
+            <command>ipa-client-install --uninstall</command>as part of the
+            uninstallation process. However, while the 
+            <command>ipa-join</command>option removes the client from the
+            domain, it does not actually uninstall the client or properly
+            remove all of the &IPA;-related configuration. Do not run 
+            <command>ipa-join -u</command>to attempt to uninstall the &IPA;
+            client. The only way to uninstall a client completely is to use 
+            <command>ipa-client-install --uninstall</command>.</para>
+        </note>
+    </section>
+</chapter>

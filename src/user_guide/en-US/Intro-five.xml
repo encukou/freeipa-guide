@@ -1,0 +1,224 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
+[
+]>
+<chapter id="introduction">
+    <title>Introduction to &PROD;</title>
+    <para>&RH; &PROD; is a way to create identity stores, centralized
+    authentication, domain control for Kerberos and DNS services, and
+    authorization policies &mdash; all on Linux systems, using native Linux
+    tools. While centralized identity/policy/authorization software is hardly
+    new, &PROD; is one of the only options that supports Linux/Unix
+    domains.</para>
+    <para>&PROD; provides a unifying skin for standards-defined, common network
+    services, including PAM, LDAP, Kerberos, DNS, NTP, and certificate
+    services, and it allows &RHEL; systems to serve as the domain
+    controllers.</para>
+    <para>&PROD; defines a domain, with servers and clients who share
+    centrally-managed services, like Kerberos and DNS. This chapter first
+    explains what &PROD; is.</para>
+    <section id="ipadefined">
+        <title>A Working Definition for &PROD;</title>
+        <para>At the most basic level, &FULL; is a domain controller for Linux
+        and Unix machines. &PROD; defines the domain, using controlling servers
+        and enrolled client machines. This provides centralized structure that
+        has previously been unavailable to Linux/Unix environments, and it does
+        it using native Linux applications and protocols.</para>
+        <para>Security information frequently relates to 
+        <emphasis>identities</emphasis>of users, machines, and services. Once
+        the identity is verified, then access to services and resources can be
+        controlled.</para>
+        <para>For efficiency, risk management, and ease of administration, IT
+        administrators try to manage identities as centrally as possible and to
+        unite identity management with authentication and authorization
+        policies. Historically, Linux environments have had a very difficult
+        time establishing this centralized management. There are a number of
+        different protocols (such as NIS and Kerberos) which define domains,
+        while other applications store data (such as LDAP) and still others
+        manage access (such as sudo). None of these applications talk to each
+        other or use the same management tools. Every application had to be
+        administered separately and it had to be managed locally. The only way
+        to get a consistent identity policy was to copy configuration files
+        around manually or to try to develop a proprietary application to
+        manage identities and policies.</para>
+        <para>The goal of &PROD; is to simplify that administrative overhead.
+        Users, machines, services, and polices are all configured in one place,
+        using the same tools. Because &IPA; creates a domain, multiple machines
+        can all use the same configuration and the same resources simply by
+        joining the domain. Users only have to sign into services once, and
+        administrators only have to manage a single user account.</para>
+        <para>&IPA; does three things:</para>
+        <itemizedlist>
+            <listitem>
+                <para>Create a Linux-based and Linux-controlled domain. Both
+                &IPA; servers and &IPA; clients are Linux or Unix machines.
+                While &IPA; can synchronize data with an &AD; domain to allow
+                integration with Windows servers, it is not an administrative
+                tools for Windows machines and it does not support Windows
+                clients. &PROD; is a management tool for Linux domains.</para>
+            </listitem>
+            <listitem>
+                <para>Centralize identity management and identity
+                policies.</para>
+            </listitem>
+            <listitem>
+                <para>Build on existing, native Linux applications and
+                protocols. While &IPA; has its own processes and configuration,
+                its underlying technologies are familiar and trusted by Linux
+                administrators and are well established on Linux
+                systems.</para>
+            </listitem>
+        </itemizedlist>
+        <para>In a sense, &PROD; isn't making administrators do something new;
+        it is helping them do it better. There are a few ways to illustrate
+        that.</para>
+        <para>On one extreme is the 
+        <emphasis>low control</emphasis>environment. Little Example Corp. has
+        several Linux and Unix servers, but each one is administered
+        separately. All passwords are kept on the local machine, so there is no
+        central identity or authentication process. Tim the IT Guy just has to
+        manage users on every machine, set authentication and authorization
+        policies separately, and maintain local passwords. With &IPA;, things
+        come to order. There is a simple way to have central user, password,
+        and policy stores, so Tim the IT Guy only has to maintain the
+        identities on one machine (the &IPA; server) and users and policies are
+        uniformly applied to all machines. Using host-based access control,
+        delegation, and other rules, he can even set different access levels
+        for laptops and remote users.</para>
+        <para>In the middle is the 
+        <emphasis>medium control</emphasis>environment. Mid-Example Corp. has
+        several Linux and Unix servers, but Bill the IT Guy has tried to
+        maintain a greater degree of control by creating a NIS domain for
+        machines, an LDAP directory for users, and Kerberos for authentication.
+        While his environment is well under control, every application has to
+        be maintained separately, using different tools. He also has to update
+        all of the services manually whenever a new machine is added to his
+        infrastructure or when one is taken offline. In this situation, &IPA;
+        greatly reduces his administrative overhead because it integrates all
+        of the different applications together seamlessly, using a single and
+        simplified tool set. It also makes it possible for him to implement
+        single sign-on services for all of the machines in his domain.</para>
+        <para>On the other extreme is the 
+        <emphasis>absent control</emphasis>environment. At Big Example Corp.,
+        most of the systems are Windows based and are managed in a tightly-knit
+        &AD; forest. However, development, production, and other teams have
+        many Linux and Unix systems &mdash; which are basically excluded from
+        the Windows controlled environment. &IPA; brings native control to the
+        Linux/Unix servers, using their native tools and applications &mdash;
+        something that is not possible in an &AD; forest. Additionally, because
+        &IPA; is Windows-aware, data can be synchronized between &AD; and
+        &IPA;, preserving a centralized user store.</para>
+        <para>&IPA; provides a very simple solution to a very common, very
+        specific problem: identity management.</para>
+    </section>
+    <section id="service-interactions">
+        <title>Relationships Between Servers and Clients</title>
+        <para>&IPA; itself defines a 
+        <emphasis>domain</emphasis>, a group of machines that have shared
+        configuration, policies, and identity stores. This shared configuration
+        allows the machines (and users) within the domain to be aware of each
+        other and operate together. This awareness can be used to enable
+        cross-platform compatibility, like unifying Windows and Linux systems,
+        or to enable infrastructure-wide single sign-on.</para>
+        <para>A client is simply any machine which is configured to operate
+        within the &IPA; domain, using its Kerberos and DNS services, NTP
+        settings, and certificate services. That's an important distinction: a
+        client does not require a daemon or (necessarily) an installed product.
+        It requires only system configurations which direct it to use &IPA;
+        services.</para>
+        <para>For &OS; systems, a certain number of platform tools are
+        available for &IPA; to use, such as SSSD. These are 
+        <emphasis>&IPA;-enabled platform applications</emphasis>, which is
+        simply a way of saying that they are aspects of the underlying platform
+        that work with &IPA; services. Other tools, like certain PAM and NSS
+        modules and &IPA; command-line utilities, are provided as
+        &IPA;-specific packages that must be installed on the machine. These
+        are 
+        <emphasis>&IPA;-related components</emphasis>.</para>
+        <figure id="fig.serverclient1">
+            <title>Server and Client Interactions</title>
+            <mediaobject>
+                <imageobject>
+                    <imagedata fileref="images/ServerClient1.png" />
+                </imageobject>
+            </mediaobject>
+        </figure>
+        <para>&IPA; uses the local storage (cache) on a client to improve
+        performance in a few ways:</para>
+        <itemizedlist>
+            <listitem>
+                <para>Store &IPA; information when the machine is
+                offline.</para>
+            </listitem>
+            <listitem>
+                <para>Keep information active beyond its normal timeout period
+                if the client cannot access the central server. The cache is
+                persistent even after rebooting the machine.</para>
+            </listitem>
+            <listitem>
+                <para>Reduce the round-trip time of requests by checking
+                information locally before looking at the server.</para>
+            </listitem>
+        </itemizedlist>
+        <para>Information is stored either in an LDB database (similar to LDAP)
+        or the local filesystem (as XML files), depending on the 
+        <emphasis>type</emphasis>of information.</para>
+        <itemizedlist>
+            <listitem>
+                <para>Identity information (about users, machines, and groups)
+                is stored in the LDB database, which uses the same syntax as an
+                LDAP directory. This identity information is originally stored
+                in the &IPA; server's &DSF; instance. Because this information
+                changes frequently and is referenced frequently, it is
+                important to be able to call the more current information
+                quickly, which is possible using an LDB database on the client
+                and the &DS; on the server.</para>
+            </listitem>
+            <listitem>
+                <para>Policy information is more static than identity
+                information, and it can include configuration for SELinux or
+                sudo. These policies are set globally on the server and then
+                are propagated to the clients. On the client, the policy
+                information is stored in the filesystem in XML files which can
+                be downloaded and converted into a native file for whatever
+                service is being managed.</para>
+            </listitem>
+        </itemizedlist>
+        <para>A specific set of services on the &IPA; server interact with a
+        subset of services and modules on the &IPA; client. A client is any
+        machine (a 
+        <emphasis>host</emphasis>) which can retrieve a keytab or certificates
+        from the &IPA; domain.</para>
+        <figure id="fig.IPA_Architecture">
+            <title>Interactions Between &IPA; Services</title>
+            <mediaobject>
+                <imageobject>
+                    <imagedata fileref="images/IPA_arch.png" />
+                </imageobject>
+            </mediaobject>
+        </figure>
+        <para>
+        <xref linkend="fig.IPA_Architecture" />shows that &OS; uses two native
+        daemons to interact with the &IPA; server:</para>
+        <itemizedlist>
+            <listitem>
+                <para>SSSD provides the user authentication for the machine and
+                enforces host-based access control rules.</para>
+            </listitem>
+            <listitem>
+                <para>
+                <systemitem class="service">certmonger</systemitem>monitors and
+                renews the certificates on the client. It can request new
+                certificates for the services on the system, including virtual
+                machines.</para>
+            </listitem>
+        </itemizedlist>
+        <para>When a &OS; client is added to the domain ( 
+        <emphasis>enrolled</emphasis>), its SSSD and 
+        <systemitem>certmonger</systemitem>are configured to connect to the
+        &IPA; server and the required Kerberos keytab and host certificates are
+        created. (The host certificate is not used directly by &IPA;; it may be
+        used by other services, such as a web server.)</para>
+    </section>
+</chapter>

@@ -1,0 +1,470 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
+[
+]>
+<chapter id="kerberos">
+    <title>Policy: Managing the Kerberos Domain</title>
+    <para>Kerberos authentication is the core of authentication within the
+    &IPA; domain. The &IPA; server actually runs a Kerberos server within it,
+    and this Kerberos server can be configured for custom policies for managing
+    tickets and keytabs.</para>
+    <para>For more information on Kerberos concepts, see the MIT Kerberos
+    documentation, 
+    <ulink url="http://web.mit.edu/kerberos/www/" />.</para>
+    <important>
+        <title>IMPORTANT</title>
+        <para>&PROD; has its own command-line tools to use to manage Kerberos
+        policies. 
+        <emphasis role="bold">Do not</emphasis>use 
+        <command>kadmin</command>or 
+        <command>kadmin.local</command>to manage &IPA; Kerberos
+        settings.</para>
+    </important>
+    <section id="about-kerberos">
+        <title>About Kerberos</title>
+        <indexterm>
+            <primary>Kerberos</primary>
+        </indexterm>
+        <para>Kerberos provides an authentication layer between services and
+        users. Kerberos centralizes authentication into a single location; a
+        user authenticates to the Kerberos server, and then when that user
+        attempts to access any resource on the network, that resource can check
+        the 
+        <emphasis>key distribution center</emphasis>(KDC) for the stored user
+        credentials. This allows users to access multiple resources without
+        having to supply credentials separately to each and every one.</para>
+        <para>All of the users and services, combined, and all of the KDCs and
+        Kerberos servers that are aware of each other constitute a 
+        <emphasis>realm</emphasis>. Each user, machine, and service within the
+        realm is identified by a unique name called the 
+        <emphasis>principal</emphasis>. The user or service uses the principal
+        and a verifying credential (usually a password) to authenticate to the
+        KDC. The credential that is shared with the KDC is a 
+        <emphasis>key</emphasis>and it is stored in a file called a 
+        <emphasis>key table</emphasis>or 
+        <emphasis>keytab</emphasis>.</para>
+        <para>When the KDC verifies the user's identity, it issues a 
+        <emphasis>ticket</emphasis>. The ticket is a long-term pass to any
+        service and machine on the realm. The KDC issues the user a special
+        kind of ticket called a 
+        <emphasis>ticket-granting ticket</emphasis>(TGT). Whenever the user
+        tries to access a resource within the Kerberos realm, the resource
+        sends a request for a ticket specifically for it. The TGT is used to
+        issue a resource-specific ticket that the resource then uses to
+        authenticate the user and grant access.</para>
+        <note>
+            <title>NOTE</title>
+            <para>When &IPAA; client is first configured, the host principal is
+            automatically retrieved by the setup script and stored in the 
+            <filename>/etc/krb5.keytab</filename>file. This host principal is
+            stored within the host record so that local service commands cannot
+            be used with this principal. This prepares the client to function
+            in the &IPA; realm.</para>
+        </note>
+        <section id="about-principal-names">
+            <title>About Principal Names</title>
+            <para>The principal identifies not only the user or service, but
+            also the realm that that entity belongs to. A principal name has
+            two parts, the identifier and the realm:</para>
+            <screen>
+            <replaceable>identifier</replaceable>@ 
+            <replaceable>REALM</replaceable></screen>
+            <para>For a user, the 
+            <emphasis>identifier</emphasis>is only the Kerberos username. For a
+            service, the 
+            <emphasis>identifier</emphasis>is a combination of the service name
+            and the hostname of the machine it runs on:</para>
+            <screen>
+            <replaceable>service/FQDN</replaceable>@ 
+            <replaceable>REALM</replaceable></screen>
+            <para>The 
+            <emphasis>service</emphasis>name is a case-sensitive string that is
+            specific to the service type, like 
+            <command>host</command>, 
+            <command>ldap</command>, 
+            <command>http</command>, and 
+            <command>dns</command>. Not all services have obvious principal
+            identifiers; the 
+            <systemitem>sshd</systemitem>daemon, for example, uses the host
+            service principal.</para>
+            <para>The host principal is usually stored in 
+            <filename>/etc/krb5.keytab</filename>.</para>
+            <para>When Kerberos requests a ticket, it always resolves the
+            domain name aliases (DNS CNAME records) to the corresponding DNS
+            address (A or AAAA records). The hostname from the address record
+            is then used when service or host principals are created.</para>
+            <para>For example:</para>
+            <screen>www.example.com CNAME web-01.example.com web-01.example.com
+            A 192.0.2.145</screen>
+            <para>A service attempts to connect to the host using its CNAME
+            alias:</para>
+            <screen>$ ssh www.example.com</screen>
+            <para>The Kerberos server requests a ticket for the resolved
+            hostname, 
+            <command>web-01.example.com@EXAMPLE.COM</command>, so the host
+            principal must be 
+            <command>host/web-01.example.com@EXAMPLE.COM</command>.</para>
+        </section>
+        <section id="about-keytabs">
+            <title>About Protecting Keytabs</title>
+            <para>To protect keytab files, reset the permissions and ownership
+            to restrict access to the files to only the keytab owner. For
+            example, set the owner of the Apache keytab ( 
+            <filename>/etc/httpd/conf/ipa.keytab</filename>) to 
+            <literal>apache</literal>and the mode to 
+            <literal>0600</literal>.</para>
+        </section>
+    </section>
+    <section id="kerb-policies">
+        <title>Setting Kerberos Ticket Policies</title>
+        <indexterm>
+            <primary>ticket policies</primary>
+        </indexterm>
+        <indexterm>
+            <primary>Kerberos</primary>
+            <secondary>ticket policies</secondary>
+        </indexterm>
+        <para>The Kerberos 
+        <emphasis>ticket policy</emphasis>sets basic restrictions on managing
+        tickets within the Kerberos realm, such as the maximum ticket lifetime
+        and the maximum renewal age (the period during which the ticket is
+        renewable).</para>
+        <para>The Kerberos ticket policy is set globally so that it applies to
+        every ticket issued within the realm. &IPA; also has the ability to set
+        user-level ticket policies which override the global policies. This can
+        be used, for example, to set extended expiration times for
+        administrators or to set shorter expiration times for some
+        employees.</para>
+        <section id="kerb-policies-global">
+            <title>Setting Global Ticket Policies</title>
+            <indexterm>
+                <primary>Kerberos</primary>
+                <secondary>ticket policies</secondary>
+                <tertiary>global</tertiary>
+            </indexterm>
+            <section id="kerb-policies-global-ui">
+                <title>From the Web UI</title>
+                <orderedlist>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Policy</guilabel>tab, and then click the 
+                        <guilabel>Kerberos Ticket
+                        Policy</guilabel>subtab.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Change the ticket lifetime policies.</para>
+                        <informalfigure>
+                            <mediaobject>
+                                <imageobject>
+                                    <imagedata fileref="images/krb-ticket-policy.png" />
+                                </imageobject>
+                            </mediaobject>
+                        </informalfigure>
+                        <itemizedlist>
+                            <listitem>
+                                <para>
+                                <emphasis>Max renew</emphasis>sets the period
+                                after a ticket expires that it can be
+                                renewed.</para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                <emphasis>Max life</emphasis>sets the active
+                                period (lifetime) of a Kerberos ticket.</para>
+                            </listitem>
+                        </itemizedlist>
+                    </listitem>
+                    <listitem>
+                        <para>Click the 
+                        <guilabel>Update</guilabel>link at the top of the
+                        policy page.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Restart the KDC.</para>
+                        <screen># service krb5kdc restart</screen>
+                        <important>
+                            <title>IMPORTANT</title>
+                            <para>Any change to the global Kerberos ticket
+                            policy requires a restart of the KDC for the
+                            changes to take effect.</para>
+                        </important>
+                    </listitem>
+                </orderedlist>
+            </section>
+            <section id="kerb-policies-global-cmd">
+                <title>From the Command Line</title>
+                <para>The 
+                <command>ipa&nbsp;krbtpolicy-mod</command>command modifies the
+                policy, while the 
+                <command>ipa&nbsp;krbtpolicy-reset</command>command resets the
+                policy to the default values.</para>
+                <para>For example:</para>
+                <screen># ipa krbtpolicy-mod --maxlife=3600 --maxrenew=18000
+                Max life: 3600 Max renew: 18000</screen>
+                <important>
+                    <title>IMPORTANT</title>
+                    <para>Any change to the global Kerberos ticket policy
+                    requires a restart of the KDC for the changes to take
+                    effect. Restart the KDC: 
+                    <screen># service krb5kdc restart</screen></para>
+                </important>
+            </section>
+        </section>
+        <section id="user-ticket-policies">
+            <title>Setting User-Level Ticket Policies</title>
+            <indexterm>
+                <primary>Kerberos</primary>
+                <secondary>ticket policies</secondary>
+                <tertiary>user-level</tertiary>
+            </indexterm>
+            <para>User-level Kerberos ticket policies are set using the same
+            commands as global policies, but the user is specified in the
+            command.</para>
+            <para>For example:</para>
+            <screen># ipa krbtpolicy-mod jsmith --maxlife=3600 Max life:
+            3600</screen>
+            <important>
+                <title>IMPORTANT</title>
+                <para>User-level policies take effect immediately on the next
+                requested ticket (such as running 
+                <command>kinit</command>), without having to restart the KDC
+                service.</para>
+            </important>
+        </section>
+    </section>
+    <section id="Configuring_Authentication-Refreshing_Kerberos_Tickets">
+        <title>Refreshing Kerberos Tickets</title>
+        <para>Kerberos keys are analogous to passwords. Like passwords,
+        security policies may require that Kerberos tickets are manually
+        refreshed after a specified interval.</para>
+        <para>The version of the key is shown in its 
+        <emphasis>key version number</emphasis>(KVNO). Refreshing (also called
+        rotating) the principal's key increments the KVNO in the keytab entry.
+        When a key is refreshed, a new entry is added to the keytab with a
+        higher KVNO. The original key remains in the keytab but is no longer
+        used to issue tickets.</para>
+        <para>Each keytab for the &IPA; realm has an entry in the &IPA; LDAP
+        server, which includes its last change time. The principals which need
+        to be refreshed can be regenerated using the 
+        <command>ipa-getkeytab</command>command.</para>
+        <note>
+            <title>NOTE</title>
+            <para>The 
+            <command>ipa-getkeytab</command>command does not delete the old
+            keytab in case it already exists in the file.</para>
+        </note>
+        <orderedlist>
+            <listitem>
+                <para>Find all keytabs issued before the requisite date. For
+                example, this looks for any principals created between midnight
+                on January 1, 2010, and 11:59 PM on December 31, 2010:</para>
+                <screen># ldapsearch -x -b
+                "cn=computers,cn=accounts,dc=example,dc=com"
+                "(&amp;(krblastpwdchange&gt;=20100101000000)(krblastpwdchange&lt;=20101231235959))"
+                dn krbprincipalname # ldapsearch -x -b
+                "cn=services,cn=accounts,dc=example,dc=com"
+                "(&amp;(krblastpwdchange&gt;=20100101000000)(krblastpwdchange&lt;=20101231235959))"
+                dn krbprincipalname</screen>
+                <itemizedlist>
+                    <listitem>
+                        <para>Host (machine) principals are stored under the 
+                        <command>
+                        cn=computers,cn=accounts,dc=example,dc=com</command>subtree.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Service principals are stored under the 
+                        <command>
+                        cn=services,cn=accounts,dc=example,dc=com</command>subtree.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Filter by the last change date ( 
+                        <parameter>krblastpwdchange</parameter>).</para>
+                    </listitem>
+                    <listitem>
+                        <para>Limit the search result information to only the
+                        entry name and principal by specifying the 
+                        <parameter>dn
+                        krbprincipalname</parameter>attributes.</para>
+                    </listitem>
+                </itemizedlist>
+                <para>Dates are expressed in YYYYMMDD format, and times in
+                HHMMSS format (GMT).</para>
+            </listitem>
+            <listitem>
+                <para>Retrieve a new keytab for the principal using the 
+                <command>ipa-getkeytab</command>command. This requires the
+                location of the original keytab for the service or host ( 
+                <option>-k</option>), the principal ( 
+                <option>-p</option>), and the &IPA; server hostname ( 
+                <option>-s</option>).</para>
+                <para>For example, this refreshes the host principal with a
+                keytab in the default location of 
+                <filename>/etc/krb5.keytab</filename>: 
+                <screen># ipa-getkeytab -p host/client.example.com@EXAMPLE.COM
+                -s ipa.example.com -k /etc/krb5.keytab</screen></para>
+                <para>This refreshes the keytab for the Apache service, with a
+                keytab in the default location of 
+                <filename>/etc/httpd/conf/ipa.keytab</filename>: 
+                <screen># ipa-getkeytab -p HTTP/client.example.com@EXAMPLE.COM
+                -s ipa.example.com -k
+                /etc/httpd/conf/ipa.keytab</screen></para>
+            </listitem>
+            <listitem>
+                <para>Regenerate the keytab using 
+                <command>ipa-getkeytab</command>for every service.</para>
+            </listitem>
+        </orderedlist>
+        <para>The 
+        <command>klist</command>command displays the new key version number for
+        the refreshed keytab. The original keytab still exists in the database,
+        and it is listed with the previous KVNO. 
+        <screen># klist -kt /etc/krb5.keytab Keytab: WRFILE:/etc/krb5.keytab
+        KVNO Timestamp Principal ---- -----------------
+        -------------------------------------------------------- 1 06/09/10
+        11:23:01 host/client.example.com@EXAMPLE.COM(aes256-cts-hmac-sha1-96) 2
+        06/09/11 05:58:47
+        host/client.example.com@EXAMPLE.COM(aes256-cts-hmac-sha1-96) 1 03/09/11
+        13:57:16 krbtgt/EXAMPLE.COM@EXAMPLE.COM(aes256-cts-hmac-sha1-96) 1
+        03/09/11 13:57:16
+        HTTP/ipa.example.com@EXAMPLE.COM(aes256-cts-hmac-sha1-96) 1 03/09/11
+        13:57:16
+        ldap/ipa.example.com@EXAMPLE.COM(aes256-cts-hmac-sha1-96)</screen></para>
+        <para>Tickets issued against the old keytab continue to work, while new
+        tickets are issued using the key with the highest KVNO. This avoids any
+        disruption to system operations.</para>
+        <important>
+            <title>IMPORTANT</title>
+            <para>Some services, such as NFSv4, only support a limited set of
+            encryption types. Pass the appropriate arguments to the 
+            <command>ipa-getkeytab</command>command to configure the keytab
+            properly.</para>
+        </important>
+    </section>
+    <section id="kerberos-pwd-cache">
+        <title>Caching Kerberos Passwords</title>
+        <indexterm>
+            <primary>SSSD</primary>
+            <secondary>and Kerberos passwords</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>Kerberos</primary>
+            <secondary>SSSD password cache</secondary>
+        </indexterm>
+        <para>A machine may not always be on the same network as the &IPA;
+        domain; for example, a machine may need to be logged into a VPN before
+        it can access the &IPA; domain. If a user logs into a system when it is
+        offline and then later attempts to connect to &IPA; services, then the
+        user is blocked because there is no &IPA; Kerberos ticket for that
+        user. &IPA; works around that limitation by using SSSD to store the
+        Kerberos passwords in the SSSD cache.</para>
+        <para>This is configured by default by the 
+        <command>ipa-client-install</command>script. A configuration parameter
+        is added to the 
+        <filename>&SSSDF;</filename>file which specifically instructs SSSD to
+        store those Kerberos passwords for the &IPA; domain:</para>
+        <programlisting language="LDIF">[domain/example.com] cache_credentials
+        = True ipa_domain = example.com id_provider = ipa auth_provider = ipa
+        access_provider = ipa chpass_provider = ipa ipa_server = _srv_,
+        server.example.com krb5_store_password_if_offline =
+        true</programlisting>
+        <indexterm>
+            <primary>SSSD</primary>
+            <secondary>and Kerberos passwords</secondary>
+            <tertiary>disabling cache</tertiary>
+        </indexterm>
+        <para>This default behavior can be disabled during the client
+        installation by using the 
+        <option>--no-krb5-offline-passwords</option>option.</para>
+        <para>This behavior can also be disabled by editing the 
+        <filename>&SSSDF;</filename>file and removing the 
+        <option>krb5_store_password_if_offline</option>line or changing its
+        value to false.</para>
+        <programlisting language="LDIF">[domain/example.com] ...
+        krb5_store_password_if_offline = false</programlisting>
+        <para>The SSSD configuration options for Kerberos authentication is
+        covered in 
+        <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/Configuring_Domains.html">
+        the "Configuring Domains" section of the SSSD chapter in the &RHEL;
+        &DPG;</ulink>.</para>
+    </section>
+    <section id="removing-keytabs">
+        <title>Removing Keytabs</title>
+        <para>Refreshing Kerberos tickets adds a new key to the keytab, but it
+        does not clear the keytab. If a host is being unenrolled and re-added
+        to the &IPA; domain or if there are Kerberos connection errors, then it
+        may be necessary to remove the keytab and create a new keytab.</para>
+        <para>This is done using the 
+        <command>ipa-rmkeytab</command>command. To remove all principals on the
+        host, specify the realm with the 
+        <option>-r</option>option:</para>
+        <screen># ipa-rmkeytab -r EXAMPLE.COM -k /etc/krb5.keytab</screen>
+        <para>To remove the keytab for a specific service, use the 
+        <option>-p</option>option to specify the service principal:</para>
+        <screen># ipa-rmkeytab -p ldap/client.example.com -k
+        /etc/krb5.keytab</screen>
+    </section>
+    <section id="Kerberos_Errors">
+        <title>Troubleshooting Kerberos Errors</title>
+        <para>Kerberos errors frequently become apparent when trying to connect
+        to the realm using 
+        <command>kinit</command>or a similar client. For information related to
+        Kerberos, first check the Kerberos manpages, help files, and other
+        resources.</para>
+        <important>
+            <title>IMPORTANT</title>
+            <para>&PROD; has its own command-line tools to use to manage
+            Kerberos policies. 
+            <emphasis role="bold">Do not</emphasis>use 
+            <command>kadmin</command>or 
+            <command>kadmin.local</command>to manage &IPA; Kerberos
+            settings.</para>
+        </important>
+        <para>There are several places to look for Kerberos error log
+        information: 
+        <itemizedlist>
+            <listitem>
+                <para>For 
+                <command>kinit</command>problems or other Kerberos server
+                problems, look at the KDC log in 
+                <filename>/var/log/krb5kdc.log</filename>.</para>
+            </listitem>
+            <listitem>
+                <para>For &IPA;-specific errors, look in 
+                <filename>/var/log/httpd/error_log</filename>.</para>
+            </listitem>
+        </itemizedlist></para>
+        <para>The &IPA; logs, both for the server and for &IPA;-associated
+        services, are covered in 
+        <xref linkend="logging" />.</para>
+        <formalpara>
+            <title>Problems making connections with SSH when using
+            GSS-API</title>
+            <para>If there are bad reverse DNS entries in the DNS
+            configuration, then it may not be possible to log into &IPA;
+            resources using SSH. When SSH attempts to connect to a resource
+            using GSS-API as its security method, GSS-API first checks the DNS
+            records. The bad records prevent SSH from locating the
+            resource.</para>
+        </formalpara>
+        <para>It is possible to disable reverse DNS lookups in the SSH
+        configuration. Rather than using reverse DNS records, SSH passes the
+        given username directly to GSS-API.</para>
+        <para>To disable reverse DNS lookups with SSH, add or edit the 
+        <parameter>GSSAPITrustDNS</parameter>directive and set the value to 
+        <command>no</command>.</para>
+        <screen># vim /etc/ssh/ssh_config GSSAPITrustDNS no</screen>
+        <formalpara>
+            <title>There are problems connecting to an NFS server after
+            changing a keytab</title>
+            <para>Clients attempting to mount NFS exports rely on the existence
+            of a valid principal and secret key on both the NFS server and the
+            client host. Clients themselves should not have access to the NFS
+            keytab. The ticket for the NFS connection will be given to clients
+            from the KDC.</para>
+        </formalpara>
+        <para>Failure to export an updated keytab can cause problems that are
+        difficult to isolate. For example, existing service connections may
+        continue to function, but no new connections may be possible.</para>
+    </section>
+</chapter>

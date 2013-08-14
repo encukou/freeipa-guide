@@ -1,0 +1,171 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+     "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
+[
+]>
+<appendix id="certmongerX">
+    <title>Working with certmonger</title>
+    <para>Part of managing machine authentication is managing machine
+    certificates. On clients, &IPA; manages the certificate lifecycle with the 
+    <emphasis>certmonger</emphasis>service, which works together with the
+    certificate authority (CA) provided by &IPA;.</para>
+    <para>The 
+    <systemitem class="daemon">certmonger</systemitem>daemon and its
+    command-line clients simplify the process of generating public/private key
+    pairs, creating certificate requests, and submitting requests to the CA for
+    signing. As part of managing certificates, the 
+    <systemitem class="daemon">certmonger</systemitem>daemon monitors
+    certificates for expiration and can renew certificates that are about to
+    expire. The certificates that 
+    <systemitem class="daemon">certmonger</systemitem>monitors are tracked in
+    files stored in a configurable directory. The default location is 
+    <filename>/var/lib/certmonger/requests</filename>.</para>
+    <para>
+    <command>certmonger</command>uses the &IPA; 
+    <command>getcert</command>command to manage all certificates. As covered in
+    
+    <xref linkend="install-ca-options" />, an &IPA; server can be configured to
+    use different types of certificate authorities. The most common (and
+    recommended) configuration is to use a full CA server, but it is also
+    possible to use a much more limited, self-signed CA. The exact 
+    <command>getcert</command>command used by 
+    <command>certmonger</command>to communicate with the &IPA; backend depends
+    on which type of CA is used. The 
+    <command>ipa-getcert</command>command is used with a full CA, while the 
+    <command>selfsign-getcert</command>command is used with a self-signed
+    CA.</para>
+    <note>
+        <title>NOTE</title>
+        <para>Because of general security issues, self-signed certificates are
+        not typically used in production, but can be used for development and
+        testing.</para>
+    </note>
+    <para condition="reviewing">The command-line tools are described in 
+    <xref linkend="certmonger-tools" />.</para>
+    <section id="certmonger-req">
+        <title>Requesting a Certificate with certmonger</title>
+        <para>With the &IPA; CA, 
+        <command>certmonger</command>uses the 
+        <command>ipa-getcert</command>command.</para>
+        <para>Certificates and keys are stored locally in plaintext files ( 
+        <filename>.pem</filename>) or in an NSS database, identified by the
+        certificate nickname. When requesting a certificate, then, the request
+        should identify the location where the certificate will be stored and
+        the nickname of the certificate. For example:</para>
+        <screen># ipa-getcert request -d /etc/pki/nssdb -n Server-Cert</screen>
+        <para>The 
+        <filename>/etc/pki/nssdb</filename>file is the global NSS database, and
+        
+        <literal>Server-Cert</literal>is the nickname of this certificate. The
+        certificate nickname must be unique within this database.</para>
+        <para>When requesting a certificate to be used with &IPAA; service, the
+        
+        <option>-K</option>option is required to specify the service principal.
+        Otherwise, 
+        <command>certmonger</command>assumes the certificate is for a host. The
+        
+        <option>-N</option>option must specify the certificate subject DN, and
+        the subject base DN must match the base DN for the &IPA; server, or the
+        request is rejected.</para>
+        <screen>$ ipa-getcert request -d /etc/httpd/alias -n Server-Cert -K
+        HTTP/client1.example.com -N
+        'CN=client1.example.com,O=EXAMPLE.COM'</screen>
+        <example id="ex.Using_certmonger_with_IPA">
+            <title>Using certmonger for a Service</title>
+            <screen>$ ipa-getcert request -r -f
+            /etc/httpd/conf/ssl.crt/server.crt -k
+            /etc/httpd/conf/ssl.key/server.key -N CN=`hostname --fqdn` -D
+            `hostname` -U id-kp-serverAuth</screen>
+        </example>
+        <para>The options vary depending on whether you are using a self-signed
+        certificate ( 
+        <command>selfsign-getcert</command>) and the desired configuration for
+        the final certificate, as well as other settings. In 
+        <xref linkend="ex.Using_certmonger_with_IPA" />, these are common
+        options:</para>
+        <itemizedlist>
+            <listitem>
+                <para>The 
+                <option>-r</option>option will automatically renew the
+                certificate if the key pair already exists. This is used by
+                default.</para>
+            </listitem>
+            <listitem>
+                <para>The 
+                <option>-f</option>option stores the certificate in the given
+                file.</para>
+            </listitem>
+            <listitem>
+                <para>The 
+                <option>-k</option>option either stores the key in the given
+                file or, if the key file already exists, uses the key in the
+                file.</para>
+            </listitem>
+            <listitem>
+                <para>The 
+                <option>-N</option>option gives the subject name.</para>
+            </listitem>
+            <listitem>
+                <para>The 
+                <option>-D</option>option gives the DNS domain name.</para>
+            </listitem>
+            <listitem>
+                <para>The 
+                <option>-U</option>option sets the extended key usage
+                flag.</para>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <section id="Working_with_certmonger-Using_certmonger_with_NSS">
+        <title>Storing Certificates in NSS Databases</title>
+        <para>By default, 
+        <command>certmonger</command>uses plaintext files to store the key and
+        the certificate, but these keys and certificates can also be stored in
+        NSS databases. This is done using the 
+        <option>-d</option>option to set the security database location and 
+        <option>-n</option>to give the certificate nickname which is used for
+        the certificate in the database. These options are used instead of the
+        PEM files given in the 
+        <option>-f</option>and 
+        <option>-k</option>options.</para>
+        <para>For example: 
+        <screen># ipa-getcert request 
+        <userinput>-d /export/alias -n
+        ServerCert</userinput>...</screen></para>
+    </section>
+    <section id="certmonger-tracking-certs">
+        <title>Tracking Certificates with certmonger</title>
+        <para>
+        <command>certmonger</command>can manage the entire certificate
+        lifecycle. Along with generating requests, 
+        <command>certmonger</command>can track a certificate and automatically
+        renew it when it expires at the end of its validity period.</para>
+        <para>This is done using the 
+        <command>start-tracking</command>command with the 
+        <command>getcert</command>command. The 
+        <option>-I</option>option creates the tracking entry, along with
+        pointers to the key and certificate files, either in an NSS database ( 
+        <option>-d</option>and 
+        <option>-n</option>) or in the PEM file ( 
+        <option>-f</option>and 
+        <option>-k</option>). The 
+        <option>-r</option>option tells 
+        <command>certmonger</command>to renew the certificate.</para>
+        <screen># ipa-getcert start-tracking -I cert1-tracker -d /export/alias
+        -n ServerCert -r</screen>
+        <note>
+            <title>TIP</title>
+            <para>The 
+            <option>-r</option>option can be passed with the 
+            <command>request</command>command, in 
+            <xref linkend="ex.Using_certmonger_with_IPA" />. In that case, the
+            requested certificate is automatically tracked and renewed by 
+            <command>certmonger</command>. Then, it is not necessary to
+            configure tracking manually.</para>
+        </note>
+        <para>A certificate can be 
+        <emphasis>un</emphasis>tracked by 
+        <command>certmonger</command>by using the 
+        <command>stop-tracking</command>command.</para>
+    </section>
+</appendix>

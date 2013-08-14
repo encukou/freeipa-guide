@@ -1,0 +1,33 @@
+<!ENTITY RHEL "Red Hat Enterprise Linux">
+<!ENTITY RH "Red Hat">
+<!ENTITY RHN "Red Hat Network">
+<!ENTITY PROD "Identity Management">
+<!ENTITY FULL "Red Hat Identity Management">
+<!ENTITY BOOKID "doc-Enterprise_Identity_Management_Guide">
+<!ENTITY YEAR "2012">
+<!ENTITY HOLDER "Red Hat">
+<!ENTITY VER "2.2">
+<!ENTITY RVER "6">
+<!ENTITY OVER "6">
+<!ENTITY DSF "389 Directory Server">
+<!ENTITY DS "Directory Server">
+<!ENTITY RHDS "Red Hat Directory Server">
+<!ENTITY AD "Active Directory">
+<!ENTITY FCRTS "Dogtag Certificate System">
+<!ENTITY RHCRTS "Red Hat Certificate System">
+<!ENTITY CRTS "Certificate System">
+<!ENTITY IPA "IdM">
+<!ENTITY IPAA "an IdM">
+<!ENTITY IPAB "An IdM">
+<!ENTITY OS "&RHEL;">
+<!ENTITY TITLE_TPREVIEW "(TECH PREVIEW)">
+
+<!-- directory locations -->
+<!ENTITY SBIN "/usr/sbin">
+<!ENTITY BIN "/usr/bin">
+
+<!ENTITY SSSDF "/etc/sssd/sssd.conf">
+
+<!-- titles -->
+<!ENTITY DPG "Deployment Guide">
+<!ENTITY AG "Administrator's Guide">

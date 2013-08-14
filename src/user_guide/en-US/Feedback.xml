@@ -1,0 +1,76 @@
+<?xml version='1.0'?>
+<!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
+[
+]>
+<section id="feedback">
+    <title>Giving Feedback</title>
+    <para>If there is any error in this book or there is any way to improve the
+    documentation, please let us know. Bugs can be filed against the
+    documentation for &IPA; through Bugzilla, 
+    <ulink url="http://bugzilla.redhat.com/bugzilla">
+    http://bugzilla.redhat.com/bugzilla</ulink>. Make the bug report as
+    specific as possible, so we can be more effective in correcting any
+    issues:</para>
+    <!-- redhat specific instructions -->
+    <orderedlist condition="redhat">
+        <listitem>
+            <para>Select the &RH; group and the &RHEL; &RVER; product.</para>
+        </listitem>
+        <listitem>
+            <para>Set the component to 
+            <command>&BOOKID;</command>.</para>
+        </listitem>
+        <listitem>
+            <para>For errors, give the page number (for the PDF) or URL (for
+            the HTML), and give a succinct description of the problem, such as
+            incorrect procedure or typo.</para>
+            <para>For enhancements, put in what information needs to be added
+            and why.</para>
+        </listitem>
+        <listitem>
+            <para>Give a clear title for the bug. For example, 
+            <command>"Incorrect command example for setup script
+            options"</command>is better than 
+            <command>"Bad example"</command>.</para>
+        </listitem>
+    </orderedlist>
+    <para condition="redhat">We appreciate receiving any feedback &mdash;
+    requests for new sections, corrections, improvements, enhancements, even
+    new ways of delivering the documentation or new styles of docs. You are
+    welcome to contact &RH; Content Services directly at 
+    <ulink url="mailto:docs@redhat.com">docs@redhat.com</ulink>.</para>
+    <!-- end redhat -->
+    <!-- fedora specific instructions -->
+    <orderedlist condition="fedora">
+        <listitem>
+            <para>Select the Community group and the freeIPA product.</para>
+        </listitem>
+        <listitem>
+            <para>Set the component to Documentation.</para>
+        </listitem>
+        <listitem>
+            <para>Set the version number to &VER;.</para>
+        </listitem>
+        <listitem>
+            <para>For errors, give the page number (for the PDF) or URL (for
+            the HTML), and give a succinct description of the problem, such as
+            incorrect procedure or typo.</para>
+            <para>For enhancements, put in what information needs to be added
+            and why.</para>
+        </listitem>
+        <listitem>
+            <para>Give a clear title for the bug. For example, 
+            <command>"Incorrect command example for setup script
+            options"</command>is better than 
+            <command>"Bad example"</command>.</para>
+        </listitem>
+    </orderedlist>
+    <para condition="fedora">We appreciate receiving any feedback &mdash;
+    requests for new sections, corrections, improvements, enhancements, even
+    new ways of delivering the documentation or new styles of docs. You are
+    welcome to contact the Fedora docs team at 
+    <ulink url="mailto:docs@lists.fedoraproject.org">
+    docs@lists.fedoraproject.org</ulink>.</para>
+    <!-- end fedora -->
+</section>
