@@ -1,99 +1,109 @@
-<?xml version='1.0' encoding='utf-8'?>
-<!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-     "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
-[
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 ]>
 <appendix id="chap-Enterprise_Identity_Management_Guide-Frequently_Asked_Questions">
+	<title>Frequently Asked Questions</title>
+	 <qandaset>
+		<qandaentry>
+			<question>
+				<para>
+					Is it possible to change the IP address of the master server?
+				</para>
 
-    <title>Frequently Asked Questions</title>
-    <qandaset>
-        <qandaentry>
-            <question>
-                <para>Is it possible to change the IP address of the master
-                server?</para>
-            </question>
-            <answer>
-                <para>Yes. If you are only changing the IP address, it is
-                sufficient to update the 
-                <filename>/etc/hosts</filename>file, the system configuration,
-                and the DNS entry.</para>
-            </answer>
-        </qandaentry>
-        <qandaentry>
-            <question>
-                <para>Why are there restrictions on the length of user and
-                group names? How can I change this?</para>
-            </question>
-            <answer>
-                <para>User and group name lengths are specified in the policy.
-                The default maximum username length is 32 characters. The
-                maximum configurable length for user or group names is 255
-                characters. This complements some supported client operating
-                systems which limit the length of usernames.</para>
-                <para>The default settings can be changed in the &IPA; UI or
-                using the 
-                <command>ipa config-mod</command>command. For example:</para>
-                <screen>4 ipa config-mod --maxusername=50</screen>
-            </answer>
-        </qandaentry>
-        <qandaentry>
-            <question>
-                <para>What is the difference between a replica and a master
-                server?</para>
-            </question>
-            <answer>
-                <para>A master server maintains a certificate authority. A
-                replica server has its certificate issued by the master
-                CA.</para>
-            </answer>
-        </qandaentry>
-        <!--
-         <qandaentry>
-            <question>
-                <para>
-                    Can I promote a replica to function as the master? 
-                </para>
+			</question>
+			 <answer>
+				<para>
+					Yes. If you are only changing the IP address, it is sufficient to update the <filename>/etc/hosts</filename> file, the system configuration, and the DNS entry.
+				</para>
 
-            </question>
-             <answer>
-                <para>
-                    Yes. This is described in <xref linkend="promoting-replica" />.
-                </para>
+			</answer>
 
-            </answer>
+		</qandaentry>
+		 <qandaentry>
+			<question>
+				<para>
+					Why are there restrictions on the length of user and group names? How can I change this?
+				</para>
 
-        </qandaentry>
-        -->
-        <qandaentry>
-            <question>
-                <para>Why does the 
-                <command>ipa-client-install</command>script fail to find the
-                IPA server on a network that uses Active Directory DNS?</para>
-            </question>
-            <answer>
-                <para>Active Directory has its own SRV records for Kerberos and
-                LDAP. The 
-                <command>ipa-client-install</command>script can retrieve those
-                records instead of any that have been added for the &IPA;
-                domain.</para>
-                <para>When running 
-                <command>ipa-client-install</command>, manually enter the
-                server information to ensure that the script uses the &IPA; SRV
-                records instead of &AD; records. The 
-                <command>ipa-client-install</command>options are listed in the 
-                <command>ipa-client-install</command>manpage.</para>
-            </answer>
-        </qandaentry>
-        <qandaentry>
-            <question>
-                <para>Can an administrator who is connected to "Server&nbsp;B"
-                revoke a certificate issued by "Server&nbsp;A"?</para>
-            </question>
-            <answer>
-                <para>Yes, assuming that Servers A and B contain non-cloned CAs
-                which have their database information replicated to share
-                revocation information only.</para>
-            </answer>
-        </qandaentry>
-    </qandaset>
+			</question>
+			 <answer>
+				<para>
+					User and group name lengths are specified in the policy. The default maximum username length is 32 characters. The maximum configurable length for user or group names is 255 characters. This complements some supported client operating systems which limit the length of usernames.
+				</para>
+				 <para>
+					The default settings can be changed in the &IPA; UI or using the <command>ipa config-mod</command> command. For example:
+				</para>
+<screen>4 ipa config-mod --maxusername=50</screen>
+			</answer>
+
+		</qandaentry>
+		 <qandaentry>
+			<question>
+				<para>
+					What is the difference between a replica and a master server?
+				</para>
+
+			</question>
+			 <answer>
+				<para>
+					A master server maintains a certificate authority. A replica server has its certificate issued by the master CA.
+				</para>
+
+			</answer>
+
+		</qandaentry>
+		<!--
+		 <qandaentry>
+			<question>
+				<para>
+					Can I promote a replica to function as the master? 
+				</para>
+
+			</question>
+			 <answer>
+				<para>
+					Yes. This is described in <xref linkend="promoting-replica" />.
+				</para>
+
+			</answer>
+
+		</qandaentry>
+		-->
+		 <qandaentry>
+			<question>
+				<para>
+					Why does the <command>ipa-client-install</command> script fail to find the IPA server on a network that uses Active Directory DNS?
+				</para>
+
+			</question>
+			 <answer>
+				<para>
+					Active Directory has its own SRV records for Kerberos and LDAP. The <command>ipa-client-install</command> script can retrieve those records instead of any that have been added for the &IPA; domain. 
+				</para>
+				<para>
+					When running <command>ipa-client-install</command>, manually enter the server information to ensure that the script uses the &IPA; SRV records instead of &AD; records. The <command>ipa-client-install</command> options are listed in the <command>ipa-client-install</command> manpage.
+				</para>
+
+			</answer>
+
+		</qandaentry>
+		 <qandaentry>
+			<question>
+				<para>
+					Can an administrator who is connected to "Server&nbsp;B" revoke a certificate issued by "Server&nbsp;A"?
+				</para>
+
+			</question>
+			 <answer>
+				<para>
+					Yes, assuming that Servers A and B contain non-cloned CAs which have their database information replicated to share revocation information only.
+				</para>
+
+			</answer>
+
+		</qandaentry>
+
+	</qandaset>
+
 </appendix>
+

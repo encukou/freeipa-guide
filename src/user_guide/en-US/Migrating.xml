@@ -1,900 +1,828 @@
-<?xml version='1.0' encoding='utf-8'?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
-[
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 ]>
 <chapter id="Migrating_from_a_Directory_Server_to_IPA">
-    <title>Migrating from an LDAP Directory to &IPA;</title>
-    <para>When an infrastructure has previously deployed an LDAP server for
-    authentication and identity lookups, it is possible to migrate the user
-    data, including passwords, to a new &PROD; instance, without losing user or
-    password data.</para>
-    <para condition="redhat">&PROD; has migration tools to help move directory
-    data and only requires minimal updates to clients. However, the migration
-    process assumes a simple deployment scenario (one LDAP namespace to one
-    &IPA; namespace). For more complex environments, such as ones with multiple
-    namespaces or custom schema, contact &RH; support services for
-    assistance.</para>
-    <para condition="fedora">&PROD; has migration tools to help move directory
-    data and only requires minimal updates to clients. However, the migration
-    process assumes a very simple deployment scenario (one LDAP directory
-    namespace to one &IPA; namespace).</para>
-    <section id="migration-overview">
-        <title>An Overview of LDAP to &IPA; Migration</title>
-        <para>The actual migration part of moving from an LDAP server to &PROD;
-        &mdash; the process of moving the data from one server to the other
-        &mdash; is fairly straightforward. The process is simple: move data,
-        move passwords, and move clients.</para>
-        <para>
-        <emphasis role="bold">The crucial part of migration is not data
-        migration; it is deciding how clients are going to be configured to use
-        &PROD;.</emphasis>For each client in the infrastructure, you need to
-        decide what services (such as Kerberos and SSSD) are being used and
-        what services can be used in the final, &IPA; deployment.</para>
-        <para>A secondary, but significant, consideration is planning how to
-        migrate passwords. &PROD; requires Kerberos hashes for every user
-        account in addition to passwords. Some of the considerations and
-        migration paths for passwords are covered in 
-        <xref linkend="migr-kerb" />.</para>
-        <section id="Overview-Assumptions">
-            <title>Planning the Client Configuration</title>
-            <para>&PROD; can support a number of different client
-            configurations, with varying degrees of functionality, flexibility,
-            and security. Decide which configuration is best 
-            <emphasis>for each individual client</emphasis>based on its
-            operating system, functional area (such as development machines,
-            production servers, or user laptops), and your IT maintenance
-            priorities.</para>
-            <important>
-                <title>IMPORTANT</title>
-                <para>The different client configurations 
-                <emphasis>are not mutually exclusive</emphasis>. Most
-                environments will have a mix of different ways that clients use
-                to connect to the &IPA; domain. Administrators must decide
-                which scenario is best for each individual client.</para>
-            </important>
-            <section id="initial-config">
-                <title>Initial Client Configuration (Pre-Migration)</title>
-                <para>Before deciding where you want to go with the client
-                configuration in &PROD;, first establish where you are before
-                the migration.</para>
-                <para>The initial state for almost all LDAP deployments that
-                will be migrated is that there is an LDAP service providing
-                identity and authentication services.</para>
-                <figure id="basic-ldap-client-config">
-                    <title>Basic LDAP Directory and Client
-                    Configuration</title>
-                    <mediaobject>
-                        <imageobject>
-                            <imagedata fileref="images/IPA_Migration_Initial_State.png" />
-                        </imageobject>
-                    </mediaobject>
-                </figure>
-                <para>Linux and Unix clients use PAM_LDAP and NSS_LDAP
-                libraries to connect directly to the LDAP services. These
-                libraries allow clients to retrieve user information from the
-                LDAP directory 
-                <emphasis>as if</emphasis>the data were stored in 
-                <filename>/etc/passwd</filename>or 
-                <filename>/etc/shadow</filename>. (In real life, the
-                infrastructure may be more complex if a client uses LDAP for
-                identity lookups and Kerberos for authentication or other
-                configurations.)</para>
-                <para>There are structural differences between an LDAP
-                directory and &IPAA; server, particularly in schema support and
-                the structure of the directory tree. (For more background on
-                those differences, see 
-                <xref linkend="ipa-v-ldap" />.) While those differences may
-                impact data (especially with the directory tree, which affects
-                entry names), they have little impact on the 
-                <emphasis>client configuration</emphasis>, so it really has
-                little impact on migrating clients to &PROD;.</para>
-            </section>
-            <section id="rec1-rhel">
-                <title>Recommended Configuration for &OS; Clients</title>
-                <para>&OS; has a service called the 
-                <emphasis>System Security Services Daemon</emphasis>(SSSD).
-                SSSD uses special PAM and NSS libraries ( 
-                <systemitem>pam_sss</systemitem>and 
-                <systemitem>nss_sss</systemitem>, respectively) which allow
-                SSSD to be integrated very closely with &PROD; and leverage the
-                full authentication and identity features in &PROD;. SSSD has a
-                number of useful features, like caching identity information so
-                that users can log in even if the connection is lost to the
-                central server; these are described in the 
-                <citetitle>&OS; &DPG;</citetitle>.</para>
-                <para>Unlike generic LDAP directory services (using 
-                <systemitem>pam_ldap</systemitem>and 
-                <systemitem>nss_ldap</systemitem>), SSSD establishes
-                relationships between identity and authentication information
-                by defining 
-                <emphasis>domains</emphasis>. A domain in SSSD defines four
-                backend functions: authentication, identity lookups, access,
-                and password changes. The SSSD domain is then configured to use
-                a 
-                <emphasis>provider</emphasis>to supply the information for any
-                one (or all) of those four functions. An identity provider is
-                always required in the domain configuration. The other three
-                providers are optional; if an authentication, access, or
-                password provider is not defined, then the identity provider is
-                used for that function.</para>
-                <para>SSSD can use &PROD; for all of its backend functions.
-                This is the ideal configuration because it provides the full
-                range of &PROD; functionality, unlike generic LDAP identity
-                providers or Kerberos authentication. For example, during daily
-                operation, SSSD enforces host-based access control rules and
-                security features in &PROD;.</para>
-                <note>
-                    <title>TIP</title>
-                    <para>During the migration process from an LDAP directory
-                    to &PROD;, SSSD can seamlessly migrate user passwords
-                    without additional user interaction.</para>
-                </note>
-                <figure id="migration-with-sssd2">
-                    <title>Clients and SSSD with &IPAA; Backend</title>
-                    <mediaobject>
-                        <imageobject>
-                            <imagedata fileref="images/migr-sssd2.png" />
-                        </imageobject>
-                    </mediaobject>
-                </figure>
-                <para>The 
-                <command>ipa-client-install</command>script automatically
-                configured SSSD to use &IPA; for all four of its backend
-                services, so &OS; clients are set up with the recommended
-                configuration by default.</para>
-                <note condition="redhat">
-                    <title>NOTE</title>
-                    <para>This client configuration is only supported for &OS;
-                    6.1 and later and &OS; 5.7 later, which support the latest
-                    versions of SSSD and 
-                    <command>ipa-client</command>. Older versions of &OS; can
-                    be configured as described in 
-                    <xref linkend="supported-nonrhel" />.</para>
-                </note>
-                <note condition="fedora">
-                    <title>NOTE</title>
-                    <para>This client configuration is only supported for &OS;
-                    15 and later, which supports the latest versions of SSSD
-                    and 
-                    <command>ipa-client</command>. Older versions of &OS; can
-                    be configured as described in 
-                    <xref linkend="supported-nonrhel" />.</para>
-                </note>
-            </section>
-            <section id="supported-nonrhel">
-                <title>Alternative Supported Configuration</title>
-                <para condition="redhat">Unix and Linux systems such as Mac,
-                Solaris, HP-UX, AIX, and Scientific Linux support all of the
-                services that &IPA; manages but do not use SSSD. Likewise,
-                older &OS; versions (6.1 and 5.6) support SSSD but have an
-                older version, which does not support &IPA; as an identity
-                provider.</para>
-                <para condition="fedora">Unix and Linux systems such as Mac,
-                Solaris, HP-UX, AIX, and Scientific Linux support all of the
-                services that &IPA; manages but do not use SSSD. Likewise,
-                older &OS; versions (15) support SSSD but have an older
-                version, which does not support &IPA; as an identity
-                provider.</para>
-                <para>When it is not possible to use a modern version of SSSD
-                on a system, then clients can be configured to connect to the
-                &IPA; server as if it were an LDAP directory service for
-                identity lookups (using 
-                <systemitem>nss_ldap</systemitem>) and to &IPA; as if it were a
-                regular Kerberos KDC (using 
-                <systemitem>pam_krb5</systemitem>).</para>
-                <figure id="migration-with-krb5">
-                    <title>Clients and &IPA; with LDAP and Kerberos</title>
-                    <mediaobject>
-                        <imageobject>
-                            <imagedata fileref="images/migr-ldap.png" />
-                        </imageobject>
-                    </mediaobject>
-                </figure>
-                <para>If a &OS; client is using an older version of SSSD, SSSD
-                can still be configured to use the &IPA; server as its identity
-                provider and its Kerberos authentication domain; this is
-                described in the SSSD configuration section of the 
-                <citetitle>&OS; &DPG;</citetitle>.</para>
-                <para>Any &IPA; domain client can be configured to use 
-                <systemitem>nss_ldap</systemitem>and 
-                <systemitem>pam_krb5</systemitem>to connect to the &IPA;
-                server. For some maintenance situations and IT structures, a
-                scenario that fits the lowest common denominator may be
-                required, using LDAP for both identity and authentication ( 
-                <systemitem>nss_ldap</systemitem>and 
-                <systemitem>pam_ldap</systemitem>). However, it is generally
-                best practice to use the most secure configuration possible for
-                a client (meaning SSSD and Kerberos or LDAP and
-                Kerberos).</para>
-            </section>
-        </section>
-        <section id="migr-kerb">
-            <title>Planning Password Migration</title>
-            <para>Probably the most visible issue that can impact
-            LDAP-to-&PROD; migration is migrating user passwords.</para>
-            <para>&PROD; (by default) uses Kerberos for authentication and
-            requires that each user have Kerberos hashes stored in the &PROD;
-            &DS; in addition to the standard user passwords. To generate these
-            hashes, the user password needs to be available to the &IPA; server
-            in cleartext. This is the case when the user is created in &PROD;.
-            However, when the user is migrated from an LDAP directory, the
-            associated user password is already hashed, so the corresponding
-            Kerberos key cannot be generated.</para>
-            <important>
-                <title>IMPORTANT</title>
-                <para>Users cannot authenticate to the &IPA; domain or access
-                &IPA; resources until they have Kerberos hashes.</para>
-            </important>
-            <para>If a user does not have a Kerberos hash 
-            <footnote>
-                <para>It is possible to use LDAP authentication in &PROD;
-                instead of Kerberos authentication, which means that Kerberos
-                hashes are not required for users. However, this limits the
-                capabilities of &PROD; and is not recommended.</para>
-            </footnote>, that user cannot log into the &IPA; domain even if he
-            has a user account. There are three options for migrating
-            passwords: forcing a password change, using a web page, and using
-            SSSD.</para>
-            <para>Migrating users from an existing system provides a smoother
-            transition but also requires parallel management of LDAP directory
-            and &IPA; during the migration and transition process. If you do
-            not preserve passwords, the migration can be performed more quickly
-            but it requires more manual work by administrators and
-            users.</para>
-            <section id="resetting-pwd-migr">
-                <title>Method 1: Using Temporary Passwords and Requiring a
-                Change</title>
-                <para>When passwords are changed in &PROD;, they will be
-                created with the appropriate Kerberos hashes. So one
-                alternative for administrators is to force users to change
-                their passwords by resetting all user passwords when user
-                accounts are migrated. (This can also be done simply by
-                re-creating the LDAP directory accounts in &IPA;, which
-                automatically creates accounts with the appropriate keys.) The
-                new users are assigned a temporary password which they change
-                at the first login. No passwords are migrated.</para>
-            </section>
-            <section id="webpage-pwd-migr">
-                <title>Method 2: Using the Migration Web Page</title>
-                <para>When it is running in migration mode, &PROD; has a
-                special web page in its web UI that will capture a cleartext
-                password and create the appropriate Kerberos hash.</para>
-                <screen>https://ipaserver.example.com/ipa/migration</screen>
-                <para>Administrators could tell users to authenticate once to
-                this web page, which would properly update their user accounts
-                with their password and corresponding Kerberos hash, without
-                requiring password changes.</para>
-            </section>
-            <section id="sssd-pwd-migr">
-                <title>Method 3: Using SSSD (Recommended)</title>
-                <para>SSSD can work with &IPA; to mitigate the user impact on
-                migrating by generating the required user keys. For deployments
-                with a lot of users or where users shouldn't be burdened with
-                password changes, this is the best scenario.</para>
-                <orderedlist>
-                    <listitem>
-                        <para>A user tries to log into a machine with
-                        SSSD.</para>
-                    </listitem>
-                    <listitem>
-                        <para>SSSD attempts to perform Kerberos authentication
-                        against the &IPA; server.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Even though the user exists in the system, the
-                        authentication will fail with the error 
-                        <emphasis>key type is not supported</emphasis>because
-                        the Kerberos hashes do not yet exist.</para>
-                    </listitem>
-                    <listitem>
-                        <para>SSSD the performs a plaintext LDAP bind over a
-                        secure connection.</para>
-                    </listitem>
-                    <listitem>
-                        <para>&IPA; intercepts this bind request. If the user
-                        has a Kerberos principal but no Kerberos hashes, then
-                        the &IPA; identity provider generates the hashes and
-                        stores them in the user entry.</para>
-                    </listitem>
-                    <listitem>
-                        <para>If authentication is successful, SSSD disconnects
-                        from &IPA; and tries Kerberos authentication again.
-                        This time, the request succeeds because the hash exists
-                        in the entry.</para>
-                    </listitem>
-                </orderedlist>
-                <para>That entire process is entirely transparent to the user;
-                as far as users known, they simply log into a client service
-                and it works as normal.</para>
-            </section>
-            <section id="pwd-migr-cleartext">
-                <title>Migrating Cleartext LDAP Passwords</title>
-                <para>Although in most deployments LDAP passwords are stored
-                encrypted, there may be some users or some environments that
-                use cleartext passwords for user entries.</para>
-                <para>When users are migrated from the LDAP server to the &IPA;
-                server, their cleartext passwords are not migrated over. &PROD;
-                does not allow cleartext passwords. Instead, a Kerberos
-                principle is created for the user, the keytab is set to true,
-                and the password is set as expired. This means that &PROD;
-                requires the user to reset the password at the next
-                login.</para>
-                <note>
-                    <title>NOTE</title>
-                    <para>If passwords are hashed, the password is successfully
-                    migrated through SSSD and the migration web page, as in 
-                    <xref linkend="sssd-pwd-migr" />.</para>
-                </note>
-            </section>
-            <section id="forced-pwd-reset">
-                <title>Automatically Resetting Passwords That Do Not Meet
-                Requirements</title>
-                <para>If user passwords in the original directory do not meet
-                the password policies defined in &PROD;, then the passwords
-                must be reset after migration.</para>
-                <para>Password resets are done automatically the first time the
-                users attempts to 
-                <command>kinit</command>into the &IPA; domain.</para>
-                <screen>[jsmith@server ~]$ kinit Password for
-                jsmith@EXAMPLE.COM: Password expired. You must change it now.
-                Enter new password: Enter it again:</screen>
-            </section>
-        </section>
-        <section id="migration-considerations">
-            <title>Migration Considerations and Requirements</title>
-            <para>As you are planning migrating from an LDAP server to &PROD;,
-            make sure that your LDAP environment is able to work with the
-            &PROD; migration script.</para>
-            <section id="migr-support">
-                <title>LDAP Servers Supported for Migration</title>
-                <para>The migration process from an LDAP server to &PROD; uses
-                a special script, 
-                <command>ipa migrate-ds</command>, to perform the migration.
-                This script has certain expectations about the structure of the
-                LDAP directory and LDAP entries in order to work. Migration is
-                supported only for LDAPv3-compliant directory services, which
-                include several common directories:</para>
-                <itemizedlist>
-                    <listitem>
-                        <para>SunONE &DS;</para>
-                    </listitem>
-                    <listitem>
-                        <para>Apache &DS;</para>
-                    </listitem>
-                    <listitem>
-                        <para>OpenLDAP</para>
-                    </listitem>
-                </itemizedlist>
-                <para>Migration from an LDAP server to &PROD; has been tested
-                with &RHDS;.</para>
-                <note condition="redhat">
-                    <title>NOTE</title>
-                    <para>Migration using the migration script is 
-                    <emphasis>not</emphasis>supported for Microsoft &AD;
-                    because it is not an LDAPv3-compliant directory. For
-                    assistance with migrating from &AD;, contact &RH;
-                    Professional Services.</para>
-                </note>
-                <note condition="fedora">
-                    <title>NOTE</title>
-                    <para>Migration using the migration script is 
-                    <emphasis>not</emphasis>supported for Microsoft &AD;
-                    because it is not an LDAPv3-compliant directory.</para>
-                </note>
-            </section>
-            <section id="migr-environment-requirements">
-                <title>Migration Environment Requirements</title>
-                <para>There are many different possible configuration scenarios
-                for both &RHDS; and &PROD;, and any of those scenarios may
-                affect the migration process. For the example migration
-                procedures in this chapter, these are the assumptions about the
-                environment:</para>
-                <itemizedlist>
-                    <listitem>
-                        <para>A single LDAP directory domain is being migrated
-                        to one &IPA; realm. No consolidation is
-                        involved.</para>
-                    </listitem>
-                    <listitem>
-                        <para>User passwords are stored as a hash in the LDAP
-                        directory that the &IPA; &DS; can support.</para>
-                    </listitem>
-                    <listitem>
-                        <para>The LDAP directory instance is both the identity
-                        store and the authentication method. Client machines
-                        are configured to use 
-                        <command>pam_ldap</command>or 
-                        <command>nss_ldap</command>to connect to the LDAP
-                        server.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Entries use only standard LDAP schema. Custom
-                        attributes will not be migrated to &PROD;.</para>
-                    </listitem>
-                </itemizedlist>
-            </section>
-            <section id="migr-tooling">
-                <title>Migration Tools</title>
-                <para>&PROD; uses a specific command, 
-                <command>ipa migrate-ds</command>, to drive the migration
-                process so that LDAP directory data are properly formatted and
-                imported cleanly into the &IPA; server.</para>
-                <para>The &PROD; server must be configured to run in migration
-                mode, and then the migration script can be used.</para>
-            </section>
-            <section id="Migration_Sequence_of_Steps">
-                <title>Migration Sequence</title>
-                <para>There are four major steps when migrating to &PROD;, but
-                the order varies slightly depending on whether you want to
-                migrate the server first or the clients first.</para>
-                <para>With a client-based migration, SSSD is used to change the
-                client configuration while &IPAA; server is configured:</para>
-                <orderedlist>
-                    <listitem>
-                        <para>Deploy SSSD.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Reconfigure clients to connect to the current
-                        LDAP server and then fail over to &IPA;. 
-                        <!-- really? why ldap? why not kerberos? --></para>
-                    </listitem>
-                    <listitem>
-                        <para>Install the &IPA; server.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Migrate the user data using the &IPA; 
-                        <command>ipa-migrate-ds</command>script. This exports
-                        the data from the LDAP directory, formats for the &IPA;
-                        schema, and then imports it into &IPA;.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Take the LDAP server offline and allow clients to
-                        fail over to &PROD; transparently.</para>
-                    </listitem>
-                </orderedlist>
-                <para>With a server migration, the LDAP to &PROD; migration
-                comes first:</para>
-                <orderedlist>
-                    <listitem>
-                        <para>Install the &IPA; server.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Migrate the user data using the &IPA; 
-                        <command>ipa-migrate-ds</command>script. This exports
-                        the data from the LDAP directory, formats it for the
-                        &IPA; schema, and then imports it into &IPA;.</para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                        <emphasis>Optional.</emphasis>Deploy SSSD.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Reconfigure clients to connect to &IPA;. It is
-                        not possible to simply replace the LDAP server. The
-                        &IPA; directory tree &mdash; and therefore user entry
-                        DNs &mdash; is different than the previous directory
-                        tree.</para>
-                        <para>While it is required that clients be
-                        reconfigured, clients do not need to be reconfigured
-                        immediately. Updated clients can point to the &IPA;
-                        server while other clients point to the old LDAP
-                        directory, allowing a reasonable testing and transition
-                        phase after the data are migrated.</para>
-                        <note>
-                            <title>NOTE</title>
-                            <para>Do not run both an LDAP directory service and
-                            the &IPA; server for very long in parallel. This
-                            introduces the risk of user data being inconsistent
-                            between the two services.</para>
-                        </note>
-                    </listitem>
-                </orderedlist>
-                <para>Both processes provide a general migration procedure, but
-                it may not work in every environment. Set up a test LDAP
-                environment and test the migration process before attempting to
-                migrate the real LDAP environment.</para>
-            </section>
-        </section>
-    </section>
-    <section id="using-migrate-ds">
-        <title>Examples for Using migrate-ds</title>
-        <para>The data migration is performed with the 
-        <command>ipa migrate-ds</command>command. At its simplest, the command
-        takes the LDAP URL of the directory to migrate and exports the data
-        based on common default settings.</para>
-        <screen>ipa migrate-ds ldap://ldap.example.com:389</screen>
-        <para>It is possible to customize how the 
-        <command>migrate-ds</command>commands identifies and exports data. This
-        is useful if the original directory tree has a unique structure or if
-        some entries or attributes within entries should be excluded from
-        migration.</para>
-        <section id="migrate-ds-dit">
-            <title>Migrating Specific Subtrees</title>
-            <para>The default directory structure places person entries in the 
-            <command>ou=People</command>subtree and group entries in the 
-            <command>ou=Groups</command>subtree. These subtrees are container
-            entries for those different types of directory data. If no options
-            are passed with the 
-            <command>migrate-ds</command>command, then the utility assumes that
-            the given LDAP directory uses the 
-            <command>ou=People</command>and 
-            <command>ou=Groups</command>structure.</para>
-            <para>Many deployments may have an entirely different directory
-            structure (or may only want to export certain parts of the
-            directory tree). There are two options which allow administrators
-            to give the RDN of a different user or group subtree:</para>
-            <itemizedlist>
-                <listitem>
-                    <para>
-                        <option>--user-container</option>
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <option>--group-container</option>
-                    </para>
-                </listitem>
-            </itemizedlist>
-            <note>
-                <title>NOTE</title>
-                <para>In both cases, the subtree must be the RDN only and must
-                be relative to the base DN. For example, the 
-                <command>ou=Employees,dc=example,dc=com</command>subtree can be
-                migrated using 
-                <command>--user-container=ou=Employees</command>, but 
-                <command>
-                ou=Employees,ou=People,dc=example,dc=com</command>cannot be
-                migrated with that option because 
-                <command>ou=Employees</command>is not a direct child of the
-                base DN.</para>
-            </note>
-            <para>For example:</para>
-            <screen>[root@ipaserver ~]# ipa migrate-ds
-            --user-container=ou=employees --group-container="ou=employee
-            groups" ldap://ldap.example.com:389</screen>
-            <para>There is a third option that allows administrators to set a
-            base DN for migration: 
-            <option>--base-dn</option>. With this option, it is possible to
-            change the target for container subtrees. For example:</para>
-            <screen>[root@ipaserver ~]# ipa migrate-ds
-            --user-container=ou=employees
-            --base-dn="ou=people,dc=example,dc=com"
-            ldap://ldap.example.com:389</screen>
-            <para>Now, the 
-            <command>ou=Employees</command>user subtree can be migrated from
-            within the larger 
-            <command>ou=People</command>subtree without migrating every
-            people-related subtree.</para>
-        </section>
-        <section id="finding-excluding-entries">
-            <title>Specifically Including or Excluding Entries</title>
-            <para>By default, the 
-            <command>migrate-ds</command>script exports every user entry with
-            the 
-            <command>person</command>object class and every group entry within
-            the given user and group subtrees.</para>
-            <para>In some migration paths, only specific types of users and
-            groups may need to be exported, or, conversely, specific users and
-            groups may need to be excluded.</para>
-            <para>On option is to set positively which 
-            <emphasis>types</emphasis>of users and groups to include. This is
-            done by setting which object classes to search for when looking for
-            user or group entries.</para>
-            <para>This is a really useful option when there are custom object
-            classes used in an environment for different user types. For
-            example, this migrates only users with the custom 
-            <command>fullTimeEmployee</command>object class:</para>
-            <screen>[root@ipaserver ~]# ipa migrate-ds
-            --user-objectclass=fullTimeEmployee
-            ldap://ldap.example.com:389</screen>
-            <para>Because of the different types of groups, this is also very
-            useful for migrating only certain types of groups (such as user
-            groups) while excluding other types of groups, like certificate
-            groups. For example:</para>
-            <screen>[root@ipaserver ~]# ipa migrate-ds
-            --group-objectclass=groupOfNames,groupOfUniqueNames
-            ldap://ldap.example.com:389</screen>
-            <para>Positively specifying user and groups to migrate based on
-            object class implicitly excludes all other users and groups from
-            migration.</para>
-            <para>Alternatively, it can be useful to migrate all user and group
-            entries except for just a small handful of entries. Specific user
-            or group accounts can be excluded while all others of that type are
-            migrated. For example, this excludes a hobbies group and two
-            users:</para>
-            <screen>[root@ipaserver ~]# ipa migrate-ds
-            --exclude-groups="Golfers Group" --exclude-users=jsmith,bjensen
-            ldap://ldap.example.com:389</screen>
-            <para>Specifying an object class to migrate can be used together
-            with excluding specific entries. For example, this specifically
-            includes users with the 
-            <command>fullTimeEmployee</command>object class, yet excludes three
-            managers:</para>
-            <screen>[root@ipaserver ~]# ipa migrate-ds
-            --user-objectclass=fullTimeEmployee
-            --exclude-users=jsmith,bjensen,mreynolds
-            ldap://ldap.example.com:389</screen>
-        </section>
-        <section id="excluding-attributes">
-            <title>Excluding Entry Attributes</title>
-            <para>By default, every attribute and object class for a user or
-            group entry is migrated. There are some cases where that may not be
-            realistic, either because of bandwidth and network constraints or
-            because the attribute data are no longer relevant. For example, if
-            users are going to be assigned new user certificates as they join
-            the &IPA; domain, then there is no reason to migrate the 
-            <parameter>userCertificate</parameter>attribute.</para>
-            <para>Specific object classes and attributes can be ignored by the 
-            <command>migrate-ds</command>by using any of several different
-            options:</para>
-            <itemizedlist>
-                <listitem>
-                    <para>
-                        <option>--user-ignore-objectclass</option>
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <option>--user-ignore-attribute</option>
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <option>--group-ignore-objectclass</option>
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <option>--group-ignore-attribute</option>
-                    </para>
-                </listitem>
-            </itemizedlist>
-            <para>For example, to exclude the 
-            <parameter>userCertificate</parameter>attribute and 
-            <command>strongAuthenticationUser</command>object class for users
-            and the 
-            <command>groupOfCertificates</command>object class for
-            groups:</para>
-            <screen>[root@ipaserver ~]# ipa migrate-ds
-            --user-ignore-attribute=userCertificate
-            --user-ignore-objectclass=strongAuthenticationUser
-            --group-ignore-objectclass=groupOfCertificates
-            ldap://ldap.example.com:389</screen>
-            <note>
-                <title>NOTE</title>
-                <para>Make sure not to ignore any required attributes. Also,
-                when excluding object classes, make sure to exclude any
-                attributes which are only supported by that object
-                class.</para>
-            </note>
-        </section>
-        <section id="migrate-schema">
-            <title>Setting the Schema to Use</title>
-            <para>By default, &PROD; uses 
-            <ulink url="http://www.padl.com/~lukeh/rfc2307bis.txt">
-            RFC2307bis</ulink>schema to define user, host, hostgroup, and other
-            network identities. This schema option can be reset to use 
-            <ulink url="http://www.faqs.org/rfcs/rfc2307.html">
-            RFC2307</ulink>schema instead:</para>
-            <screen>[root@ipaserver ~]# ipa migrate-ds --schema=RFC2307
-            ldap://ldap.example.com:389</screen>
-        </section>
-    </section>
-    <section id="Migrating_from_a_Directory_Server_to_IPA-Performing_a_Client_based_Migration">
+	<title>Migrating from an LDAP Directory to &IPA;</title>
+		<para>
+			When an infrastructure has previously deployed an LDAP server for authentication and identity lookups, it is possible to migrate the user data, including passwords, to
+			a new &PROD; instance, without losing user or password data.
+		</para>
+		
+		<para condition="redhat">
+			&PROD; has migration tools to help move directory data and only requires minimal updates to clients. However, the migration process assumes a  
+			simple deployment scenario (one LDAP namespace to one &IPA; namespace). For more complex environments, such as ones with multiple namespaces or 
+			custom schema, contact &RH; support services for assistance.
+		</para>
+		<para condition="fedora">
+			&PROD; has migration tools to help move directory data and only requires minimal updates to clients. However, the migration process assumes a very 
+			simple deployment scenario (one LDAP directory namespace to one &IPA; namespace). 
+		</para>
 
-        <title>Scenario 1: Using SSSD as Part of Migration</title>
-        <important>
-            <title>IMPORTANT</title>
-            <para>This is a general migration procedure, but it may not work in
-            every environment.</para>
-            <para>It is strongly recommended that you set up a test LDAP
-            environment and test the migration process before attempting to
-            migrate the real LDAP environment.</para>
-        </important>
-        <orderedlist>
-            <listitem>
-                <para>Set up SSSD. Using SSSD allows the required Kerberos keys
-                and server certificates to be delivered to the clients.</para>
-                <orderedlist>
-                    <listitem>
-                        <para>Install SSSD on every client machine:</para>
-                        <screen># yum install sssd</screen>
-                    </listitem>
-                    <listitem>
-                        <para>Configure an LDAP identity provider in SSSD to
-                        use the existing &DS; for all functions
-                        (authentication, identity lookups, access, and password
-                        changes). This ensures every client works properly with
-                        the existing directory service.</para>
-                    </listitem>
-                </orderedlist>
-            </listitem>
-            <listitem>
-                <para>Install &PROD;, including any custom LDAP directory
-                schema 
-                <footnote>
-                    <para>There is limited support for custom user and group
-                    schema in &PROD;.</para>
-                </footnote>, on a different machine from the existing LDAP
-                directory.</para>
-            </listitem>
-            <listitem>
-                <para>Enable the &IPA; server to allow migration:</para>
-                <screen># ipa config-mod --enable-migration=TRUE</screen>
-            </listitem>
-            <listitem>
-                <para>Disable the compat plug-in.</para>
-                <screen># ipa-compat-manage disable</screen>
-            </listitem>
-            <listitem>
-                <para>Restart the &IPA; &DS; instance.</para>
-                <screen># service dirsrv restart</screen>
-            </listitem>
-            <listitem>
-                <para>Run the &IPA; migration script, 
-                <command>ipa migrate-ds</command>. At its most basic, this
-                requires only the LDAP URL of the LDAP directory instance to
-                migrate:</para>
-                <screen># ipa migrate-ds ldap://ldap.example.com:389</screen>
-                <para>Simply passing the LDAP URL migrates all of the directory
-                data using common default settings. The user and group data can
-                be selectively migrated by specifying other options, as covered
-                in 
-                <xref linkend="using-migrate-ds" />.</para>
-                <para>Once the information is exported, the script adds all
-                required &IPA; object classes and attributes and converts DNs
-                in attributes to match the &IPA; directory tree.</para>
-            </listitem>
-            <listitem>
-                <para>Re-enable the compat plug-in.</para>
-                <screen># ipa-compat-manage enable</screen>
-            </listitem>
-            <listitem>
-                <para>Restart the &IPA; &DS; instance.</para>
-                <screen># service dirsrv restart</screen>
-            </listitem>
-            <listitem>
-                <para>Move clients that have SSSD installed from the LDAP
-                backend to the &PROD; backend and enroll them as client with
-                &IPA;. This downloads the required keys and
-                certificates.</para>
-                <para>On &OS; clients, this can be done using the 
-                <command>ipa-client-install</command>command. For
-                example:</para>
-                <programlisting language="Bash"># ipa-client-install
-                --enable-dns-updates</programlisting>
-            </listitem>
-            <listitem>
-                <para>Have users log into a machine with SSSD and &PROD;
-                backend. This generates the required Kerberos keys for the
-                user.</para>
-                <para>To monitor the user migration process, query the existing
-                LDAP directory to see which user accounts have a password but
-                do not yet have a Kerberos principal key.</para>
-                <screen>$ ldapsearch -LL -x -D 'cn=Directory Manager' -w secret
-                -b 'ou=people,dc=example,dc=com'
-                '(&amp;(!(krbprincipalkey=*))(userpassword=*))' uid</screen>
-                <note>
-                    <title>NOTE</title>
-                    <para>Include the quotes around the filter so that it is
-                    not interpreted by the shell.</para>
-                </note>
-            </listitem>
-            <listitem>
-                <para>Once users have been migrated over, configure non-SSSD
-                clients to use the &IPA; domain, as required.</para>
-            </listitem>
-            <listitem>
-                <para>When the migration of all clients and users is complete,
-                decommission the LDAP directory.</para>
-            </listitem>
-        </orderedlist>
-    </section>
-    <section id="Migrating_from_a_Directory_Server_to_IPA-Performing_a_Server_based_Migration">
+		<section id="migration-overview"><title>An Overview of LDAP to &IPA; Migration</title>
+			<para>
+				The actual migration part of moving from an LDAP server to &PROD; &mdash; the process of moving the data from one server to the other &mdash; is fairly straightforward. 
+				The process is simple: move data, move passwords, and move clients.
+			</para>
+			<para>
+				<emphasis role="bold">The crucial part of migration is not data migration; it is deciding how clients are going to be configured to use &PROD;.</emphasis> For each client in the infrastructure, you need to decide what services (such as Kerberos and SSSD) are being used and what services can be used 
+				in the final, &IPA; deployment. 
+			</para>
+			<para>
+				A secondary, but significant, consideration is planning how to migrate passwords. &PROD; requires Kerberos hashes for every user account in addition to passwords. Some of the considerations and migration paths for passwords are covered in <xref linkend="migr-kerb" />.
+			</para>
 
-        <title>Scenario 2: Migrating an LDAP Server Directly to &PROD;</title>
-        <important>
-            <title>IMPORTANT</title>
-            <para>This is a general migration procedure, but it may not work in
-            every environment.</para>
-            <para>It is strongly recommended that you set up a test LDAP
-            environment and test the migration process before attempting to
-            migrate the real LDAP environment.</para>
-        </important>
-        <orderedlist>
-            <listitem>
-                <para>Install the &IPA; server, including any custom LDAP
-                directory schema 
-                <footnote>
-                    <para>There is limited support for custom user and group
-                    schema in &PROD;.</para>
-                </footnote>, on a different machine from the existing LDAP
-                directory.</para>
-            </listitem>
-            <listitem>
-                <para>Disable the compat plug-in.</para>
-                <screen># ipa-compat-manage disable</screen>
-            </listitem>
-            <listitem>
-                <para>Restart the &IPA; &DS; instance.</para>
-                <screen># service dirsrv restart</screen>
-            </listitem>
-            <listitem>
-                <para>Enable the &IPA; server to allow migration:</para>
-                <screen># ipa config-mod --enable-migration=TRUE</screen>
-            </listitem>
-            <listitem>
-                <para>Run the &IPA; migration script, 
-                <command>ipa migrate-ds</command>. At its most basic, this
-                requires only the LDAP URL of the LDAP directory instance to
-                migrate:</para>
-                <screen># ipa migrate-ds ldap://ldap.example.com:389</screen>
-                <para>Simply passing the LDAP URL migrates all of the directory
-                data using common default settings. The user and group data can
-                be selectively migrated by specifying other options, as covered
-                in 
-                <xref linkend="using-migrate-ds" />.</para>
-                <para>Once the information is exported, the script adds all
-                required &IPA; object classes and attributes and converts DNs
-                in attributes to match the &IPA; directory tree.</para>
-            </listitem>
-            <listitem>
-                <para>Re-enable the compat plug-in.</para>
-                <screen># ipa-compat-manage enable</screen>
-            </listitem>
-            <listitem>
-                <para>Restart the &IPA; &DS; instance.</para>
-                <screen># service dirsrv restart</screen>
-            </listitem>
-            <listitem>
-                <para>Update the client configuration to use PAM_LDAP and
-                NSS_LDAP to connect to &IPA; instead of connecting to an LDAP
-                directory, NIS, or local files.</para>
-            </listitem>
-            <listitem>
-                <para>
-                <emphasis>Optional.</emphasis>Set up SSSD. Using SSSD migrates
-                user passwords without additional user interaction, as
-                described in 
-                <xref linkend="migr-kerb" />.</para>
-                <orderedlist>
-                    <listitem>
-                        <para>Install SSSD on every client machine:</para>
-                        <screen># yum install sssd</screen>
-                    </listitem>
-                    <listitem>
-                        <para>Run the 
-                        <command>ipa-client-install</command>to configure SSSD
-                        and related services to use the &IPA; server for
-                        identity and Kerberos authentication.</para>
-                    </listitem>
-                </orderedlist>
-            </listitem>
-            <listitem>
-                <para>Instruct users to log into &IPA; using either SSSD client
-                or the migration web page if SSSD is not available on the
-                client. Both methods automatically migrate the user password
-                into &PROD;.</para>
-                <screen>https://ipaserver.example.com/ipa/migration</screen>
-            </listitem>
-            <listitem>
-                <para>
-                <emphasis>Optional.</emphasis>Reconfigure non-SSSD clients to
-                use Kerberos authentication ( 
-                <systemitem>pam_krb5</systemitem>) instead of LDAP
-                authentication ( 
-                <systemitem>pam_ldap</systemitem>).</para>
-                <note>
-                    <title>NOTE</title>
-                    <para>Use PAM_LDAP modules until all of the users have been
-                    migrated; then it is possible to use PAM_KRB5.</para>
-                </note>
-            </listitem>
-            <listitem>
-                <para>When the migration of all clients and users is complete,
-                decommission the LDAP directory.</para>
-            </listitem>
-        </orderedlist>
-    </section>
+		<section id="Overview-Assumptions">
+			<title>Planning the Client Configuration</title>
+			<para>
+				&PROD; can support a number of different client configurations, with varying degrees of functionality, flexibility, and security. Decide which configuration 
+				is best <emphasis>for each individual client</emphasis> based on its operating system, functional area (such as development machines, production servers, or user laptops), 
+				and your IT maintenance priorities.
+			</para>
+				<important><title>IMPORTANT</title>
+					<para>
+						The different client configurations <emphasis>are not mutually exclusive</emphasis>. Most environments will have a mix of different ways that clients use 
+						to connect to the &IPA; domain. Administrators must decide which scenario is best for each individual client.
+					</para>
+				</important>
+			<section id="initial-config"><title>Initial Client Configuration (Pre-Migration)</title>
+				<para>
+					Before deciding where you want to go with the client configuration in &PROD;, first establish where you are before the migration. 
+				</para>
+				<para>
+					The initial state for almost all LDAP deployments that will be migrated is that there is an LDAP service providing identity and authentication services. 
+				</para>
+				<figure id="basic-ldap-client-config">
+					<title>Basic LDAP Directory and Client Configuration</title>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="images/IPA_Migration_Initial_State.png" />
+						</imageobject>
+
+					</mediaobject>
+
+				</figure>
+
+			<para>
+				Linux and Unix clients use PAM_LDAP and NSS_LDAP libraries to connect directly to the LDAP services. These libraries allow clients to retrieve user
+				information from the LDAP directory <emphasis>as if</emphasis> the data were stored in <filename>/etc/passwd</filename> or <filename>/etc/shadow</filename>. (In real life, 
+				the infrastructure may be more complex if a client uses LDAP for identity lookups and Kerberos for authentication or other configurations.)
+			</para>
+			<para>
+				There are structural differences between an LDAP directory and &IPAA; server, particularly in schema support and the structure of the directory tree. 
+				(For more background on those differences, see <xref linkend="ipa-v-ldap" />.) While those differences may impact data (especially with the directory tree, which affects entry names), 
+				they have little impact on the <emphasis>client configuration</emphasis>, so it really has little impact on migrating clients to &PROD;.
+			</para>
+			</section>
+				
+			<section id="rec1-rhel"><title>Recommended Configuration for &OS; Clients</title>
+				<para>
+					&OS; has a service called the <emphasis>System Security Services Daemon</emphasis> (SSSD). SSSD uses special PAM and NSS libraries (<systemitem>pam_sss</systemitem>
+					and <systemitem>nss_sss</systemitem>, respectively) which allow SSSD to be integrated very closely with &PROD; and leverage the full authentication and identity 
+					features in &PROD;. SSSD has a number of useful features, like caching identity information so that users can log in even if the connection is lost to the central server; 
+					these are described in the <citetitle>&OS; &DPG;</citetitle>.
+				</para>
+				<para>
+					Unlike generic LDAP directory services (using <systemitem>pam_ldap</systemitem> and <systemitem>nss_ldap</systemitem>), SSSD establishes relationships between identity and authentication 
+					information by defining <emphasis>domains</emphasis>. A domain in SSSD defines four backend functions: authentication, identity lookups, access, and password changes.
+					The SSSD domain is then configured to use a <emphasis>provider</emphasis> to supply the information for any one (or all) of those four functions. An identity provider is always required in the domain configuration. The other three providers are optional; if an authentication, access, or password provider is not defined, then the identity provider is used for that function.
+				</para>
+				<para>
+					SSSD can use &PROD; for all of its backend functions. This is the ideal configuration because it provides the full range of &PROD; functionality, unlike 
+					generic LDAP identity providers or Kerberos authentication.
+					For example, during daily operation, SSSD enforces host-based access control rules and security features in &PROD;.
+				</para>
+				<note><title>TIP</title>
+					<para>
+						During the migration process from an LDAP directory to &PROD;, SSSD can seamlessly migrate user passwords without additional user interaction. 
+					</para>
+				</note>
+				<figure id="migration-with-sssd2">
+					<title>Clients and SSSD with &IPAA; Backend</title>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="images/migr-sssd2.png" />
+						</imageobject>
+
+					</mediaobject>
+				</figure>
+				<para>
+					The <command>ipa-client-install</command> script automatically configured SSSD to use &IPA; for all four of its backend services, so &OS; clients are set up with 
+					the recommended configuration by default.
+				</para>
+				<note condition="redhat"><title>NOTE</title>
+					<para>
+						This client configuration is only supported for &OS; 6.1 and later and &OS; 5.7 later, which support the latest versions of SSSD and <command>ipa-client</command>. 
+						Older versions of &OS; can be configured as described in <xref linkend="supported-nonrhel" />.
+					</para>
+				</note>
+				<note condition="fedora"><title>NOTE</title>
+					<para>
+						This client configuration is only supported for &OS; 15 and later, which supports the latest versions of SSSD and <command>ipa-client</command>. 
+						Older versions of &OS; can be configured as described in <xref linkend="supported-nonrhel" />.
+					</para>
+				</note>
+			</section>
+
+			<section id="supported-nonrhel"><title>Alternative Supported Configuration</title>
+					<para condition="redhat">
+						Unix and Linux systems such as Mac, Solaris, HP-UX, AIX, and Scientific Linux support all of the services that &IPA; manages but do not use 
+						SSSD. Likewise, older &OS; versions (6.1 and 5.6) support SSSD but have an older version, which does not support &IPA; as an identity provider.
+					</para>
+					<para condition="fedora">
+						Unix and Linux systems such as Mac, Solaris, HP-UX, AIX, and Scientific Linux support all of the services that &IPA; manages but do not use 
+						SSSD. Likewise, older &OS; versions (15) support SSSD but have an older version, which does not support &IPA; as an identity provider.
+					</para>
+					<para>
+						When it is not possible to use a modern version of SSSD on a system, then clients can be configured to connect to the &IPA; server as if 
+						it were an LDAP directory service for identity lookups (using <systemitem>nss_ldap</systemitem>) and to &IPA; as if it were a regular 
+						Kerberos KDC (using <systemitem>pam_krb5</systemitem>).
+				</para>
+				<figure id="migration-with-krb5">
+					<title>Clients and &IPA; with LDAP and Kerberos</title>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="images/migr-ldap.png" />
+						</imageobject>
+
+					</mediaobject>
+				</figure>
+				<para>
+					If a &OS; client is using an older version of SSSD, SSSD can still be configured to use the &IPA; server as its identity provider and its 
+					Kerberos authentication domain; this is described in the SSSD configuration section of the <citetitle>&OS; &DPG;</citetitle>.
+				</para>
+				<para>
+					Any &IPA; domain client can be configured to use <systemitem>nss_ldap</systemitem> and <systemitem>pam_krb5</systemitem> to connect to the &IPA; server.
+					For some maintenance situations and IT structures, a scenario that fits the lowest common denominator may be required, using LDAP for both identity and authentication
+					(<systemitem>nss_ldap</systemitem> and <systemitem>pam_ldap</systemitem>).
+					However, it is generally best practice to use the most secure configuration possible for a client (meaning SSSD and Kerberos or LDAP and Kerberos).
+				</para>
+			</section>
+		</section>
+
+		<section id="migr-kerb"><title>Planning Password Migration</title>
+
+			<para>
+				Probably the most visible issue that can impact LDAP-to-&PROD; migration is migrating user passwords.
+			</para>
+			<para>
+				&PROD; (by default) uses Kerberos for authentication and requires that each user 
+				have Kerberos hashes stored in the &PROD; &DS; in addition to the standard user passwords. 
+				To generate these hashes, the user password needs to be available to the &IPA; server in cleartext. This is the case when the user is created in &PROD;. However, when the user is migrated from an LDAP directory, the associated user password is already hashed, so the corresponding Kerberos key cannot be generated. 
+			</para>
+			<important><title>IMPORTANT</title>
+				<para>
+					Users cannot authenticate to the &IPA; domain or access &IPA; resources until they have Kerberos hashes.
+				</para>
+			</important>
+			
+			<para>
+				If a user does not have a Kerberos hash<footnote><para>It is possible to use LDAP authentication in &PROD; instead of Kerberos authentication, which means that Kerberos hashes are not required for users. However, this limits the capabilities of &PROD; and is not recommended.</para></footnote>, that user cannot log into the &IPA; domain even if he has a user account. There are three options for migrating passwords: 
+				forcing a password change, using a web page, and using SSSD.
+			</para>
+			<para>
+				Migrating users from an existing system provides a smoother transition but also requires parallel management of LDAP directory and &IPA; during the migration and transition process. 
+				If you do not preserve passwords, the migration can be performed more quickly but it requires more manual work by administrators and users.
+			</para>
+			<section id="resetting-pwd-migr"><title>Method 1: Using Temporary Passwords and Requiring a Change</title>
+				<para>
+					When passwords are changed in &PROD;, they will be created with the appropriate Kerberos hashes. So one alternative for administrators is to force users to change 
+					their passwords by resetting all user passwords when user accounts are migrated.
+					(This can also be done simply by re-creating the LDAP directory accounts in &IPA;, which automatically creates accounts with 
+					the appropriate keys.) The new users are assigned a temporary password
+					which they change at the first login. No passwords are migrated. 
+				</para>
+			</section>
+
+			<section id="webpage-pwd-migr"><title>Method 2: Using the Migration Web Page</title>
+				<para>
+					When it is running in migration mode, &PROD; has a special web page in its web UI that will capture a cleartext password and create the appropriate Kerberos hash. 
+				</para>
+<screen>https://ipaserver.example.com/ipa/migration</screen>
+			<para>
+				Administrators could tell users to authenticate once to this web page, which would properly update their user accounts with their password and corresponding Kerberos hash, 
+				without requiring password changes.
+			</para>
+			</section>
+
+			<section id="sssd-pwd-migr"><title>Method 3: Using SSSD (Recommended)</title>
+				<para>
+					SSSD can work with &IPA; to mitigate the user impact on migrating by generating the required user keys. For deployments with a lot of users or 
+					where users shouldn't be burdened with password changes, this is the best scenario.
+				</para>
+			<orderedlist>
+				<listitem>
+					<para>
+						A user tries to log into a machine with SSSD.
+					</para>
+
+				</listitem>
+				<listitem>
+					<para>
+						SSSD attempts to perform Kerberos authentication against the &IPA; server.
+					</para>
+
+				</listitem>
+				<listitem>
+					<para>
+						Even though the user exists in the system, the authentication will fail with the error <emphasis>key type is not supported</emphasis> because the Kerberos hashes do not yet exist.
+					</para>
+
+				</listitem>
+				<listitem>
+					<para>
+						SSSD the performs a plaintext LDAP bind over a secure connection.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						&IPA; intercepts this bind request. If the user has a Kerberos principal but no Kerberos hashes, then the &IPA; identity provider generates the hashes and stores them in the user entry.
+					</para>
+
+				</listitem>
+				<listitem>
+					<para>
+						If authentication is successful, SSSD disconnects from &IPA; and tries Kerberos authentication again. This time, the request succeeds because the hash exists in the entry.
+					</para>
+
+				</listitem>
+
+			</orderedlist>
+			<para>
+				That entire process is entirely transparent to the user; as far as users known, they simply log into a client service and it works as normal.
+			</para>
+		</section>
+
+			<section id="pwd-migr-cleartext"><title>Migrating Cleartext LDAP Passwords</title>
+				<para>
+					Although in most deployments LDAP passwords are stored encrypted, there may be some users or some environments that use cleartext passwords for user entries.
+				</para>
+				<para>
+					When users are migrated from the LDAP server to the &IPA; server, 
+					their cleartext passwords are not migrated over. &PROD; does not allow cleartext passwords. Instead, a Kerberos principle is created for the user, the keytab is set to true, and the password is set as expired. This means that &PROD; requires the user to reset the password at the next login.
+				</para>
+				<note><title>NOTE</title>
+					<para>
+						If passwords are hashed, the password is successfully migrated through SSSD and the migration web page, as in <xref linkend="sssd-pwd-migr" />.
+					</para>
+				</note>
+			</section>
+
+			<section id="forced-pwd-reset"><title>Automatically Resetting Passwords That Do Not Meet Requirements</title>
+				<para>
+					If user passwords in the original directory do not meet the password 
+					policies defined in &PROD;, then the passwords must be reset after 
+					migration. 
+				</para>
+				<para>
+					Password resets are done automatically the first time the users attempts to <command>kinit</command> into the &IPA; domain.
+				</para>
+<screen>[jsmith@server ~]$ kinit 
+Password for jsmith@EXAMPLE.COM: 
+Password expired.  You must change it now.
+Enter new password: 
+Enter it again: </screen>	
+			</section>
+
+		</section>
+
+
+			<section id="migration-considerations"><title>Migration Considerations and Requirements</title>
+				<para>
+					As you are planning migrating from an LDAP server to &PROD;, make sure that your LDAP environment is able to work with the &PROD; migration script. 
+				</para>
+
+				<section id="migr-support"><title>LDAP Servers Supported for Migration</title>
+					<para>
+						The migration process from an LDAP server to &PROD; uses a special script, <command>ipa migrate-ds</command>, to perform the migration. This script 
+						has certain expectations about the structure of the LDAP directory and LDAP entries in order to work. Migration is supported only for LDAPv3-compliant directory services, 
+						which include several common directories:
+					</para>
+					<itemizedlist>
+						<listitem>
+							<para>
+								SunONE &DS;
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Apache &DS;
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								OpenLDAP
+							</para>
+						</listitem>
+					</itemizedlist>
+					<para>
+						Migration from an LDAP server to &PROD; has been tested with &RHDS;.
+					</para>
+					<note condition="redhat"><title>NOTE</title>
+					<para>
+						Migration using the migration script is <emphasis>not</emphasis> supported for Microsoft &AD; because it is not an LDAPv3-compliant directory. For assistance with migrating 
+						from &AD;, contact &RH; Professional Services.
+					</para>
+				</note>
+					<note condition="fedora"><title>NOTE</title>
+					<para>
+						Migration using the migration script is <emphasis>not</emphasis> supported for Microsoft &AD; because it is not an LDAPv3-compliant directory.
+					</para>
+				</note>
+				</section>
+
+				
+
+			<section id="migr-environment-requirements"><title>Migration Environment Requirements</title>
+			
+			<para>
+				There are many different possible configuration scenarios for both &RHDS; and &PROD;, and any of those scenarios may affect the migration process. For 
+				the example migration procedures in this chapter, these are the assumptions about the environment:
+			</para>
+			<itemizedlist>
+				<listitem>
+					<para>
+						A single LDAP directory domain is being migrated to one &IPA; realm. No consolidation is involved.
+					</para>
+
+				</listitem>
+				<listitem>
+					<para>
+						User passwords are stored as a hash in the LDAP directory that the &IPA; &DS; can support.
+					</para>
+
+				</listitem>
+				<listitem>
+					<para>
+						The LDAP directory instance is both the identity store and the authentication method. Client machines are configured to use <command>pam_ldap</command> or <command>nss_ldap</command> to connect to the LDAP server.
+					</para>
+
+				</listitem>
+				<listitem>
+					<para>
+						Entries use only standard LDAP schema. Custom attributes will not be migrated to &PROD;.
+					</para>
+				</listitem>
+			</itemizedlist>
+		</section>
+
+		<section id="migr-tooling"><title>Migration Tools</title>
+			<para>
+				&PROD; uses a specific command, <command>ipa migrate-ds</command>, to drive the migration process so that LDAP directory data are properly formatted and imported cleanly into 
+				the &IPA; server.
+			</para>
+			<para>
+				The &PROD; server must be configured to run in migration mode, and then the migration script can be used.
+			</para>
+		</section>
+		
+		<section id="Migration_Sequence_of_Steps">
+			<title>Migration Sequence</title>
+			<para>
+				There are four major steps when migrating to &PROD;, but the order varies slightly depending on whether you want to migrate the server first or the clients first.
+			</para>
+
+			<para>
+				With a client-based migration, SSSD is used to change the client configuration while &IPAA; server is configured:
+			</para>
+			<orderedlist>
+				<listitem>
+					<para>
+						Deploy SSSD.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Reconfigure clients to connect to the current LDAP server and then fail over to &IPA;. 
+						<!-- really? why ldap? why not kerberos? -->
+					</para>
+
+				</listitem>
+				<listitem>
+					<para>
+						Install the &IPA; server.
+					</para>
+
+				</listitem>
+				<listitem>
+					<para>
+						Migrate the user data using the &IPA; <command>ipa-migrate-ds</command> script. This exports the data from the LDAP directory, formats for the &IPA; schema, and then imports it into &IPA;.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Take the LDAP server offline and allow clients to fail over to &PROD; transparently.
+					</para>
+				</listitem>
+			</orderedlist>
+						<para>
+				With a server migration, the LDAP to &PROD; migration comes first:
+			</para>
+			<orderedlist>
+				<listitem>
+					<para>
+						Install the &IPA; server.
+					</para>
+
+				</listitem>
+				<listitem>
+					<para>
+						Migrate the user data using the &IPA; <command>ipa-migrate-ds</command> script. This exports the data from the LDAP directory, formats it for the &IPA; schema, and then imports it into &IPA;.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<emphasis>Optional.</emphasis> Deploy SSSD.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Reconfigure clients to connect to &IPA;. It is not possible to simply replace the LDAP server. The &IPA; directory tree &mdash; and therefore user entry DNs &mdash; is different than the previous directory tree.
+					</para>
+					<para>
+						While it is required that clients be reconfigured, clients do not need to be reconfigured immediately. Updated clients can point to the &IPA; server while other clients point to the old LDAP directory, allowing a reasonable testing and transition phase after the data are migrated.
+					</para>
+					<note><title>NOTE</title>
+						<para>
+							Do not run both an LDAP directory service and the &IPA; server for very long in parallel. This introduces the risk of user data being inconsistent between the two services.
+						</para>
+					</note>
+
+				</listitem>
+
+			</orderedlist>
+			<para>
+				Both processes provide a general migration procedure, but it may not work in every environment. 
+				Set up a test LDAP environment and test the migration process before attempting to migrate the real LDAP environment.
+			</para>
+
+		</section>
+		</section>
+
+	</section>
+
+	<section id="using-migrate-ds"><title>Examples for Using migrate-ds</title>
+		<para>
+			The data migration is performed with the <command>ipa migrate-ds</command> command. At its simplest, the command takes the LDAP URL of the directory to migrate and exports the data based on common default settings.
+		</para>
+<screen>ipa migrate-ds ldap://ldap.example.com:389</screen>
+		<para>
+			It is possible to customize how the <command>migrate-ds</command> commands identifies and exports data. This is useful if the original directory tree has a unique structure or if some entries or attributes within entries should be excluded from migration.
+		</para>
+
+		<section id="migrate-ds-dit"><title>Migrating Specific Subtrees</title>
+			<para>
+				The default directory structure places person entries in the <command>ou=People</command> subtree and group entries in the <command>ou=Groups</command> subtree. These subtrees are container entries for those different types of directory data. If no options are passed with the <command>migrate-ds</command> command, then the utility assumes that the given LDAP directory uses the <command>ou=People</command> and <command>ou=Groups</command> structure.
+			</para>
+			<para>
+				Many deployments may have an entirely different directory structure (or may only want to export certain parts of the directory tree). There are two options which allow administrators to give the RDN of a different user or group subtree:
+			</para>
+			<itemizedlist>
+				<listitem>
+					<para>
+						<option>--user-container</option>
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<option>--group-container</option>
+					</para>
+				</listitem>
+			</itemizedlist>
+			<note><title>NOTE</title>
+				<para>
+					In both cases, the subtree must be the RDN only and must be relative to the base DN. For example, the <command>ou=Employees,dc=example,dc=com</command> subtree can be migrated using <command>--user-container=ou=Employees</command>, but <command>ou=Employees,ou=People,dc=example,dc=com</command> cannot be migrated with that option because <command>ou=Employees</command> is not a direct child of the base DN.
+				</para>
+			</note>
+			<para>
+				For example:
+			</para>
+<screen>[root@ipaserver ~]# ipa migrate-ds --user-container=ou=employees --group-container="ou=employee groups" ldap://ldap.example.com:389</screen>
+			<para>
+				There is a third option that allows administrators to set a base DN for migration: <option>--base-dn</option>. With this option, it is possible to change the target for container subtrees. For example:
+			</para>
+<screen>[root@ipaserver ~]# ipa migrate-ds --user-container=ou=employees --base-dn="ou=people,dc=example,dc=com" ldap://ldap.example.com:389</screen>
+			<para>
+				Now, the <command>ou=Employees</command> user subtree can be migrated from within the larger <command>ou=People</command> subtree without migrating every people-related subtree.
+			</para>
+		</section>
+
+		<section id="finding-excluding-entries"><title>Specifically Including or Excluding Entries</title>
+			<para>
+				By default, the <command>migrate-ds</command> script exports every user entry with the <command>person</command> object class and every group entry within the given user and group subtrees. 
+			</para>
+			<para>
+				In some migration paths, only specific types of users and groups may need to be exported, or, conversely, specific users and groups may need to be excluded.
+			</para>
+			<para>
+				On option is to set positively which <emphasis>types</emphasis> of users and groups to include. This is done by setting which object classes to search for when looking for user or group entries. 
+			</para>
+			<para>
+				This is a really useful option when there are custom object classes used in an environment for different user types. For example, this migrates only users with the custom <command>fullTimeEmployee</command> object class:
+			</para>
+<screen>[root@ipaserver ~]# ipa migrate-ds --user-objectclass=fullTimeEmployee ldap://ldap.example.com:389</screen>
+			<para>
+				Because of the different types of groups, this is also very useful for migrating only certain types of groups (such as user groups) while excluding other types of groups, like certificate groups. For example:
+			</para>
+<screen>[root@ipaserver ~]# ipa migrate-ds --group-objectclass=groupOfNames,groupOfUniqueNames ldap://ldap.example.com:389</screen>			
+			<para>
+				Positively specifying user and groups to migrate based on object class implicitly excludes all other users and groups from migration.
+			</para>
+			<para>
+				Alternatively, it can be useful to migrate all user and group entries except for just a small handful of entries. Specific user or group accounts can be excluded while all others of that type are migrated. For example, this excludes a hobbies group and two users:
+			</para>
+<screen>[root@ipaserver ~]# ipa migrate-ds --exclude-groups="Golfers Group" --exclude-users=jsmith,bjensen ldap://ldap.example.com:389</screen>
+			<para>
+				Specifying an object class to migrate can be used together with excluding specific entries. For example, this specifically includes users with the <command>fullTimeEmployee</command> object class, yet excludes three managers:
+			</para>
+<screen>[root@ipaserver ~]# ipa migrate-ds --user-objectclass=fullTimeEmployee --exclude-users=jsmith,bjensen,mreynolds ldap://ldap.example.com:389</screen>
+		</section>
+
+		<section id="excluding-attributes"><title>Excluding Entry Attributes</title>
+			<para>
+				By default, every attribute and object class for a user or group entry is migrated. There are some cases where that may not be realistic, either because of bandwidth and network constraints or because the attribute data are no longer relevant. For example, if users are going to be assigned new user certificates as they join the &IPA; domain, then there is no reason to migrate the <parameter>userCertificate</parameter> attribute.
+			</para>
+			<para>
+				Specific object classes and attributes can be ignored by the <command>migrate-ds</command> by using any of several different options:
+			</para>
+			<itemizedlist>
+				<listitem>
+					<para>
+						<option>--user-ignore-objectclass</option>
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<option>--user-ignore-attribute</option>
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<option>--group-ignore-objectclass</option>
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<option>--group-ignore-attribute</option>
+					</para>
+				</listitem>
+			</itemizedlist>
+			<para>
+				For example, to exclude the <parameter>userCertificate</parameter> attribute and <command>strongAuthenticationUser</command> object class for users and the <command>groupOfCertificates</command> object class for groups:
+			</para>
+<screen>[root@ipaserver ~]# ipa migrate-ds --user-ignore-attribute=userCertificate --user-ignore-objectclass=strongAuthenticationUser --group-ignore-objectclass=groupOfCertificates ldap://ldap.example.com:389</screen>
+			<note><title>NOTE</title>
+				<para>
+					Make sure not to ignore any required attributes. Also, when excluding object classes, make sure to exclude any attributes which are only supported by that object class.
+				</para>
+			</note>
+		</section>
+
+		<section id="migrate-schema"><title>Setting the Schema to Use</title>
+			<para>
+				By default, &PROD; uses <ulink url="http://www.padl.com/~lukeh/rfc2307bis.txt">RFC2307bis</ulink> schema to define user, host, hostgroup, and other network identities. This schema option can be reset to use <ulink url="http://www.faqs.org/rfcs/rfc2307.html">RFC2307</ulink> schema instead:
+			</para>
+<screen>[root@ipaserver ~]# ipa migrate-ds --schema=RFC2307 ldap://ldap.example.com:389</screen>
+		</section>
+	</section>
+	
+	<section id="Migrating_from_a_Directory_Server_to_IPA-Performing_a_Client_based_Migration">
+		<title>Scenario 1: Using SSSD as Part of Migration</title>
+		<important><title>IMPORTANT</title>
+			<para>
+				This is a general migration procedure, but it may not work in every environment. 
+			</para>
+			<para>
+				It is strongly recommended that you set up a test LDAP environment and test the migration process before attempting to migrate the real LDAP environment.
+			</para>
+		</important>
+		<orderedlist>
+			
+							<listitem>
+								<para>
+									Set up SSSD. Using SSSD allows the required Kerberos keys and server certificates to be delivered to the clients.
+								</para>
+								<orderedlist>
+						<listitem>
+							<para>
+								Install SSSD on every client machine:
+							</para>
+<screen># yum install sssd</screen>
+						</listitem>
+						<listitem>
+							<para>
+								Configure an LDAP identity provider in SSSD to use the existing &DS; for all functions (authentication, identity lookups, access, and password changes). This ensures every client works properly with the existing directory service.
+							</para>
+
+						</listitem>
+
+					</orderedlist>
+				</listitem>
+			
+				<listitem>
+					<para>
+						Install &PROD;, including any custom LDAP directory schema<footnote><para>There is limited support for custom user and group schema in &PROD;.</para></footnote>, on a different machine from the existing LDAP directory.
+					</para>
+				</listitem>
+				
+				<listitem>
+					<para>
+						Enable the &IPA; server to allow migration:
+					</para>
+<screen># ipa config-mod --enable-migration=TRUE</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Disable the compat plug-in.
+					</para>
+<screen># ipa-compat-manage disable</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Restart the &IPA; &DS; instance.
+					</para>
+<screen># service dirsrv restart</screen>
+				</listitem>
+			<listitem>
+			<para>
+				Run the &IPA; migration script, <command>ipa migrate-ds</command>. At its most basic, this requires only the LDAP URL of the LDAP directory instance to migrate:
+			</para>
+<screen># ipa migrate-ds ldap://ldap.example.com:389</screen>
+			<para>
+				Simply passing the LDAP URL migrates all of the directory data using common default settings. The user and group data can be selectively migrated by specifying other options, as covered in <xref linkend="using-migrate-ds" />.
+			</para>
+			<para>
+				Once the information is exported, the script adds all required &IPA; object classes and attributes and converts DNs in attributes to match the &IPA; directory tree. 
+			</para>
+				</listitem>
+				<listitem>
+					<para>
+						Re-enable the compat plug-in.
+					</para>
+<screen># ipa-compat-manage enable</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Restart the &IPA; &DS; instance.
+					</para>
+<screen># service dirsrv restart</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Move clients that have SSSD installed from the LDAP backend to the &PROD; backend and enroll them as client with &IPA;. This downloads the required keys and certificates.
+					</para>
+					<para>
+						On &OS; clients, this can be done using the <command>ipa-client-install</command> command. For example:
+					</para>
+<programlisting language="Bash"># ipa-client-install --enable-dns-updates</programlisting>
+				</listitem>
+				<listitem>
+					<para>
+						Have users log into a machine with SSSD and &PROD; backend. This generates the required Kerberos keys for the user.
+					</para>
+
+					<para>
+						To monitor the user migration process, query the existing LDAP directory to see which user accounts have a password but do not yet have a Kerberos principal key.
+					</para>
+<screen>$ ldapsearch -LL -x -D 'cn=Directory Manager' -w secret -b 'ou=people,dc=example,dc=com' '(&amp;(!(krbprincipalkey=*))(userpassword=*))' uid</screen>
+<note><title>NOTE</title>
+						<para>
+							Include the quotes around the filter so that it is not interpreted by the shell.
+						</para>
+
+					</note>
+
+				</listitem>
+						<listitem>
+							<para>
+								Once users have been migrated over, configure non-SSSD clients to use the &IPA; domain, as required.
+							</para>
+
+						</listitem>
+				<listitem>
+					<para>
+						When the migration of all clients and users is complete, decommission the LDAP directory.
+					</para>
+
+				</listitem>
+
+			</orderedlist>
+		
+	</section>
+	
+	<section id="Migrating_from_a_Directory_Server_to_IPA-Performing_a_Server_based_Migration">
+		<title>Scenario 2: Migrating an LDAP Server Directly to &PROD;</title>
+		<important><title>IMPORTANT</title>
+			<para>
+				This is a general migration procedure, but it may not work in every environment. 
+			</para>
+			<para>
+				It is strongly recommended that you set up a test LDAP environment and test the migration process before attempting to migrate the real LDAP environment.
+			</para>
+		</important>
+		<orderedlist>
+			
+				<listitem>
+					<para>
+						Install the &IPA; server, including any custom LDAP directory schema<footnote><para>There is limited support for custom user and group schema in &PROD;.</para></footnote>, on a different machine from the existing LDAP directory.
+					</para>
+
+				</listitem>
+				<listitem>
+					<para>
+						Disable the compat plug-in.
+					</para>
+<screen># ipa-compat-manage disable</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Restart the &IPA; &DS; instance.
+					</para>
+<screen># service dirsrv restart</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Enable the &IPA; server to allow migration:
+					</para>
+<screen># ipa config-mod --enable-migration=TRUE</screen>
+				</listitem>
+			<listitem>
+			<para>
+				Run the &IPA; migration script, <command>ipa migrate-ds</command>. At its most basic, this requires only the LDAP URL of the LDAP directory instance to migrate:
+			</para>
+<screen># ipa migrate-ds ldap://ldap.example.com:389</screen>
+			<para>
+				Simply passing the LDAP URL migrates all of the directory data using common default settings. The user and group data can be selectively migrated by specifying other options, as covered in <xref linkend="using-migrate-ds" />.
+			</para>
+			<para>
+				Once the information is exported, the script adds all required &IPA; object classes and attributes and converts DNs in attributes to match the &IPA; directory tree. 
+			</para>
+				</listitem>
+				<listitem>
+					<para>
+						Re-enable the compat plug-in.
+					</para>
+<screen># ipa-compat-manage enable</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Restart the &IPA; &DS; instance.
+					</para>
+<screen># service dirsrv restart</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Update the client configuration to use PAM_LDAP and NSS_LDAP to connect to &IPA; instead of connecting to an LDAP directory, NIS, or local files. 
+					</para>
+				</listitem>
+							<listitem>
+								<para>
+									<emphasis>Optional.</emphasis> Set up SSSD. Using SSSD migrates user passwords without additional user interaction, as described in <xref linkend="migr-kerb" />.
+								</para>
+								<orderedlist>
+						<listitem>
+							<para>
+								Install SSSD on every client machine:
+							</para>
+<screen># yum install sssd</screen>
+						</listitem>
+						<listitem>
+							<para>
+								Run the <command>ipa-client-install</command> to configure SSSD and related services to use the &IPA; server for identity and Kerberos authentication. 
+							</para>
+
+						</listitem>
+
+					</orderedlist>
+				</listitem>
+						<listitem>
+							<para>
+								Instruct users to log into &IPA; using either SSSD client or the migration web page if SSSD is not available on the client. Both methods automatically migrate the user password into &PROD;.
+							</para>
+<screen>https://ipaserver.example.com/ipa/migration</screen>
+						</listitem>
+						<listitem>
+							<para>
+								<emphasis>Optional.</emphasis> Reconfigure non-SSSD clients to use Kerberos authentication (<systemitem>pam_krb5</systemitem>) instead of LDAP authentication (<systemitem>pam_ldap</systemitem>).
+							</para>
+							<note><title>NOTE</title>
+								<para>
+									Use PAM_LDAP modules until all of the users have been migrated; then it is possible to use PAM_KRB5.
+								</para>
+							</note>
+
+						</listitem>
+				<listitem>
+					<para>
+						When the migration of all clients and users is complete, decommission the LDAP directory.
+					</para>
+
+				</listitem>
+
+			</orderedlist>
+		
+
+	</section>
+	
+
 </chapter>
+

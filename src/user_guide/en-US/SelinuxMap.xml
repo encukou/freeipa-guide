@@ -1,503 +1,451 @@
-<?xml version='1.0' encoding='utf-8'?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
-[
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 ]>
+
 <chapter id="selinux-mapping">
-    <title>Policy: Defining SELinux User Maps</title>
-    <para>Security-enhanced Linux (SELinux) sets rules over what system users
-    can access processes, files, directories, and system settings. Both the
-    system administrator and applications themselves can define 
-    <emphasis>security contexts</emphasis>that restrict or allow user access
-    and even access from other applications.</para>
-    <para>As part of defining centralized security policies in the &PROD;
-    domain, &PROD; provides a way to map &IPA; users to SELinux users and
-    automatically grant or restrict access to clients and services within the
-    &IPA; domain, per host, based on the defined SELinux policies.</para>
-    <section id="about-selinux-maps">
-        <title>About &PROD;, SELinux, and Mapping Users</title>
-        <para>Security-enhanced Linux defines kernel-level, mandatory access
-        controls for how users, processes, and applications can interact with
-        other resources on a system. These rules for interactions, called 
-        <emphasis>contexts</emphasis>, look at the data and behavior
-        characteristics of different objects on the system and then set rules,
-        called 
-        <emphasis>policies</emphasis>, which create contexts based on the
-        security implications of each specific object. This is in contrast to
-        higher-level discretionary access controls which are concerned
-        primarily with file ownership and user identity, without accounting for
-        data criticality or applciation behavior.</para>
-        <para>System users are associated with an SELinux 
-        <emphasis>role</emphasis>. The role is assigned both a multi-layer
-        security context (MLS) a multi-category security context (MCS). The
-        MLS/MCS contexts 
-        <emphasis>confine</emphasis>users to what processes, files, and
-        operations they can access on the system.</para>
-        <figure id="fig.selinux-os">
-            <title>SELinux Users in the SELinux Manager</title>
-            <mediaobject>
-                <imageobject>
-                    <imagedata fileref="images/selinux-os.png" />
-                </imageobject>
-            </mediaobject>
-        </figure>
-        <para>This is all described in detail in 
-        <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Security-Enhanced_Linux/index.html">
-        &RHEL; 6 Security-Enhanced Linux</ulink>.</para>
-        <para>SELinux users and policies function at the system level, not the
-        network level. This means that SELinux users are configured
-        independently on each system. While this is acceptable in many
-        situations &mdash; SELinux has common defined system users and
-        SELinux-aware services define their own policies &mdash; it has some
-        issues when dealing with remote users and systems that access local
-        resources. Remote users and services can get shuffled into a default
-        guest context without a lot of intelligence about what their actual
-        SELinux user and role should be.</para>
-        <para>This is how &PROD; can cleanly integrate an identity domain with
-        local SELinux services. &PROD; can map &IPA; users to configured
-        SELinux roles 
-        <emphasis>per host</emphasis>. Mapping SELinux and &IPA; users improves
-        user administration:</para>
-        <itemizedlist>
-            <listitem>
-                <para>Remote users can be granted appropriate SELinux user
-                contexts based on their &IPA; group assignments. This also
-                allows administrators to consistently apply the same policies
-                to the same users without having to create local accounts or
-                reconfigure SELinux.</para>
-            </listitem>
-            <listitem>
-                <para>SELinux users are automatically updated as hosts are
-                added to the IT environment or as users are added, removed, or
-                changed, without having to edit local systems.</para>
-            </listitem>
-            <listitem>
-                <para>SELinux policies can be planned and related to
-                domain-wide security policies through settings like &IPA;
-                host-based access control rules.</para>
-            </listitem>
-            <listitem>
-                <para>Administrators gain environment-wide visibility and
-                control over how users and systems are assigned in
-                SELinux.</para>
-            </listitem>
-        </itemizedlist>
-        <para>SELinux user maps are comprised of three parts: the SELinux user
-        for the system, an &IPA; user, and an &IPA; host. These define two
-        separate relationships. First, it defines a map for the SELinux user on
-        a specific host (the local or target system). Second, it defines a map
-        for the SELinux user and the &IPA; user.</para>
-        <para>This arrangement allows administrators to set different SELinux
-        users for the same &IPA; users, depending on which host they are
-        accessing.</para>
-        <para>SELinux user maps work with the Systerm Security Services Daemon
-        (SSSD) and the 
-        <systemitem>pam_selinux</systemitem>module. When a remote user attempts
-        to log into a machine, SSSD checks its &IPA; identity provider to
-        collect the user information, including any SELinux maps. The PAM
-        module then processes the user and assigns it the appropriate SELinux
-        user context.</para>
-        <para>The core of an SElinux mapping rule is the SELinux system user.
-        Each map is associated with the SELinux user first. The SELinux users
-        which are available for mapping are configured in the &IPA; server, so
-        there is a central and universal list. These are SELinux users which
-        are configured on every host in the &IPA; domain. By default, there are
-        five common SELinux users defined:</para>
-        <itemizedlist>
-            <listitem>
-                <para>unconfined_u (also used as a default for &IPA;
-                users)</para>
-            </listitem>
-            <listitem>
-                <para>guest_u</para>
-            </listitem>
-            <listitem>
-                <para>xguest_u</para>
-            </listitem>
-            <listitem>
-                <para>user_u</para>
-            </listitem>
-            <listitem>
-                <para>staff_u</para>
-            </listitem>
-        </itemizedlist>
-        <para>In the &IPA; server configuration, each SELinux user is
-        configured with both its username and its MLS/MCS range, 
-        <emphasis>SELinux_username:MLS[:MCS]</emphasis>, and this format is
-        used to identify the SELinux user when configuring maps.</para>
-        <para>The &IPA; user and host configuration is very flexible. Users and
-        hosts can be explicitly and individually assigned to an SELinux user
-        map individually, or user groups or host groups can be explicitly
-        assigned to the map.</para>
-        <para>An extra layer of security is possible by using host-based access
-        control rules. As long as the host-based access control rule defines a
-        user and a host, it can be used for an SELinux user map. Host-based
-        access control rules (described in 
-        <xref linkend="configuring-host-access" />) help integrate SELinux user
-        maps with other access controls in &IPA; and can help limit or allow
-        host-based user access for remote users, as well as defining local
-        security contexts.</para>
-        <note>
-            <title>NOTE</title>
-            <para>If a host-based access control rule is associated with an
-            SELinux user map, the host-based access control rule cannot be
-            deleted until it is removed from the SELinux user map
-            configuration.</para>
-        </note>
-    </section>
-    <section id="config-selinux">
-        <title>Configuring SELinux Users in &IPA;</title>
-        <para>SELinux user maps, as the name implies, creates an association
-        between an SELinux user and an &IPA; user. Before that association can
-        be established, the &IPA; server has to be aware of what SELinux users
-        are configured on the systems it manages.</para>
-        <para>The available SELinux users are part of the &IPA; server
-        configuration. This is a list, in order from most to least confined, of
-        the SELinux users. The SELinux user entry itself has this
-        format:</para>
-        <screen>
-            <replaceable>SELinux_username:MLS[:MCS]</replaceable>
-        </screen>
-        <para>The individual user entries are separated with a dollar sign
-        ($).</para>
-        <para>Since there is no requirement on user entries to have an SELinux
-        map, many entries may be unmapped. The &IPA; server configuration can
-        also set a default SELinux user (which is part of the larger SELinux
-        map list) to use for otherwise unmapped &IPA; user entries.</para>
-        <section id="config-selinux-ui">
-            <title>In the Web UI</title>
-            <orderedlist>
-                <listitem>
-                    <para>In the top menu, click the 
-                    <guilabel>IPA Server</guilabel>main tab and the 
-                    <guilabel>Configuration</guilabel>subtab.</para>
-                </listitem>
-                <listitem>
-                    <para>Scroll to the bottom of the list of server
-                    configuration areas, to 
-                    <guilabel>SELINUX OPTIONS</guilabel>.</para>
-                </listitem>
-                <listitem>
-                    <para>Set the SELinux user configuration.</para>
-                    <para>There are two areas that can be edited: the
-                    prioritized list of SELinux users and the default SELinux
-                    user to use for unmapped &IPA; users.</para>
-                    <para>The 
-                    <guilabel>SELinux user map order</guilabel>gives the list
-                    of SELinux users, defined on the local Linux system , which
-                    are available for configuring mapping rules. This is a
-                    prioritized list, from most to least confined. Each SELinux
-                    user has the format 
-                    <emphasis>SELinux_user:MLS</emphasis>.</para>
-                    <para>The 
-                    <guilabel>Default SELinux user</guilabel>field sets the
-                    SELinux user to use for 
-                    <emphasis>unmapped</emphasis>&IPA; users.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/selinux-config.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>Click the 
-                    <guilabel>Update</guilabel>link at the top of the page to
-                    save the changes.</para>
-                </listitem>
-            </orderedlist>
-        </section>
-        <section id="config-selinux-cli">
-            <title>In the CLI</title>
-            <para>Before SELinux mapping rules can be created, there has to be
-            a defined and universal list of SELinux users which are available
-            to be mapped. This is set in the &IPA; server configuration:</para>
-            <screen>[jsmith@server ~]$ ipa config-show ... SELinux user map
-            order:
-            unconfined_u:s0-s0:c0.c1023$guest_u:s0$xguest_u:s0$user_u:s0-s0:c0.c1023$staff_u:s0-s0:c0.c1023
-            Default SELinux user: unconfined_u:s0-s0:c0.c1023</screen>
-            <para>The SELinux user settings can be edited using the 
-            <command>config-mod</command>command.</para>
-            <example id="ex.selinux-config-list">
-                <title>List of SELinux Users</title>
-                <para>The complete list of SELinux users is passed in the 
-                <option>--ipaselinuxusermaporder</option>option. This list sets
-                a priority order, from most to least confined users.</para>
-                <para>The SELinux user entry itself has this format:</para>
-                <screen>
-                    <replaceable>SELinux_user:MLS:MCS</replaceable>
-                </screen>
-                <para>The individual user entries are separated with a dollar
-                sign ($).</para>
-                <para>For example:</para>
-                <screen>[jsmith@server ~]$ ipa config-mod
-                --ipaselinuxusermaporder="unconfined_u:s0-s0:c0.c1023$guest_u:s0$xguest_u:s0$user_u:s0-s0:c0.c1023$staff_u:s0-s0:c0.c1023"</screen>
-            </example>
-            <note>
-                <title>NOTE</title>
-                <para>The default SELinux user, used for unmapped entries, must
-                be included in the user map list or the edit operation fails.
-                Likewise, if the default is edited, it must be changed to a
-                user in the SELinux map list or the map list must be updated
-                first.</para>
-            </note>
-            <example id="ex.selinux-default">
-                <title>Default SELinux User</title>
-                <para>&IPA; users are not required to have a specific SELinux
-                user mapped to their account. However, the local system still
-                checks the &IPA; entry for an SELinux user to use for the &IPA;
-                user account. The default SELinux user sets the fallback user
-                to use for unmapped &IPA; user entries; this is, by default,
-                the default SELinux user for system users on &OS;, 
-                <systemitem>unconfined_u</systemitem>.</para>
-                <para>This default user can be changed with the 
-                <option>--ipaselinuxusermapdefault</option>. For
-                example:</para>
-                <screen>[jsmith@server ~]$ ipa config-mod
-                --ipaselinuxusermapdefault="guest_u:s0"</screen>
-            </example>
-        </section>
-    </section>
-    <section id="mapping-selinux">
-        <title>Mapping SELinux Users and &IPA; Users</title>
-        <para>An SELinux map associates an SELinux user with an &IPA; user (or
-        users). However, SELinux settings are local to each host system, so a
-        map not only needs to map the SELinux user with an &IPA; user but also
-        with a host system.</para>
-        <para>The rule definition primarily identifies the SELinux user; the
-        SELinux user is the basis of the rule.</para>
-        <para>The other half of the map is comprised of defined &IPA; users and
-        defined &IPA; hosts. (There can be one single user or host or multiple
-        users and hosts or user and host groups in the map.) The users and
-        hosts can be defined either by explicitly listing users and hosts or by
-        referencing a host-based access control rule.</para>
-        <note>
-            <title>NOTE</title>
-            <para>The host-based access control rule must contain users and
-            hosts, not just services.</para>
-        </note>
-        <section id="mapping-selinux-ui">
-            <title>In the Web UI</title>
-            <orderedlist>
-                <listitem>
-                    <para>In the top menu, click the 
-                    <guilabel>Policy</guilabel>main tab and the 
-                    <guilabel>SELinux User Mappings</guilabel>subtab.</para>
-                </listitem>
-                <listitem>
-                    <para>In the list of mappings, click the 
-                    <guibutton>Add</guibutton>button to create a new
-                    map.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/selinux-list.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>Enter the name for the map and the SELinux user 
-                    <emphasis>exactly as it appears in the &IPA; server
-                    configuration</emphasis>. SElinux users have the format 
-                    <emphasis>SELinux_username:MLS[:MCS]</emphasis>.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/selinux-add.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>Click 
-                    <guibutton>Add and Edit</guibutton>to add the &IPA; user
-                    information.</para>
-                </listitem>
-                <listitem>
-                    <para>As described in the introduction, an SELinux map has
-                    three parts: the SELinux user and an &IPA; user/host
-                    pairing. That &IPA; user/host pair can be defined in one of
-                    two ways: it can be set for explicit users on explicit
-                    hosts, or it can be defined using a host-based access
-                    control rule.</para>
-                    <para>To set a host-based access control rule, select the
-                    rule from the drop-down menu in the 
-                    <guilabel>General</guilabel>area of the configuration.
-                    Using a host-based access control rule also introduces
-                    access controls on what hosts a remote user can use to
-                    access a target machine. 
-                    <emphasis role="bold">Only one host-based access control
-                    rule can be set.</emphasis></para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/selinux-general.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                    <para>Alternatively, scroll down the 
-                    <guilabel>Users</guilabel>and 
-                    <guilabel>Hosts</guilabel>areas, and click the 
-                    <guilabel>Add</guilabel>link to assign users, user groups,
-                    hosts, or host groups to the SELinux map.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/selinux-userhost-add.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                    <para>Select the users (or hosts or groups) on the left,
-                    click the right arrows button ( 
-                    <guibutton>&gt;&gt;</guibutton>) to move them to the 
-                    <guilabel>Prospective</guilabel>column, and click the 
-                    <guibutton>Add</guibutton>button to add them to the
-                    rule.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/selinux-userhost.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                    <note>
-                        <title>NOTE</title>
-                        <para>Either a host-based access control rule can be
-                        given or the users and hosts can be set manually. Both
-                        options cannot be used at the same time.</para>
-                    </note>
-                </listitem>
-                <listitem>
-                    <para>Click the 
-                    <guilabel>Update</guilabel>link at the top to save the
-                    changes to the SELinux user map.</para>
-                </listitem>
-            </orderedlist>
-        </section>
-        <section id="mapping-selinux-cli">
-            <title>In the CLI</title>
-            <para>An SELinux map rule has three fundamental parts:</para>
-            <itemizedlist>
-                <listitem>
-                    <para>The SELinux user ( 
-                    <option>--selinuxuser</option>)</para>
-                </listitem>
-                <listitem>
-                    <para>The user or user groups which are associated with the
-                    SELinux user ( 
-                    <option>--users</option>or 
-                    <option>--groups</option>)</para>
-                </listitem>
-                <listitem>
-                    <para>The host or host groups which are associated with the
-                    SELinux user ( 
-                    <option>--hosts</option>or 
-                    <option>--hostgroups</option>)</para>
-                </listitem>
-                <listitem>
-                    <para>Alternatively, a host-based access control rule which
-                    specifies both hosts and users in it ( 
-                    <option>--hbacrule</option>)</para>
-                </listitem>
-            </itemizedlist>
-            <para>A rule can be created with all information at once using the 
-            <command>selinuxusermap-add</command>command. Users and hosts can
-            be added to a rule after it is created by using the 
-            <command>selinuxusermap-add-user</command>and 
-            <command>selinuxusermap-add-host</command>commands,
-            respectively.</para>
-            <example id="ex.selinux-all">
-                <title>Creating a New SELinux Map</title>
-                <para>The 
-                <option>--selinuxuser</option>value must be the SELinux user
-                name exactly as it appears in the &IPA; server configuration.
-                SElinux users have the format 
-                <emphasis>SELinux_username:MLS[:MCS]</emphasis>.</para>
-                <para>Both a user and a host (or appropriate groups) must be
-                specified for the SELinux mapping to be valid. Users, hosts, or
-                groups can be specified in comma-separated lists.</para>
-                <screen>[jsmith@server ~]$ ipa selinuxusermap-add
-                --users=jsmith,bjensen,jrockford
-                --hosts=server.example.com,test.example.com
-                --selinuxuser="xguest_u:s0" selinux1</screen>
-            </example>
-            <example id="ex.selinux-hbac">
-                <title>Creating an SELinux Map with a Host-Based Access Control
-                Rule</title>
-                <para>The 
-                <option>--hbacrule</option>value identifies the host-based
-                access control rule to use for mapping. Using a host-based
-                access control rule introduces access controls on what hosts a
-                remote user can use to access a target machine, along with
-                applying SELinux contexts after the remote user as logged into
-                the target machine.</para>
-                <para>The access control rule must specify both users and hosts
-                appropriately so that the SELinux map can construct the SELinux
-                user, &IPA; user, and host triple.</para>
-                <para>Only one host-based access control rule can be
-                specified.</para>
-                <screen>[jsmith@server ~]$ ipa selinuxusermap-add
-                --hbacrule=webserver --selinuxuser="xguest_u:s0"
-                selinux1</screen>
-                <para>Host-based access control rules are described in 
-                <xref linkend="configuring-host-access" />.</para>
-            </example>
-            <example id="ex.selinux-adding">
-                <title>Adding a User to an SELinux Map</title>
-                <para>While all of the users and hosts can be added to a map
-                when it is created, users and hosts can also be added after the
-                rule is created. This is done using a specific command, either 
-                <command>selinuxusermap-add-user</command>or 
-                <command>selinuxusermap-add-host</command>.</para>
-                <screen>[jsmith@server ~]$ ipa selinuxusermap-add-user
-                --users=jsmith selinux1</screen>
-                <para>It is not necessary to use a separate command to add a
-                host-based access control rule after the rule is configured
-                because there can only be one. If the 
-                <command>selinuxusermap-mod</command>command is used with the 
-                <option>--hbacrule</option>option, it adds the host-based
-                access control rule or overwrites the previous one.</para>
-            </example>
-            <para>A specific user or host can be removed from an SELinux map by
-            using either the 
-            <command>selinuxusermap-remove-host</command>or 
-            <command>selinuxusermap-remove-user</command>command.</para>
-            <example id="ex.selinux-remove">
-                <title>Removing a User from an SELinux Map</title>
-                <para>As with adding a user to a ion&gt; value identifies the
-                host-based access control rule to use for mapping. The access
-                control rule must specify both users and hosts appropriately so
-                that the SELinux map can construct the SELinux user, &IPA;
-                user, and host triple.</para>
-                <screen>[jsmith@server ~]$ ipa selinuxusermap-remove-user
-                --users=jsmith selinux1</screen>
-            </example>
-        </section>
-    </section>
-    <section id="selinux-troubleshooting">
-        <title>Troubleshooting SELinux Login Problems</title>
-        <para>SELinux maps only work for remote users, not for users with a
-        local account.</para>
-        <para>When a remote user logs in, authenticating against the &IPA;
-        server, then the PAM SElinux modules create a file for that user in 
-        <filename>/etc/selinux/</filename>
-        <emphasis>policy_name</emphasis>
-        <filename>/logins/</filename>
-        <emphasis>login</emphasis>.</para>
-        <para>If that file does not exist, then it means that SSSD is not
-        properly configured to use the &IPA; server as one of its identity
-        providers. This is required for SELinux mapping to work. Configuring
-        SSSD is covered in the 
-        <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/Configuring_Domains.html">
-        &RH; 6 &DPG;</ulink>.</para>
-        <para>If the file exists but the remote user was given the wrong
-        SELinux context, then the 
-        <systemitem>pam_selinux</systemitem>module may not be properly
-        configured in the PAM stack. This is the module that reads the SELinux
-        information and sets the user context. If the module is missing, then
-        nothing processes the SELinux map and the user is defined a default
-        context on the system.</para>
-    </section>
+	<title>Policy: Defining SELinux User Maps</title>
+	<para>
+		Security-enhanced Linux (SELinux) sets rules over what system users can access processes, files, 
+		directories, and system settings. Both the system administrator and applications themselves can 
+		define <emphasis>security contexts</emphasis> that restrict or allow user access and even access 
+		from other applications.
+	</para>
+	<para>
+		As part of defining centralized security policies in the &PROD; domain, &PROD; provides a way 
+		to map &IPA; users to SELinux users and automatically grant or restrict access to clients and 
+		services within the &IPA; domain, per host, based on the defined SELinux policies.
+	</para>
+	<section id="about-selinux-maps"><title>About &PROD;, SELinux, and Mapping Users</title>
+		<para>
+			Security-enhanced Linux defines kernel-level, mandatory access controls for how users, processes, and applications 
+			can interact with other resources on a system. These rules for interactions, called <emphasis>contexts</emphasis>, 
+			look at the data and behavior characteristics of different objects on the system and then set rules, called <emphasis>policies</emphasis>, 
+			which create contexts based on the security implications of each specific object.
+			This is in contrast to higher-level discretionary access controls which are concerned primarily with file ownership and user identity, 
+			without accounting for data criticality or applciation behavior.
+		</para>
+		<para>
+			System users are associated with an SELinux <emphasis>role</emphasis>. The role is assigned both a multi-layer security context (MLS) 
+			a multi-category security context (MCS). The MLS/MCS contexts <emphasis>confine</emphasis> users to what processes, files, and operations
+			they can access on the system.
+		</para>
+		<figure id="fig.selinux-os"><title>SELinux Users in the SELinux Manager</title>
+			<mediaobject>
+				<imageobject>
+					<imagedata fileref="images/selinux-os.png" />
+				</imageobject>
+			</mediaobject>
+		</figure>
+		<para>
+			This is all described in detail in <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Security-Enhanced_Linux/index.html">&RHEL; 6 Security-Enhanced Linux</ulink>.
+		</para>
+		<para>
+			SELinux users and policies function at the system level, not the network level. This means that SELinux users are configured independently on 
+			each system. While this is acceptable in many situations &mdash; SELinux has common defined system users and SELinux-aware services define their own policies &mdash; 
+			it has some issues when dealing with remote users and systems that access local resources. Remote users and services can get shuffled into a default guest 
+			context without a lot of intelligence about what their actual SELinux user and role should be.
+		</para>
+		<para>
+			This is how &PROD; can cleanly integrate an identity domain with local SELinux services. &PROD; can map &IPA; users to configured SELinux roles <emphasis>per host</emphasis>.
+			Mapping SELinux and &IPA; users improves user administration:
+		</para>
+		<itemizedlist>
+			<listitem>
+				<para>
+					Remote users can be granted appropriate SELinux user contexts based on their &IPA; group assignments. This also allows administrators to consistently apply 
+					the same policies to the same users without having to create local accounts or reconfigure SELinux.
+				</para>
+			</listitem>
+			<listitem>
+				<para> 
+					SELinux users are automatically updated as hosts are added to the IT environment or as users are added, removed, or changed, without having to edit local systems.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					SELinux policies can be planned and related to domain-wide security policies through settings like &IPA; host-based access control rules.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Administrators gain environment-wide visibility and control over how users and systems are assigned in SELinux.
+				</para>
+			</listitem>
+		</itemizedlist>
+		<para>
+			SELinux user maps are comprised of three parts: the SELinux user for the system, an &IPA; user, and an &IPA; host. These define two separate relationships. 
+			First, it defines a map for the SELinux user on a specific host (the local or target system). Second, it defines a map for the SELinux user and the &IPA; user.
+		</para>
+		<para>
+			This arrangement allows administrators to set different SELinux users for the same &IPA; users, depending on which host they are accessing.
+		</para>
+		<para>
+			SELinux user maps work with the Systerm Security Services Daemon (SSSD) and the <systemitem>pam_selinux</systemitem> module. When a remote user attempts to 
+			log into a machine, SSSD checks its &IPA; identity provider to collect the user information, including any SELinux maps. The PAM module then processes the 
+			user and assigns it the appropriate SELinux user context.
+		</para>
+		<para>
+			The core of an SElinux mapping rule is the SELinux system user. Each map is associated with the SELinux user first. The SELinux users which are available for mapping 
+			are configured in the &IPA; server, so there is a central and universal list. These are SELinux users which are configured on every host in the &IPA; domain.
+			By default, there are five common SELinux users defined:
+		</para>
+		<itemizedlist>
+			<listitem>
+				<para>
+					unconfined_u (also used as a default for &IPA; users)
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					guest_u
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					xguest_u
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					user_u
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					staff_u
+				</para>
+			</listitem>
+		</itemizedlist>
+		<para>
+			In the &IPA; server configuration, each SELinux user is configured with both its username and its MLS/MCS range, <emphasis>SELinux_username:MLS[:MCS]</emphasis>, and this format is used 
+			to identify the SELinux user when configuring maps.
+		</para>
+		<para>
+			The &IPA; user and host configuration is very flexible. Users and hosts can be explicitly and individually assigned to an SELinux user map individually, or user groups or 
+			host groups can be explicitly assigned to the map. 
+		</para>
+		<para>
+			An extra layer of security is possible by using host-based access control rules. As long as the host-based access control rule 
+			defines a user and a host, it can be used for an SELinux user map. Host-based access control rules (described in <xref linkend="configuring-host-access" />)
+			help integrate SELinux user maps with other access controls in &IPA; and can help limit or allow host-based user access for remote users, as well as defining local security contexts.
+		</para>
+		<note><title>NOTE</title>
+			<para>
+				If a host-based access control rule is associated with an SELinux user map, the host-based access control rule cannot be deleted until it is removed from the SELinux user map configuration.
+			</para>
+		</note>
+	</section>
+
+	<section id="config-selinux"><title>Configuring SELinux Users in &IPA;</title>
+		<para>
+			SELinux user maps, as the name implies, creates an association between an SELinux user and 
+			an &IPA; user. Before that association can be established, the &IPA; server has to be 
+			aware of what SELinux users are configured on the systems it manages.
+		</para>
+		<para>
+			The available SELinux users are part of the &IPA; server configuration. This is a list, 
+			in order from most to least confined, of the SELinux users. 
+			The SELinux user entry itself has this format:
+		</para>
+<screen><replaceable>SELinux_username:MLS[:MCS]</replaceable></screen>
+		<para>
+			The individual user entries are separated with a dollar sign ($).
+		</para>
+		<para>
+			Since there is no requirement on user entries to have an SELinux map, 
+			many entries may be unmapped. The &IPA; server configuration can also 
+			set a default SELinux user (which is part of the larger SELinux map list)
+			to use for otherwise unmapped &IPA; user entries.
+		</para>
+		<section id="config-selinux-ui"><title>In the Web UI</title>
+			<orderedlist>
+				<listitem>
+					<para>
+						In the top menu, click the <guilabel>IPA Server</guilabel> main tab and the <guilabel>Configuration</guilabel> subtab.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Scroll to the bottom of the list of server configuration areas, to <guilabel>SELINUX OPTIONS</guilabel>.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Set the SELinux user configuration.
+					</para>
+					<para>
+						There are two areas that can be edited: the prioritized list of SELinux users and the default SELinux user to use for unmapped &IPA; users.
+					</para>
+					<para>
+						The <guilabel>SELinux user map order</guilabel> gives the list of SELinux users, defined on the local Linux system , which are available for configuring mapping rules. This is a prioritized list, from most to least confined. Each SELinux user has the format <emphasis>SELinux_user:MLS</emphasis>.
+					</para>
+					<para>
+						The <guilabel>Default SELinux user</guilabel> field sets the SELinux user to use for <emphasis>unmapped</emphasis> &IPA; users.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/selinux-config.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+				</listitem>
+				<listitem>
+					<para>
+						Click the <guilabel>Update</guilabel> link at the top of the page to save the changes.
+					</para>
+				</listitem>
+			</orderedlist>
+		</section>
+		<section id="config-selinux-cli"><title>In the CLI</title>
+			<para>
+				Before SELinux mapping rules can be created, there has to be a defined and 
+				universal list of SELinux users which are available to be mapped. This is 
+				set in the &IPA; server configuration:
+			</para>
+<screen>[jsmith@server ~]$ ipa config-show
+...				
+  SELinux user map order: unconfined_u:s0-s0:c0.c1023$guest_u:s0$xguest_u:s0$user_u:s0-s0:c0.c1023$staff_u:s0-s0:c0.c1023
+  Default SELinux user: unconfined_u:s0-s0:c0.c1023</screen>
+				
+			<para>
+				The SELinux user settings can be edited using the <command>config-mod</command> 
+				command.
+			</para>
+			<example id="ex.selinux-config-list"><title>List of SELinux Users</title>
+				<para>
+					The complete list of SELinux users is passed in the <option>--ipaselinuxusermaporder</option> option. This list sets a priority order, from most to least confined users.
+				</para>
+				<para>
+					The SELinux user entry itself has this format:
+				</para>
+<screen><replaceable>SELinux_user:MLS:MCS</replaceable></screen>
+				<para>
+					The individual user entries are separated with a dollar sign ($).
+				</para>
+				<para>
+					For example:
+				</para>
+<screen>[jsmith@server ~]$ ipa config-mod --ipaselinuxusermaporder="unconfined_u:s0-s0:c0.c1023$guest_u:s0$xguest_u:s0$user_u:s0-s0:c0.c1023$staff_u:s0-s0:c0.c1023"</screen>
+			</example>
+			<note><title>NOTE</title>
+				<para>
+					The default SELinux user, used for unmapped entries, must be included 
+					in the user map list or the edit operation fails. Likewise, if the default is edited, it must be changed to a user in the SELinux map list or the map list must be updated first.
+				</para>
+			</note>
+			<example id="ex.selinux-default"><title>Default SELinux User</title>
+				<para>
+					&IPA; users are not required to have a specific SELinux user mapped to their account. However, the local system still checks the &IPA; entry for an SELinux user to use for the &IPA; user account. The default SELinux user sets the fallback user to use for unmapped &IPA; user entries; this is, by default, the default SELinux user for system users on &OS;, <systemitem>unconfined_u</systemitem>.
+				</para>
+				<para>
+					This default user can be changed with the <option>--ipaselinuxusermapdefault</option>. For example:
+				</para>
+<screen>[jsmith@server ~]$ ipa config-mod --ipaselinuxusermapdefault="guest_u:s0"</screen>
+			</example>
+		</section>
+	</section>
+
+	<section id="mapping-selinux"><title>Mapping SELinux Users and &IPA; Users</title>
+		<para>
+			An SELinux map associates an SELinux user with an &IPA; user (or users). However, SELinux settings 
+			are local to each host system, so a map not only needs to map the SELinux user with an 
+			&IPA; user but also with a host system.
+		</para>
+		<para>
+			The rule definition primarily identifies the SELinux user; the SELinux user is the basis
+			of the rule.
+		</para>
+		<para>
+			The other half of the map is comprised of defined &IPA; users and defined &IPA; hosts. 
+			(There can be one single user or host or multiple users and hosts or user and host groups 
+			in the map.) The users and hosts can be defined either by explicitly listing users and 
+			hosts or by referencing a host-based access control rule.
+		</para>
+		<note><title>NOTE</title>
+			<para>
+				The host-based access control rule must contain users and hosts, not just services.
+			</para>
+		</note>
+		<section id="mapping-selinux-ui"><title>In the Web UI</title>
+			<orderedlist>
+				<listitem>
+					<para>
+						In the top menu, click the <guilabel>Policy</guilabel> main tab and the <guilabel>SELinux User Mappings</guilabel> subtab.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						In the list of mappings, click the <guibutton>Add</guibutton> button to create a new map.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/selinux-list.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+				</listitem>
+				<listitem>
+					<para>
+						Enter the name for the map and the SELinux user <emphasis>exactly as it appears in the &IPA; server configuration</emphasis>. SElinux users have the format <emphasis>SELinux_username:MLS[:MCS]</emphasis>.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/selinux-add.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+				</listitem>
+				<listitem>
+					<para>
+						Click <guibutton>Add and Edit</guibutton> to add the &IPA; user information.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						As described in the introduction, an SELinux map has three parts: the SELinux user and an &IPA; user/host pairing. That &IPA; user/host pair can be defined in one of two ways: it can be set for explicit users on explicit hosts, or it can be defined using a host-based access control rule.
+					</para>
+					<para>
+						To set a host-based access control rule, select the rule from the drop-down menu in the <guilabel>General</guilabel> area of the configuration. Using a host-based access control rule also introduces access controls on what hosts a remote user can use to access a target machine. <emphasis role="bold">Only one host-based access control rule can be set.</emphasis>
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/selinux-general.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+					<para>
+						Alternatively, scroll down the <guilabel>Users</guilabel> and <guilabel>Hosts</guilabel> areas, and click the <guilabel>Add</guilabel> link to assign users, user groups, hosts, or host groups to the SELinux map.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/selinux-userhost-add.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+					<para>
+						Select the users (or hosts or groups) on the left, click the right arrows button (<guibutton>>></guibutton>) to move them to the <guilabel>Prospective</guilabel> column, and click the <guibutton>Add</guibutton> button to add them to the rule.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/selinux-userhost.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+					<note><title>NOTE</title>
+						<para>
+							Either a host-based access control rule can be given or the users and hosts can be set manually. Both options cannot be used at the same time.
+						</para>
+					</note>
+				</listitem>
+				<listitem>
+					<para>
+						Click the <guilabel>Update</guilabel> link at the top to save the changes to the SELinux user map.
+					</para>
+				</listitem>
+			</orderedlist>
+		</section>
+		<section id="mapping-selinux-cli"><title>In the CLI</title>
+			<para>
+				An SELinux map rule has three fundamental parts:
+			</para>
+			<itemizedlist>
+				<listitem>
+					<para>
+						The SELinux user (<option>--selinuxuser</option>)
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						The user or user groups which are associated with the SELinux user (<option>--users</option> or <option>--groups</option>)
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						The host or host groups which are associated with the SELinux user (<option>--hosts</option> or <option>--hostgroups</option>)
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Alternatively, a host-based access control rule which specifies both hosts and users in it (<option>--hbacrule</option>)
+					</para>
+				</listitem>
+			</itemizedlist>
+			<para>
+				A rule can be created with all information at once using the <command>selinuxusermap-add</command> command. Users and hosts can be added to a rule after it is created by using the <command>selinuxusermap-add-user</command> and <command>selinuxusermap-add-host</command> commands, respectively.
+			</para>
+			<example id="ex.selinux-all"><title>Creating a New SELinux Map</title>
+				<para>
+					The <option>--selinuxuser</option> value must be the SELinux user name exactly as it appears in the &IPA; server configuration. SElinux users have the format <emphasis>SELinux_username:MLS[:MCS]</emphasis>.
+				</para>
+				<para>
+					Both a user and a host (or appropriate groups) must be specified for the SELinux mapping to be valid.
+					Users, hosts, or groups can be specified in comma-separated lists.
+				</para>
+<screen>[jsmith@server ~]$ ipa selinuxusermap-add --users=jsmith,bjensen,jrockford --hosts=server.example.com,test.example.com --selinuxuser="xguest_u:s0" selinux1</screen>
+			</example>
+			<example id="ex.selinux-hbac"><title>Creating an SELinux Map with a Host-Based Access Control Rule</title>
+				<para>
+					The <option>--hbacrule</option> value identifies the host-based access control rule to use for mapping. Using a host-based access control rule introduces access controls on what hosts a remote user can use to access a target machine, along with applying SELinux contexts after the remote user as logged into the target machine.
+				</para>
+				<para>
+					The access control rule must specify both users and hosts appropriately so that the SELinux map can construct the SELinux user, &IPA; user, and host triple.
+				</para>
+				<para>
+					Only one host-based access control rule can be specified.
+				</para>
+<screen>[jsmith@server ~]$ ipa selinuxusermap-add --hbacrule=webserver --selinuxuser="xguest_u:s0" selinux1</screen>
+				<para>
+					Host-based access control rules are described in <xref linkend="configuring-host-access" />.
+				</para>
+			</example>
+			<example id="ex.selinux-adding"><title>Adding a User to an SELinux Map</title>
+				<para>
+					While all of the users and hosts can be added to a map when it is 
+					created, users and hosts can also be added after the rule is created. 
+					This is done using a specific command, either 
+					<command>selinuxusermap-add-user</command> or 
+					<command>selinuxusermap-add-host</command>.
+				</para>
+<screen>[jsmith@server ~]$ ipa selinuxusermap-add-user --users=jsmith selinux1</screen>
+				<para>
+					It is not necessary to use a separate command to add a host-based access control rule after the rule is configured because there can only be one. If the <command>selinuxusermap-mod</command> command is used with the <option>--hbacrule</option> option, it adds the host-based access control rule or overwrites the previous one.
+				</para>
+			</example>
+			<para>
+				A specific user or host can be removed from an SELinux map by using either the <command>selinuxusermap-remove-host</command> or <command>selinuxusermap-remove-user</command> command. 
+			</para>
+			<example id="ex.selinux-remove"><title>Removing a User from an SELinux Map</title>
+				<para>
+					As with adding a user to a ion> value identifies the host-based access control rule to use for mapping. The access control rule must specify both users and hosts appropriately so that the SELinux map can construct the SELinux user, &IPA; user, and host triple.
+				</para>
+<screen>[jsmith@server ~]$ ipa selinuxusermap-remove-user --users=jsmith selinux1</screen>
+			</example>
+		</section>
+	</section>
+
+	<section id="selinux-troubleshooting"><title>Troubleshooting SELinux Login Problems</title>
+		<para>
+			SELinux maps only work for remote users, not for users with a local account. 
+		</para>
+		<para>
+			When a remote user logs in, authenticating against the &IPA; server, then 
+			the PAM SElinux modules create a file for that user in 
+			<filename>/etc/selinux/</filename><emphasis>policy_name</emphasis><filename>/logins/</filename><emphasis>login</emphasis>.
+		</para>
+		<para>
+			If that file does not exist, then it means that SSSD is not properly configured to 
+			use the &IPA; server as one of its identity providers. This is required for 
+			SELinux mapping to work. Configuring SSSD is covered in the <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/Configuring_Domains.html">&RH; 6 
+			&DPG;</ulink>.
+		</para>
+		<para>
+			If the file exists but the remote user was given the wrong SELinux context, then the <systemitem>pam_selinux</systemitem> module may not be properly configured in the PAM stack. This is the module that reads the SELinux information and sets the user context. If the module is missing, then nothing processes the SELinux map and the user is defined a default context on the system.
+		</para>
+	</section>
 </chapter>

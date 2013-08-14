@@ -1,1102 +1,1081 @@
-<?xml version='1.0' encoding='utf-8'?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
-[
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 ]>
-<chapter id="server-access-controls">
-    <title>Configuration: Defining Access Control within &IPA;</title>
-    <para>Access control is a security system which defines who can access
-    certain resources &mdash; from machines to services to entries &mdash; and
-    what kinds of operations they are allowed to perform. &PROD; provides
-    several access control areas to make it very clear what kind of access is
-    being granted and to whom it is granted. As part of this, &PROD; draws a
-    distinction between access controls to resources within the domain and
-    access control to the &IPA; configuration itself.</para>
-    <para>This chapter details the different internal access control mechanisms
-    that are available for users within &IPA; to the &IPA; server and other
-    &IPA; users.</para>
-    <section id="about-ipa-access-controls">
-        <title>About Access Controls for &IPA; Entries</title>
-        <para>Access control defines the rights or permissions users have been
-        granted to perform operations on other users or objects.</para>
-        <section id="acl-concepts">
-            <title>A Brief Look at Access Control Concepts</title>
-            <para>The &PROD; access control structure is based on standard LDAP
-            access controls. Access within the &IPA; server is based on the
-            &IPA; users (who are stored in the backend &DS; instance) who are
-            allowed to access other &IPA; entities (which are also stored as
-            LDAP entries in the &DS; instance).</para>
-            <para>An access control rule has three parts:</para>
-            <itemizedlist>
-                <listitem>
-                    <para>
-                    <emphasis>Who can perform the operation</emphasis>. This is
-                    the entity who is being granted permission to do something;
-                    this is the actor. In LDAP access control models, this is
-                    called the 
-                    <emphasis>bind rule</emphasis>because it defines who the
-                    user is (based on their bind information) and can
-                    optionally require other limits on the bind attempt, such
-                    as restricting attempts to a certain time of day or a
-                    certain machine.</para>
-                </listitem>
-                <listitem>
-                    <para>
-                    <emphasis>What can be accessed</emphasis>. This defines the
-                    entry which the actor is allowed to perform operations on.
-                    This is the 
-                    <emphasis>target</emphasis>of the access control
-                    rule.</para>
-                </listitem>
-                <listitem>
-                    <para>
-                    <emphasis>What type of operation can be
-                    performed</emphasis>. The last part is determining what
-                    kinds of actions the user is allowed to perform. The most
-                    common operations are add, delete, write, read, and search.
-                    In &PROD;, all users are implicitly granted read and search
-                    rights to all entries in the &IPA; domain, with
-                    restrictions only for sensitive attributes like passwords
-                    and Kerberos keys. (Anonymous users are restricted from
-                    seeing security-related configuration, like 
-                    <command>sudo</command>rules and host-based access
-                    control.)</para>
-                    <para>The only rights which can be granted are add, delete,
-                    and write &mdash; the permissions required to 
-                    <emphasis>modify</emphasis>an entry.</para>
-                </listitem>
-            </itemizedlist>
-            <note>
-                <title>NOTE</title>
-                <para>
-                <indexterm>
-                    <primary>access control</primary>
-                    <secondary>read permission</secondary>
-                </indexterm>&PROD; does not provide a way to grant read access
-                explicitly, and this is an important distinction from standard
-                LDAP access control rules. In LDAP, all operations, including
-                read, are implicitly denied and must be explicitly granted. In
-                &IPA;, read and search access are implicitly granted to any
-                authenticated user.</para>
-                <para>Because read access is already granted, there is no way
-                through the UI to grant read access. However, there is an
-                option in the CLI tools to grant read access for special cases
-                where there may be a broad deny rule set but read access should
-                be granted to specific attributes. For example, read access is
-                blocked to password attributes, but could be allowed by a
-                special read permission.</para>
-            </note>
-            <para>When any operation is attempted, the first thing that the
-            &IPA; client does is send user credentials as part of the bind
-            operation. The backend &DS; checks those user credentials and then
-            checks the user account to see if the user has permission to
-            perform the requested operation.</para>
-        </section>
-        <section id="types-of-acls">
-            <title>Access Control Methods in &PROD;</title>
-            <para>To make access control rules simple and clear to implement,
-            &PROD; divides access control definitions into three
-            categories:</para>
-            <itemizedlist>
-                <listitem>
-                    <para>
-                    <emphasis>Self-service rules</emphasis>, which define what
-                    operations a user can perform on his own personal entry.
-                    The access control type only allows write permissions to
-                    attributes within the entry; it does not allow add or
-                    delete operations for the entry itself.</para>
-                </listitem>
-                <listitem>
-                    <para>
-                    <emphasis>Delegation rules</emphasis>, which allow a
-                    specific user group to perform write (edit) operations on
-                    specific attributes for users in another user group. Like
-                    self-service rules, this form of access control rule is
-                    limited to editing the values of specific attributes; it
-                    does not grant the ability to add or remove whole entries
-                    or control over unspecified attributes.</para>
-                </listitem>
-                <listitem>
-                    <para>
-                    <emphasis>Role-based access control</emphasis>, which
-                    creates special access control groups which are then
-                    granted much broader authority over all types of entities
-                    in the &IPA; domain. Roles can be granted edit, add, and
-                    delete rights, meaning they can be granted complete control
-                    over entire entries, not just selected attributes.</para>
-                    <para>Some roles are already created and available within
-                    &PROD;. Special roles can be created to manage any type of
-                    entry in specific ways, such as hosts, automount
-                    configuration, netgroups, DNS settings, and &IPA;
-                    configuration.</para>
-                </listitem>
-            </itemizedlist>
-        </section>
-    </section>
-    <section id="self-service">
-        <title>Defining Self-Service Settings</title>
-        <para>Self-service access control rules define the operations that an
-        entity can perform on itself. These rules define only what attributes a
-        user (or other &IPA; entity) can edit on their personal entries.</para>
-        <para>Two self-service rules exist by default:</para>
-        <itemizedlist>
-            <listitem>
-                <para>A rule for editing some general attributes in the
-                personal entry, including given name and surname, phone
-                numbers, and addresses.</para>
-            </listitem>
-            <listitem>
-                <para>A rule to edit user passwords, including two Samba
-                passwords, the Kerberos password, and the general user
-                password.</para>
-            </listitem>
-        </itemizedlist>
-        <section id="self-service-ui">
-            <title>Creating Self-Service Rules from the Web UI</title>
-            <orderedlist>
-                <listitem>
-                    <para>Open the 
-                    <guilabel>IPA Server</guilabel>tab in the top menu, and
-                    select the 
-                    <guilabel>Self Service Permissions</guilabel>subtab.</para>
-                </listitem>
-                <listitem>
-                    <para>Click the 
-                    <guilabel>Add</guilabel>link at the top of the list of
-                    self-service ACIs.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/selfservice-list.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>Enter the name of the rule in the pop-up window.
-                    Spaces are allowed.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/selfservice-add.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>Select the checkboxes by the attributes which this
-                    ACI will permit users to edit.</para>
-                </listitem>
-                <listitem>
-                    <para>Click the 
-                    <guilabel>Add</guilabel>button to save the new self-service
-                    ACI.</para>
-                </listitem>
-            </orderedlist>
-        </section>
-        <section id="self-service-cli">
-            <title>Creating Self-Service Rules from the Command Line</title>
-            <para>A new self-service rule can be added using the 
-            <command>selfservice-add</command>command. There are two required
-            options, 
-            <option>--permissions</option>to set whether the ACI grants write,
-            add, or delete permission and 
-            <option>--attrs</option>to give the full list of attributes which
-            this ACI grants permission to.</para>
-            <screen>$ ipa selfservice-add "Users can manage their own name
-            details" --permissions=write
-            --attrs=givenname,displayname,title,initials
-            ----------------------------------------------------------- Added
-            selfservice "Users can manage their own name details"
-            -----------------------------------------------------------
-            Self-service name: Users can manage their own name details
-            Permissions: write Attributes: givenname, displayname, title,
-            initials</screen>
-        </section>
-        <section id="self-service-edit">
-            <title>Editing Self-Service Rules</title>
-            <para>In the self-service entry in the web UI, the only element
-            that can be edited is the list of attributes that are included in
-            the ACI. The checkboxes can be selected or deselected.</para>
-            <figure>
-                <title>Self-Service Edit Page</title>
-                <mediaobject>
-                    <imageobject>
-                        <imagedata fileref="images/selfservice-edit.png" />
-                    </imageobject>
-                </mediaobject>
-            </figure>
-            <para>With the command line, self-service rules are edited using
-            the 
-            <command>ipa selfservice-mod</command>command. The 
-            <option>--attrs</option>option overwrites whatever the previous
-            list of supported attributes was, so always include the complete
-            list of attributes along with any new attributes.</para>
-            <screen>$ ipa selfservice-mod "Users can manage their own name
-            details" --attrs=givenname,displayname,title,initials,surname
-            --------------------------------------------------------------
-            Modified selfservice "Users can manage their own name details"
-            --------------------------------------------------------------
-            Self-service name: Users can manage their own name details
-            Permissions: write Attributes: givenname, displayname, title,
-            initials</screen>
-            <important>
-                <title>IMPORTANT</title>
-                <para>Include all of the attributes when modifying a
-                self-service rule, including existing ones.</para>
-            </important>
-        </section>
-    </section>
-    <section id="delegating-users">
-        <title>Delegating Permissions over Users</title>
-        <para>Delegation is very similar to roles in that one group of users is
-        assigned permission to manage the entries for another group of users.
-        However, the delegated authority is much more similar to self-service
-        rules in that complete access is granted but only to specific user
-        attributes, not to the entire entry. Also, the groups in delegated
-        authority are existing &IPA; user groups instead of roles specifically
-        created for access controls.</para>
-        <section id="delegating-attributes-ui">
-            <title>Delegating Access to User Groups in the Web UI</title>
-            <orderedlist>
-                <listitem>
-                    <para>Open the 
-                    <guilabel>IPA Server</guilabel>tab in the top menu, and
-                    select the 
-                    <guilabel>Delegations</guilabel>subtab.</para>
-                </listitem>
-                <listitem>
-                    <para>Click the 
-                    <guilabel>Add</guilabel>link at the top of the list of
-                    delegation ACIs.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/delegation-list.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>Name the new delegation ACI.</para>
-                </listitem>
-                <listitem>
-                    <para>In the 
-                    <guilabel>User group</guilabel>drop-down menu, select the
-                    group 
-                    <emphasis>whose entries can be edited</emphasis>by members
-                    of the delegation group.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/delegation-add.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>In the 
-                    <guilabel>Member user group</guilabel>drop-down menu,
-                    select the group 
-                    <emphasis>who is being granted permissions to</emphasis>the
-                    entries of users in the user group.</para>
-                </listitem>
-                <listitem>
-                    <para>In the attributes box, select the checkboxes by the
-                    attributes to which the member user group is being granted
-                    permission.</para>
-                </listitem>
-                <listitem>
-                    <para>Click the 
-                    <guilabel>Add</guilabel>button to save the new delegation
-                    ACI.</para>
-                </listitem>
-            </orderedlist>
-        </section>
-        <section id="delegating-attributes-cli">
-            <title>Delegating Access to User Groups in the Command Line</title>
-            <para>A new delegation access control rule is added using the 
-            <command>delegation-add</command>command. There are three required
-            arguments:</para>
-            <itemizedlist>
-                <listitem>
-                    <para>
-                    <option>--group</option>, the group 
-                    <emphasis>who is being granted permissions to</emphasis>the
-                    entries of users in the user group.</para>
-                </listitem>
-                <listitem>
-                    <para>
-                    <option>--membergroup</option>, the group 
-                    <emphasis>whose entries can be edited</emphasis>by members
-                    of the delegation group.</para>
-                </listitem>
-                <listitem>
-                    <para>
-                    <option>--attrs</option>, the attributes which users in the
-                    member group are allowed to edit.</para>
-                </listitem>
-            </itemizedlist>
-            <para>For example:</para>
-            <screen>$ ipa delegation-add "basic manager attrs"
-            --attrs=manager,title,employeetype,employeenumber
-            --group=engineering_managers --membergroup=engineering
-            -------------------------------------- Added delegation "basic
-            manager attrs" -------------------------------------- Delegation
-            name: basic manager attrs Permissions: write Attributes: manager,
-            title, employeetype, employeenumber Member user group: engineering
-            User group: engineering_managers</screen>
-            <para>Delegation rules are edited using the 
-            <command>delegation-mod</command>command. The 
-            <option>--attrs</option>option overwrites whatever the previous
-            list of supported attributes was, so always include the complete
-            list of attributes along with any new attributes.</para>
-            <screen>$ ipa delegation-mod "basic manager attrs"
-            --attrs=manager,title,employeetype,employeenumber,displayname
-            ----------------------------------------- Modified delegation
-            "basic manager attrs" -----------------------------------------
-            Delegation name: basic manager attrs Permissions: write Attributes:
-            manager, title, employeetype, employeenumber, displayname Member
-            user group: engineering User group: engineering_managers</screen>
-            <important>
-                <title>IMPORTANT</title>
-                <para>Include all of the attributes when modifying a delegation
-                rule, including existing ones.</para>
-            </important>
-        </section>
-    </section>
-    <section id="defining-roles">
-        <title>Defining Role-Based Access Controls</title>
-        <para>Role-based access control grants a very different kind of
-        authority to users compared to self-service and delegation access
-        controls. Role-based access controls are fundamentally administrative,
-        with the potential to add, delete, and significantly modify
-        entries.</para>
-        <para>There are three parts to role-based access controls:</para>
-        <itemizedlist>
-            <listitem>
-                <para>The 
-                <emphasis>permission</emphasis>. The permission defines a
-                specific operation or set of operations (write, add, or delete)
-                and the target entries within the &IPA; LDAP directory to which
-                those operations apply. Permissions are building blocks; they
-                can be assigned to multiple privileges as needed.</para>
-            </listitem>
-            <listitem>
-                <para>The 
-                <emphasis>privileges</emphasis>available to a role. A privilege
-                is essentially a group of permissions. Permissions are not
-                applied directly to a role. Permissions are added to a
-                privilege so that the privilege creates a coherent and complete
-                picture of a set of access control rules. For example, a
-                permission can be created to add, edit, and delete automount
-                locations. Then that permission can be combined with another
-                permission relating to managing FTP services, and they can be
-                used to create a single privilege that relates to managing
-                filesystems.</para>
-            </listitem>
-            <listitem>
-                <para>The 
-                <emphasis>role</emphasis>. This is the list of &IPA; users who
-                are able to perform the actions defined in the
-                privileges.</para>
-            </listitem>
-        </itemizedlist>
-        <para>It is possible to create entirely new permissions, as well as to
-        create new privileges based on existing permissions or new permissions.
-        A list of the default privileges and their associated permissions are
-        in 
-        <xref linkend="tab.default-perms" />.</para>
-        <note>
-            <title>NOTE</title>
-            <para>
-            <indexterm>
-                <primary>access control</primary>
-                <secondary>read permission</secondary>
-            </indexterm>&PROD; does not provide a way to grant read access
-            explicitly, and this is an important distinction from standard LDAP
-            access control rules. In LDAP, all operations, including read, are
-            implicitly denied and must be explicitly granted. In &IPA;, read
-            and search access are implicitly granted to any authenticated
-            user.</para>
-            <para>Because read access is already granted, there is no way
-            through the UI to grant read access. However, there is an option in
-            the CLI tools to grant read access for special cases where there
-            may be a broad deny rule set but read access should be granted to
-            specific attributes. For example, read access is blocked to
-            password attributes, but could be allowed by a special read
-            permission.</para>
-        </note>
-        <table id="tab.default-perms">
-            <title>Privileges and Permissions in &IPA;</title>
-            <tgroup cols="2">
-                <thead>
-                    <row>
-                        <entry>Privilege</entry>
-                        <entry>Associated Permissions</entry>
-                    </row>
-                </thead>
-                <tbody>
-                    <row>
-                        <entry>Automount Administrators</entry>
-                        <entry>
-                            <simplelist>
-                                <member>Add_Automount_maps</member>
-                                <member>Remove_Automount_maps</member>
-                                <member>Add_Automount_keys</member>
-                                <member>Remove_Automount_keys</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>Certificate Administrators</entry>
-                        <entry>
-                            <simplelist>
-                                <member>
-                                Retrieve_Certificates_from_the_CA</member>
-                                <member>Request_Certificate</member>
-                                <member>
-                                Request_Certificates_from_a_different_hos</member>
-                                <member>
-                                Get_Certificates_status_from_the_CA</member>
-                                <member>Revoke_Certificate</member>
-                                <member>Certificate_Remove_Hold</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>Delegation Administrator</entry>
-                        <entry>
-                            <simplelist>
-                                <member>Add_Roles</member>
-                                <member>Remove_Roles</member>
-                                <member>Modify_Roles</member>
-                                <member>Modify_Role_membership</member>
-                                <member>Modify_privilege_membership</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>DNS Administrators (for users)</entry>
-                        <entry>
-                            <simplelist>
-                                <member>add_dns_entries</member>
-                                <member>remove_dns_entries</member>
-                                <member>update_dns_entries</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>DNS Servers (for machines)</entry>
-                        <entry>
-                            <simplelist>
-                                <member>add_dns_entries</member>
-                                <member>remove_dns_entries</member>
-                                <member>update_dns_entries</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>Group Administrators</entry>
-                        <entry>
-                            <simplelist>
-                                <member>Add_Groups</member>
-                                <member>Remove_Groups</member>
-                                <member>Modify_Groups</member>
-                                <member>Modify_Group_membership</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>HBAC Administrator</entry>
-                        <entry>
-                            <simplelist>
-                                <member>Add_HBAC_rule</member>
-                                <member>Delete_HBAC_rule</member>
-                                <member>Modify_HBAC_rule</member>
-                                <member>Manage_HBAC_rule_membership</member>
-                                <member>Add_HBAC_services</member>
-                                <member>Delete_HBAC_services</member>
-                                <member>Add_HBAC_service_groups</member>
-                                <member>Delete_HBAC_service_groups</member>
-                                <member>
-                                Manage_HBAC_service_group_membership</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>Host Administrators</entry>
-                        <entry>
-                            <simplelist>
-                                <member>Add_Hosts</member>
-                                <member>Remove_Hosts</member>
-                                <member>Modify_Hosts</member>
-                                <member>Manage_host_keytab</member>
-                                <member>Enroll_a_host</member>
-                                <member>Add_krbPrincipalName_to_a_host</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>Host Enrollment</entry>
-                        <entry>
-                            <simplelist>
-                                <member>Manage_host_keytab</member>
-                                <member>Enroll_a_host</member>
-                                <member>Add_krbPrincipalName_to_a_host</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>Host Group Administrators</entry>
-                        <entry>
-                            <simplelist>
-                                <member>Add_Hostgroups</member>
-                                <member>Remove_Hostgroups</member>
-                                <member>Modify_Hostgroups</member>
-                                <member>Modify_Hostgroup_membership</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>Modify Users and Reset Passwords</entry>
-                        <entry>
-                            <simplelist>
-                                <member>Modify_Users</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>Netgroups Administrators</entry>
-                        <entry>
-                            <simplelist>
-                                <member>Add_netgroups</member>
-                                <member>Remove_netgroups</member>
-                                <member>Modify_netgroups</member>
-                                <member>Modify_netgroup_membership</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>Password Policy Administrator</entry>
-                        <entry>
-                            <simplelist>
-                                <member>
-                                Add_Group_Password_Policy_costemplate</member>
-                                <member>
-                                Delete_Group_Password_Policy_costemplate</member>
-                                <member>
-                                Modify_Group_Password_Policy_costemplate</member>
-                                <member>Add_Group_Password_Policy</member>
-                                <member>Delete_Group_Password_Policy</member>
-                                <member>Modify_Group_Password_Policy</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>Replication Administrators 
-                        <footnote>
-                            <para>This permission can only be granted to
-                            servers, not to users.</para>
-                        </footnote></entry>
-                        <entry>
-                            <simplelist>
-                                <member>Add_Replication_Agreements</member>
-                                <member>Remove_Replication_Agreements</member>
-                                <member>Modify_Replication_Agreements</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>Service Administrators</entry>
-                        <entry>
-                            <simplelist>
-                                <member>Add_Services</member>
-                                <member>Remove_Services</member>
-                                <member>Modify_Services</member>
-                                <member>Manage_service_keytab</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>Sudo Administrator</entry>
-                        <entry>
-                            <simplelist>
-                                <member>Add_Sudo_rule</member>
-                                <member>Delete_Sudo_rule</member>
-                                <member>Modify_Sudo_rule</member>
-                                <member>Add_Sudo_command</member>
-                                <member>Delete_Sudo_command</member>
-                                <member>Modify_Sudo_command</member>
-                                <member>Add_Sudo_command_group</member>
-                                <member>Delete_Sudo_command_group</member>
-                                <member>
-                                Manage_Sudo_command_group_membership</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>User Administrators</entry>
-                        <entry>
-                            <simplelist>
-                                <member>Change_a_user_password</member>
-                                <member>Add_user_to_default_group</member>
-                                <member>Unlock_user_accounts</member>
-                                <member>Remove_Users</member>
-                                <member>Modify_Users</member>
-                                <member>Add_Users</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>Write IPA Configuration</entry>
-                        <entry>
-                            <simplelist>
-                                <member>Write_IPA_Configuration</member>
-                            </simplelist>
-                        </entry>
-                    </row>
-                </tbody>
-            </tgroup>
-        </table>
-        <section id="creating-roles">
-            <title>Creating Roles</title>
-            <section id="creating-roles-ui">
-                <title>Creating Roles in the Web UI</title>
-                <orderedlist>
-                    <listitem>
-                        <para>Open the 
-                        <guilabel>IPA Server</guilabel>tab in the top menu, and
-                        select the 
-                        <guilabel>Role Based Access
-                        Control</guilabel>subtab.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Add</guilabel>link at the top of the list of
-                        role-based ACIs.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/role-list.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Enter the role name and a description.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/role-add.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guibutton>Add and Edit</guibutton>button to save the
-                        new role and go to the configuration page.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Open the 
-                        <guilabel>Privileges</guilabel>tab in the role
-                        configuration page.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Add</guilabel>link at the top of the list of
-                        privileges to add a new privilege.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/role-privlist.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Enter the role name and a description.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/role-add.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                </orderedlist>
-            </section>
-            <section id="creating-roles-cli">
-                <title>Creating Roles in the Command Line</title>
-                <orderedlist>
-                    <listitem>
-                        <para>Add the new role:</para>
-                        <screen># ipa role-add --desc="User Administrator"
-                        useradmin ------------------------ Added role
-                        "useradmin" ------------------------ Role name:
-                        useradmin Description: User Administrator</screen>
-                    </listitem>
-                    <listitem>
-                        <para>Add the required privileges to the role:</para>
-                        <screen># ipa role-add-privilege --privileges="User
-                        Administrators" useradmin Role name: useradmin
-                        Description: User Administrator Privileges: user
-                        administrators ---------------------------- Number of
-                        privileges added 1
-                        ----------------------------</screen>
-                    </listitem>
-                    <listitem>
-                        <para>Add the required groups to the role. In this
-                        case, we are adding only a single group, 
-                        <systemitem class="groupname">useradmin</systemitem>,
-                        which already exists.</para>
-                        <screen># ipa role-add-member --groups=useradmins
-                        useradmin Role name: useradmin Description: User
-                        Administrator Member groups: useradmins Privileges:
-                        user administrators ------------------------- Number of
-                        members added 1 -------------------------</screen>
-                    </listitem>
-                </orderedlist>
-            </section>
-        </section>
-        <section id="creating-perms">
-            <title>Creating New Permissions</title>
-            <note>
-                <title>NOTE</title>
-                <para>
-                <indexterm>
-                    <primary>access control</primary>
-                    <secondary>read permission</secondary>
-                </indexterm>&PROD; does not provide a way to grant read access
-                explicitly, and this is an important distinction from standard
-                LDAP access control rules. In LDAP, all operations, including
-                read, are implicitly denied and must be explicitly granted. In
-                &IPA;, read and search access are implicitly granted to any
-                authenticated user.</para>
-                <para>Because read access is already granted, there is no way
-                through the UI to grant read access. However, there is an
-                option in the CLI tools to grant read access for special cases
-                where there may be a broad deny rule set but read access should
-                be granted to specific attributes. For example, read access is
-                blocked to password attributes, but could be allowed by a
-                special read permission.</para>
-            </note>
-            <section id="creating-perms-ui">
-                <title>Creating New Permissions from the Web UI</title>
-                <orderedlist>
-                    <listitem>
-                        <para>Open the 
-                        <guilabel>IPA Server</guilabel>tab in the top menu, and
-                        select the 
-                        <guilabel>Role Based Access
-                        Control</guilabel>subtab.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Select the 
-                        <guilabel>Permissions</guilabel>task link.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Add</guilabel>link at the top of the list of
-                        permissions.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/role-permission-list.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Enter the name of the new permission.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Select the checkboxes next to the allowed
-                        operations for this permission.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/role-permission-add.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Select the method to use to identify the target
-                        entries from the 
-                        <guilabel>Target</guilabel>drop-down menu. There are
-                        four different methods:</para>
-                        <itemizedlist>
-                            <listitem>
-                                <para>
-                                <emphasis>Type</emphasis>looks for an entry
-                                type like user, host, or service and then
-                                provides a list of all possible attributes for
-                                that entry type. The attributes which will be
-                                accessible through this ACI are selected from
-                                the list.</para>
-                            </listitem>
-                            <listitem>
-                                <para>
-                                <emphasis>Filter</emphasis>uses an LDAP filter
-                                to identify which entries the permission
-                                applies to.</para>
-                            </listitem>
-                            <listitem>
-                                <para>
-                                <emphasis>Subtree</emphasis>targets every entry
-                                beneath the specified subtree entry. All
-                                attributes within the matching entries can be
-                                modified.</para>
-                            </listitem>
-                            <listitem>
-                                <para>
-                                <emphasis>Target group</emphasis>specifies a
-                                user group, and all the user entries within
-                                that group are available through the ACI. All
-                                attributes within the matching entries can be
-                                modified.</para>
-                            </listitem>
-                        </itemizedlist>
-                        <note>
-                            <title>NOTE</title>
-                            <para>For 
-                            <emphasis>Filter</emphasis>, 
-                            <emphasis>Subtree</emphasis>, and 
-                            <emphasis>Target group</emphasis>methods, no
-                            attributes are set in the UI. These must be added
-                            later using 
-                            <command>ipa permission-mod --attrs</command>. If
-                            no attributes are set for the permission then, by
-                            default, all attributes are excluded.</para>
-                        </note>
-                    </listitem>
-                    <listitem>
-                        <para>Fill in the required information to identify the
-                        target entries, depending on the selected type.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guibutton>Add</guibutton>button to save the
-                        permission.</para>
-                    </listitem>
-                    <listitem>
-                        <para>For 
-                        <emphasis>Filter</emphasis>, 
-                        <emphasis>Subtree</emphasis>, and 
-                        <emphasis>Target group</emphasis>methods, set the
-                        attributes for the ACI to include. This must be done
-                        from the command line.</para>
-                        <para>For example:</para>
-                        <screen>[jsmith@ipaserver ~]$ ipa permission-mod
-                        "manage Windows groups" 
-                        <userinput>
-                        --attrs=description,member</userinput></screen>
-                    </listitem>
-                </orderedlist>
-            </section>
-            <section id="creating-perms-cli">
-                <title>Creating New Permissions from the Command Line</title>
-                <para>A new permission is added using the 
-                <command>permission-add</command>command. All permissions
-                require a list of attributes over which permission is granted (
-                
-                <option>--attr</option>), a list of allowed actions ( 
-                <option>--permissions</option>), and the target entries for the
-                ACI. There are four methods to identify the target
-                entries:</para>
-                <itemizedlist>
-                    <listitem>
-                        <para>
-                        <emphasis>--type</emphasis>looks for an entry type like
-                        user, host, or service and then provides a list of all
-                        possible attributes for that entry type.</para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                        <emphasis>--filter</emphasis>uses an LDAP filter to
-                        identify which entries the permission applies
-                        to.</para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                        <emphasis>--subtree</emphasis>targets every entry
-                        beneath the specified subtree entry.</para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                        <emphasis>--targetgroup</emphasis>specifies a user
-                        group, and all the user entries within that group are
-                        available through the ACI.</para>
-                    </listitem>
-                </itemizedlist>
-                <example id="ex.perm-filter">
-                    <title>Adding a Permission with a Filter</title>
-                    <para>A filter can be any valid LDAP filter.</para>
-                    <screen>$ ipa permission-add "manage Windows groups" 
-                    <userinput>
-                    --filter="(!(objectclass=posixgroup))"</userinput>--permissions=write
-                    --attrs=description</screen>
-                </example>
-                <note>
-                    <title>NOTE</title>
-                    <para>The 
-                    <command>permission-add</command>command does not validate
-                    the given LDAP filter. Verify that the filter returns the
-                    expected results before configuring the permission.</para>
-                </note>
-                <example id="ex.perm-subtree">
-                    <title>Adding a Permission for a Subtree</title>
-                    <para>All a subtree filter requires is a DN within the
-                    directory. Since &IPA; uses a simplified, flat directory
-                    tree structure, this can be used to target some types of
-                    entries, like automount locations, which are containers or
-                    parent entries for other configuration.</para>
-                    <screen>$ ipa permission-add "manage automount locations" 
-                    <userinput>
-                    --subtree="ldap://ldap.example.com:389/cn=automount,dc=example,dc=com"</userinput>--permissions=write
-                    --attrs=automountmapname,automountkey,automountInformation</screen>
-                </example>
-                <example id="ex.perm-type">
-                    <title>Adding a Permission Based on Object Type</title>
-                    <para>There seven object types that can be used to form a
-                    permission:</para>
-                    <itemizedlist>
-                        <listitem>
-                            <para>user</para>
-                        </listitem>
-                        <listitem>
-                            <para>group</para>
-                        </listitem>
-                        <listitem>
-                            <para>host</para>
-                        </listitem>
-                        <listitem>
-                            <para>service</para>
-                        </listitem>
-                        <listitem>
-                            <para>hostgroup</para>
-                        </listitem>
-                        <listitem>
-                            <para>netgroup</para>
-                        </listitem>
-                        <listitem>
-                            <para>dnsrecord</para>
-                        </listitem>
-                    </itemizedlist>
-                    <para>Each type has its own set of allowed attributes, in a
-                    comma-separated list.</para>
-                    <screen>$ ipa permission-add "manage service"
-                    --permissions=all --type=service
-                    --attrs=krbprincipalkey,krbprincipalname,managedby</screen>
-                    <para>The attributes ( 
-                    <option>--attrs</option>) must exist and be allowed
-                    attributes for the given object type, or the permission
-                    operation fails with schema syntax errors.</para>
-                </example>
-            </section>
-        </section>
-        <section id="creating-priv">
-            <title>Creating New Privileges</title>
-            <section id="creating-priv-ui">
-                <title>Creating New Privileges from the Web UI</title>
-                <orderedlist>
-                    <listitem>
-                        <para>Open the 
-                        <guilabel>IPA Server</guilabel>tab in the top menu, and
-                        select the 
-                        <guilabel>Role Based Access
-                        Control</guilabel>subtab.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Select the 
-                        <guilabel>Privileges</guilabel>task link.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Add</guilabel>link at the top of the list of
-                        privileges.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/role-priv-list.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Enter the name and a description of the
-                        privilege.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/role-priv-add.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guibutton>Add and Edit</guibutton>button to go to the
-                        privilege configuration page to add permissions.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Select the 
-                        <guilabel>Permissions</guilabel>tab.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Add</guilabel>link at the top of the list of
-                        permissions to add permission to the privilege.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/role-priv-addperm.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Click the checkbox by the names of the
-                        permissions to add, and click the right arrows button, 
-                        <guibutton>&gt;&gt;</guibutton>, to move the
-                        permissions to the selection box.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/role-priv-addperm2.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guibutton>Add</guibutton>button.</para>
-                    </listitem>
-                </orderedlist>
-            </section>
-            <section id="creating-priv-cli">
-                <title>Creating New Privileges from the Command Line</title>
-                <para>Privilege entries are created using the 
-                <command>privilege-add</command>command, and then permissions
-                are added to the privilege group using the 
-                <command>privilege-add-permission</command>command.</para>
-                <orderedlist>
-                    <listitem>
-                        <para>Create the privilege entry.</para>
-                        <screen>$ ipa privilege-add "managing filesystems"
-                        --desc="for filesystems"</screen>
-                    </listitem>
-                    <listitem>
-                        <para>Assign the desired permissions. For
-                        example:</para>
-                        <screen>$ ipa privilege-add-permission "managing
-                        filesystems" --permissions="managing
-                        automount","managing ftp services"</screen>
-                    </listitem>
-                </orderedlist>
-            </section>
-        </section>
-    </section>
+
+	<chapter id="server-access-controls"><title>Configuration: Defining Access Control within &IPA;</title>
+		<para>
+			Access control is a security system which defines who can access certain resources &mdash; from machines to services to entries &mdash; and what kinds of operations they are allowed to perform.
+			&PROD; provides several access control areas to make it very clear what kind of access is being granted and to whom it is granted. As part of this, &PROD; draws a distinction between 
+			access controls to resources within the domain and access control to the &IPA; configuration itself.
+		</para>
+		<para>
+			This chapter details the different internal access control mechanisms that are available for users within &IPA; to the &IPA; server and other &IPA; users.
+		</para>
+
+		<section id="about-ipa-access-controls"><title>About Access Controls for &IPA; Entries</title>
+		<para>
+			Access control defines the rights or permissions users have been granted to perform operations on other users or objects. 
+		</para>
+		<section id="acl-concepts"><title>A Brief Look at Access Control Concepts</title>
+		<para>
+			The &PROD; access control structure is based on standard LDAP access controls. Access within the &IPA; server is based on the &IPA; users (who are stored in the backend &DS; instance)
+			who are allowed to access other &IPA; entities (which are also stored as LDAP entries in the &DS; instance). 
+		</para>
+		<para>
+			An access control rule has three parts:
+		</para>
+		<itemizedlist>
+			<listitem>
+				<para>
+					<emphasis>Who can perform the operation</emphasis>. This is the entity who is being granted permission to do something; this is the actor. In LDAP access control models, this
+					is called the <emphasis>bind rule</emphasis> because it defines who the user is (based on their bind information) and can optionally require other limits on 
+					the bind attempt, such as restricting attempts to a certain time of day or a certain machine.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<emphasis>What can be accessed</emphasis>. This defines the entry which the actor is allowed to perform operations on. This is the <emphasis>target</emphasis> of the access control rule.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<emphasis>What type of operation can be performed</emphasis>. The last part is determining what kinds of actions the user is allowed to perform. The most common 
+					operations are add, delete, write, read, and search. In &PROD;, all users are implicitly granted read and search rights to all entries in the &IPA; domain, with restrictions only for sensitive attributes like passwords and Kerberos keys. (Anonymous users are restricted from seeing security-related configuration, like <command>sudo</command> rules and host-based access control.)
+				</para>
+				<para>
+					The only rights which can be granted are add, delete, and write &mdash; the permissions required to <emphasis>modify</emphasis> an entry.
+				</para>
+			</listitem>
+		</itemizedlist>
+		<note><title>NOTE</title>
+			<para>
+				<indexterm>
+					<primary>access control</primary>
+					<secondary>read permission</secondary>
+				</indexterm>
+					&PROD; does not provide a way to grant read access explicitly, and this is an important distinction from standard LDAP access control rules. In LDAP, 
+					all operations, including read, are implicitly denied and must be explicitly granted. In &IPA;, read and search access are implicitly granted to 
+					any authenticated user. 
+				</para>
+				<para>
+					Because read access is already granted, there is no way through the UI to grant read access. However, there is an option in the CLI tools to grant read access 
+					for special cases where there may be a broad deny rule set but read access should be granted to specific attributes. For example, read access is blocked to password
+					attributes, but could be allowed by a special read permission.
+				</para>
+			</note>
+		<para>
+			When any operation is attempted, 
+			the first thing that the &IPA; client does is send user credentials as part of the bind operation. The backend &DS; checks those user credentials and then checks the user 
+			account to see if the user has permission to perform the requested operation.
+		</para>
+	</section>
+
+	<section id="types-of-acls"><title>Access Control Methods in &PROD;</title>
+		<para>
+			To make access control rules simple and clear to implement, &PROD; divides access control definitions into three categories:
+		</para>
+		<itemizedlist>
+			<listitem>
+				<para>
+					<emphasis>Self-service rules</emphasis>, which define what operations a user can perform on his own personal entry. The access control type only allows write permissions 
+					to attributes within the entry; it does not allow add or delete operations for the entry itself.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<emphasis>Delegation rules</emphasis>, which allow a specific user group to perform write (edit) operations on specific attributes for users in another user group. Like self-service 
+					rules, this form of access control rule is limited to editing the values of specific attributes; it does not grant the ability to add or remove whole 
+					entries or control over unspecified attributes.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<emphasis>Role-based access control</emphasis>, which creates special access control groups which are then granted much broader authority over all types of 
+					entities in the &IPA; domain. Roles can be granted edit, add, and delete rights, meaning they can be granted complete control over entire entries, not just selected attributes. 
+				</para>
+				<para>
+					Some roles are already created and available within &PROD;. 
+					Special roles can be created to manage any type of entry in specific ways, such as hosts, automount configuration, netgroups, DNS settings, and &IPA; configuration. 
+				</para>
+			</listitem>
+		</itemizedlist>
+	</section>
+	</section>
+	
+	<section id="self-service"><title>Defining Self-Service Settings</title>
+		<para>
+			Self-service access control rules define the operations that an entity can perform on itself. These rules define only what attributes a 
+			user (or other &IPA; entity) can edit on their personal entries. 
+		</para>
+		<para>
+			Two self-service rules exist by default:
+		</para>
+		<itemizedlist>
+			<listitem>
+				<para>
+					A rule for editing some general attributes in the personal entry, including given name and surname, phone numbers, and addresses.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					A rule to edit user passwords, including two Samba passwords, the Kerberos password, and the general user password.
+				</para>
+			</listitem>
+		</itemizedlist>
+		<section id="self-service-ui"><title>Creating Self-Service Rules from the Web UI</title>
+			<orderedlist>
+				<listitem>
+					<para>
+						Open the <guilabel>IPA Server</guilabel> tab in the top menu, and select the <guilabel>Self Service Permissions</guilabel> subtab.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Click the <guilabel>Add</guilabel> link at the top of the list of self-service ACIs.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/selfservice-list.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+				</listitem>
+				<listitem>
+					<para>
+						Enter the name of the rule in the pop-up window. Spaces are allowed.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/selfservice-add.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+				</listitem>
+				<listitem>
+					<para>
+						Select the checkboxes by the attributes which this ACI will permit users to edit.
+					</para>
+				</listitem>
+				
+				<listitem>
+					<para>
+						Click the <guilabel>Add</guilabel> button to save the new self-service ACI.
+					</para>
+				</listitem>
+			</orderedlist>
+
+		</section>
+
+		<section id="self-service-cli"><title>Creating Self-Service Rules from the Command Line</title>
+			<para>
+				A new self-service rule can be added using the <command>selfservice-add</command> command. There are two required options, <option>--permissions</option> to set whether the 
+				ACI grants write, add, or delete permission and <option>--attrs</option> to give the full list of attributes which this ACI grants permission to.
+			</para>
+<screen>$ ipa selfservice-add "Users can manage their own name details" --permissions=write --attrs=givenname,displayname,title,initials
+-----------------------------------------------------------
+Added selfservice "Users can manage their own name details"
+-----------------------------------------------------------
+    Self-service name: Users can manage their own name details
+    Permissions: write
+    Attributes: givenname, displayname, title, initials</screen>
+		</section>
+		<section id="self-service-edit"><title>Editing Self-Service Rules</title>
+			
+			<para>
+				In the self-service entry in the web UI, the only element that can be edited is the list of attributes that are included in the ACI. The checkboxes can be selected or deselected.
+			</para>
+			<figure><title>Self-Service Edit Page</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/selfservice-edit.png" />
+					</imageobject>
+				</mediaobject>
+			</figure>
+			<para>
+				With the command line, self-service rules are edited using the <command>ipa selfservice-mod</command> command. The <option>--attrs</option> option overwrites whatever the previous list of 
+				supported attributes was, so always include the complete list of attributes along with any new attributes.
+			</para> 
+<screen>$ ipa selfservice-mod "Users can manage their own name details" --attrs=givenname,displayname,title,initials,surname
+--------------------------------------------------------------
+Modified selfservice "Users can manage their own name details"
+--------------------------------------------------------------
+Self-service name: Users can manage their own name details
+Permissions: write
+Attributes: givenname, displayname, title, initials</screen>
+			<important><title>IMPORTANT</title>
+				<para>
+					Include all of the attributes when modifying a self-service rule, including existing ones.
+				</para>
+
+			</important>
+		</section>
+	</section>
+
+
+
+	<section id="delegating-users"><title>Delegating Permissions over Users</title>
+		<para>
+			Delegation is very similar to roles in that one group of users is assigned permission to manage the entries for another group of users. However, the delegated authority is much more similar 
+			to self-service rules in that complete access is granted but only to specific user attributes, not to the entire entry. Also, the groups in delegated authority are existing &IPA; user 
+			groups instead of roles specifically created for access controls.
+		</para>
+		<section id="delegating-attributes-ui"><title>Delegating Access to User Groups in the Web UI</title>
+			<orderedlist>
+				<listitem>
+					<para>
+						Open the <guilabel>IPA Server</guilabel> tab in the top menu, and select the <guilabel>Delegations</guilabel> subtab.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Click the <guilabel>Add</guilabel> link at the top of the list of delegation ACIs.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/delegation-list.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+				</listitem>
+				<listitem>
+					<para>
+						Name the new delegation ACI.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						In the <guilabel>User group</guilabel> drop-down menu, select the group <emphasis>whose entries can be edited</emphasis> by members of the delegation group.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/delegation-add.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+				</listitem>
+				<listitem>
+					<para>
+						In the <guilabel>Member user group</guilabel> drop-down menu, select the group <emphasis>who is being granted permissions to</emphasis> the entries of users in the user group.
+					</para>
+				</listitem>
+				
+				<listitem>
+					<para>
+						In the attributes box, select the checkboxes by the attributes to which the member user group is being granted permission.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Click the <guilabel>Add</guilabel> button to save the new delegation ACI.
+					</para>
+				</listitem>
+			</orderedlist>
+		</section>
+		<section id="delegating-attributes-cli"><title>Delegating Access to User Groups in the Command Line</title>
+			<para>
+				A new delegation access control rule is added using the <command>delegation-add</command> command. There are three required arguments:
+			</para>
+			<itemizedlist>
+				<listitem>
+					<para>
+						<option>--group</option>, the group <emphasis>who is being granted permissions to</emphasis> the entries of users in the user group.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<option>--membergroup</option>, the group <emphasis>whose entries can be edited</emphasis> by members of the delegation group.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<option>--attrs</option>, the attributes which users in the member group are allowed to edit.
+					</para>
+				</listitem>
+			</itemizedlist>
+			<para>
+				For example:
+			</para>
+<screen>$ ipa delegation-add "basic manager attrs" --attrs=manager,title,employeetype,employeenumber --group=engineering_managers --membergroup=engineering
+--------------------------------------
+Added delegation "basic manager attrs"
+--------------------------------------
+  Delegation name: basic manager attrs
+  Permissions: write
+  Attributes: manager, title, employeetype, employeenumber
+  Member user group: engineering
+  User group: engineering_managers</screen>
+			<para>
+				Delegation rules are edited using the <command>delegation-mod</command> command. The <option>--attrs</option> option overwrites whatever the previous list of 
+				supported attributes was, so always include the complete list of attributes along with any new attributes.
+			</para> 
+<screen>$ ipa delegation-mod "basic manager attrs" --attrs=manager,title,employeetype,employeenumber,displayname
+-----------------------------------------
+Modified delegation "basic manager attrs"
+-----------------------------------------
+  Delegation name: basic manager attrs
+  Permissions: write
+  Attributes: manager, title, employeetype, employeenumber, displayname
+  Member user group: engineering
+  User group: engineering_managers</screen>
+
+			<important><title>IMPORTANT</title>
+				<para>
+					Include all of the attributes when modifying a delegation rule, including existing ones.
+				</para>
+
+			</important>
+		</section>
+	</section>
+
+	
+	<section id="defining-roles"><title>Defining Role-Based Access Controls</title>
+		<para>
+			Role-based access control grants a very different kind of authority to users compared to self-service and delegation access controls. Role-based access controls are fundamentally 
+			administrative, with the potential to add, delete, and significantly modify entries.
+		</para>
+		<para>
+			There are three parts to role-based access controls:
+		</para>
+		<itemizedlist>
+			<listitem>
+				<para>
+					The <emphasis>permission</emphasis>. The permission defines a specific operation or set of operations (write, add, or delete) and the target entries within the 
+					&IPA; LDAP directory to which those operations apply. Permissions are building blocks; they can be assigned to multiple privileges as needed. 
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					The <emphasis>privileges</emphasis> available to a role. A privilege is essentially a group of permissions. Permissions are not applied directly to a role. Permissions are 
+					added to a privilege so that the privilege creates a coherent and complete picture of a set of access control rules. For example, a permission can be created 
+					to add, edit, and delete automount locations. Then that permission can be combined with another permission relating to managing FTP services, and they can be used to 
+					create a single privilege that relates to managing filesystems.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					The <emphasis>role</emphasis>. This is the list of &IPA; users who are able to perform the actions defined in the privileges.
+				</para>
+			</listitem>
+		</itemizedlist>
+		<para>
+			It is possible to create entirely new permissions, as well as to create new privileges based on existing permissions or new permissions. A list of the default privileges and their associated 
+			permissions are in <xref linkend="tab.default-perms" />.
+		</para>
+		<note><title>NOTE</title>
+			<para>
+				<indexterm>
+					<primary>access control</primary>
+					<secondary>read permission</secondary>
+				</indexterm>
+					&PROD; does not provide a way to grant read access explicitly, and this is an important distinction from standard LDAP access control rules. In LDAP, 
+					all operations, including read, are implicitly denied and must be explicitly granted. In &IPA;, read and search access are implicitly granted to 
+					any authenticated user. 
+				</para>
+				<para>
+					Because read access is already granted, there is no way through the UI to grant read access. However, there is an option in the CLI tools to grant read access 
+					for special cases where there may be a broad deny rule set but read access should be granted to specific attributes. For example, read access is blocked to password
+					attributes, but could be allowed by a special read permission.
+				</para>
+			</note>
+		<table id="tab.default-perms"><title>Privileges and Permissions in &IPA;</title>
+			<tgroup cols="2">
+				<thead>
+					<row>
+						<entry>
+							Privilege
+						</entry>
+						<entry>
+							Associated Permissions
+						</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>
+							Automount Administrators
+						</entry>
+						<entry>
+							<simplelist>
+								<member>Add_Automount_maps</member>
+								<member>Remove_Automount_maps</member>
+								<member>Add_Automount_keys</member>
+								<member>Remove_Automount_keys</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							Certificate Administrators
+						</entry>
+						<entry>
+							<simplelist>
+								<member>Retrieve_Certificates_from_the_CA</member>
+								<member>Request_Certificate</member>
+								<member>Request_Certificates_from_a_different_hos</member>
+								<member>Get_Certificates_status_from_the_CA</member>
+								<member>Revoke_Certificate</member>
+								<member>Certificate_Remove_Hold</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							Delegation Administrator
+						</entry>
+						<entry>
+							<simplelist>
+								<member>Add_Roles</member>
+								<member>Remove_Roles</member>
+								<member>Modify_Roles</member>
+								<member>Modify_Role_membership</member>
+								<member>Modify_privilege_membership</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							DNS Administrators (for users)
+						</entry>
+						<entry>
+							<simplelist>
+								<member>add_dns_entries</member>
+								<member>remove_dns_entries</member>
+								<member>update_dns_entries</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							DNS Servers (for machines)
+						</entry>
+						<entry>
+							<simplelist>
+								<member>add_dns_entries</member>
+								<member>remove_dns_entries</member>
+								<member>update_dns_entries</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+						Group Administrators
+						</entry>
+						<entry>
+							<simplelist>
+								<member>Add_Groups</member>
+								<member>Remove_Groups</member>
+								<member>Modify_Groups</member>
+								<member>Modify_Group_membership</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							HBAC Administrator
+						</entry>
+						<entry>
+							<simplelist>
+								<member>Add_HBAC_rule</member>
+								<member>Delete_HBAC_rule</member>
+								<member>Modify_HBAC_rule</member>
+								<member>Manage_HBAC_rule_membership</member>
+								<member>Add_HBAC_services</member>
+								<member>Delete_HBAC_services</member>
+								<member>Add_HBAC_service_groups</member>
+								<member>Delete_HBAC_service_groups</member>
+								<member>Manage_HBAC_service_group_membership</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							Host Administrators
+						</entry>
+						<entry>
+							<simplelist>
+								<member>Add_Hosts</member>
+								<member>Remove_Hosts</member>
+								<member>Modify_Hosts</member>
+								<member>Manage_host_keytab</member>
+								<member>Enroll_a_host</member>
+								<member>Add_krbPrincipalName_to_a_host</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+						Host Enrollment
+						</entry>
+						<entry>
+							<simplelist>
+								<member>Manage_host_keytab</member>
+								<member>Enroll_a_host</member>
+								<member>Add_krbPrincipalName_to_a_host</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							Host Group Administrators
+						</entry>
+						<entry>
+							<simplelist>
+								<member>Add_Hostgroups</member>
+								<member>Remove_Hostgroups</member>
+								<member>Modify_Hostgroups</member>
+								<member>Modify_Hostgroup_membership</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							Modify Users and Reset Passwords
+						</entry>
+						<entry>
+							<simplelist>
+								<member>Modify_Users</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							Netgroups Administrators
+						</entry>
+						<entry>
+							<simplelist>
+								<member>Add_netgroups</member>
+								<member>Remove_netgroups</member>
+								<member>Modify_netgroups</member>
+								<member>Modify_netgroup_membership</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							Password Policy Administrator
+						</entry>
+						<entry>
+							<simplelist>
+								<member>Add_Group_Password_Policy_costemplate</member>
+								<member>Delete_Group_Password_Policy_costemplate</member>
+								<member>Modify_Group_Password_Policy_costemplate</member>
+								<member>Add_Group_Password_Policy</member>
+								<member>Delete_Group_Password_Policy</member>
+								<member>Modify_Group_Password_Policy</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							Replication Administrators<footnote><para>This permission can only be granted to servers, not to users.</para></footnote>
+						</entry>
+						<entry>
+							<simplelist>
+								<member>Add_Replication_Agreements</member>
+								<member>Remove_Replication_Agreements</member>
+								<member>Modify_Replication_Agreements</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							Service Administrators
+						</entry>
+						<entry>
+							<simplelist>
+								<member>Add_Services</member>
+								<member>Remove_Services</member>
+								<member>Modify_Services</member>
+								<member>Manage_service_keytab</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							Sudo Administrator
+						</entry>
+						<entry>
+							<simplelist>
+								<member>Add_Sudo_rule</member>
+								<member>Delete_Sudo_rule</member>
+								<member>Modify_Sudo_rule</member>
+								<member>Add_Sudo_command</member>
+								<member>Delete_Sudo_command</member>
+								<member>Modify_Sudo_command</member>
+								<member>Add_Sudo_command_group</member>
+								<member>Delete_Sudo_command_group</member>
+								<member>Manage_Sudo_command_group_membership</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							User Administrators
+						</entry>
+						<entry>
+							<simplelist>
+								<member>Change_a_user_password</member>
+								<member>Add_user_to_default_group</member>
+								<member>Unlock_user_accounts</member>
+								<member>Remove_Users</member>
+								<member>Modify_Users</member>
+								<member>Add_Users</member>
+							</simplelist>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							Write IPA Configuration
+						</entry>
+						<entry>
+							<simplelist>
+								<member>Write_IPA_Configuration</member>
+							</simplelist>
+						</entry>
+					</row>
+				</tbody>							
+			</tgroup>
+		</table>
+
+		<section id="creating-roles"><title>Creating Roles</title>
+			<section id="creating-roles-ui"><title>Creating Roles in the Web UI</title>
+				<orderedlist>
+					<listitem>
+						<para>
+							Open the <guilabel>IPA Server</guilabel> tab in the top menu, and select the <guilabel>Role Based Access Control</guilabel> subtab.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guilabel>Add</guilabel> link at the top of the list of role-based ACIs.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/role-list.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							Enter the role name and a description.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/role-add.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guibutton>Add and Edit</guibutton> button to save the new role and go to the configuration page.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Open the <guilabel>Privileges</guilabel> tab in the role configuration page.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guilabel>Add</guilabel> link at the top of the list of privileges to add a new privilege.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/role-privlist.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							Enter the role name and a description.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/role-add.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+				</orderedlist>
+			</section>
+
+
+			<section id="creating-roles-cli"><title>Creating Roles in the Command Line</title>
+			<orderedlist>
+				<listitem>
+					<para>
+						Add the new role:
+					</para>
+					
+<screen># ipa role-add --desc="User Administrator" useradmin
+  ------------------------
+  Added role "useradmin"
+  ------------------------
+  Role name: useradmin
+  Description: User Administrator</screen>
+
+				</listitem>
+				<listitem>
+					<para>
+						Add the required privileges to the role:
+					</para>
+					
+<screen># ipa role-add-privilege --privileges="User Administrators" useradmin
+  Role name: useradmin
+  Description: User Administrator
+  Privileges: user administrators
+  ----------------------------
+  Number of privileges added 1
+----------------------------
+</screen>
+
+				</listitem>
+				<listitem>
+					<para>
+						Add the required groups to the role. In this case, we are adding only a single group, <systemitem class="groupname">useradmin</systemitem>, which already exists.
+					</para>
+					
+<screen># ipa role-add-member --groups=useradmins useradmin
+  Role name: useradmin
+  Description: User Administrator
+  Member groups: useradmins
+  Privileges: user administrators
+  -------------------------
+  Number of members added 1
+-------------------------
+</screen>
+
+				</listitem>
+
+			</orderedlist>
+		</section>
+		</section>
+
+		<section id="creating-perms"><title>Creating New Permissions</title>
+			
+		<note><title>NOTE</title>
+			<para>
+				<indexterm>
+					<primary>access control</primary>
+					<secondary>read permission</secondary>
+				</indexterm>
+					&PROD; does not provide a way to grant read access explicitly, and this is an important distinction from standard LDAP access control rules. In LDAP, 
+					all operations, including read, are implicitly denied and must be explicitly granted. In &IPA;, read and search access are implicitly granted to 
+					any authenticated user. 
+				</para>
+				<para>
+					Because read access is already granted, there is no way through the UI to grant read access. However, there is an option in the CLI tools to grant read access 
+					for special cases where there may be a broad deny rule set but read access should be granted to specific attributes. For example, read access is blocked to password
+					attributes, but could be allowed by a special read permission.
+				</para>
+			</note>
+			<section id="creating-perms-ui"><title>Creating New Permissions from the Web UI</title>
+			<orderedlist>
+				<listitem>
+					<para>
+						Open the <guilabel>IPA Server</guilabel> tab in the top menu, and select the <guilabel>Role Based Access Control</guilabel> subtab.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Select the <guilabel>Permissions</guilabel> task link.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Click the <guilabel>Add</guilabel> link at the top of the list of permissions.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/role-permission-list.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+				</listitem>
+				<listitem>
+					<para>
+						Enter the name of the new permission.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Select the checkboxes next to the allowed operations for this permission.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/role-permission-add.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+				</listitem>
+				<listitem>
+					<para>
+						Select the method to use to identify the target entries from the <guilabel>Target</guilabel> drop-down menu. There are four different methods:
+					</para>
+					<itemizedlist>
+						<listitem>
+							<para>
+								<emphasis>Type</emphasis> looks for an entry type like user, host, or service and then provides a list of all possible attributes for that 
+								entry type. The attributes which will be accessible through this ACI are selected from the list.
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								<emphasis>Filter</emphasis> uses an LDAP filter to identify which entries the permission applies to. 
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								<emphasis>Subtree</emphasis> targets every entry beneath the specified subtree entry. All attributes within the matching entries can be modified.
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								<emphasis>Target group</emphasis> specifies a user group, and all the user entries within that group are available through the ACI. All attributes within the matching entries can be modified.
+							</para>
+						</listitem>
+					</itemizedlist>
+					<note><title>NOTE</title>
+						
+							<para>
+								For <emphasis>Filter</emphasis>, <emphasis>Subtree</emphasis>, and <emphasis>Target group</emphasis> methods, no attributes are set in the UI. These must be added later using <command>ipa permission-mod --attrs</command>. If no attributes are set for the permission then, by default, all attributes are excluded.
+							</para>
+						</note>
+				</listitem>
+				<listitem>
+					<para>
+						Fill in the required information to identify the target entries, depending on the selected type.
+					</para>
+				</listitem>
+					<listitem>
+						<para>
+							Click the <guibutton>Add</guibutton> button to save the permission.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							For <emphasis>Filter</emphasis>, <emphasis>Subtree</emphasis>, and <emphasis>Target group</emphasis> methods, set the attributes for the ACI to include. This must be done from the command line. 
+						</para>
+						<para>
+							For example:
+						</para>
+						<screen>[jsmith@ipaserver ~]$ ipa permission-mod "manage Windows groups" <userinput>--attrs=description,member</userinput></screen>
+					</listitem>
+			</orderedlist>
+			</section>
+			<section id="creating-perms-cli"><title>Creating New Permissions from the Command Line</title>
+				<para>
+					A new permission is added using the <command>permission-add</command> command. All permissions require a list of attributes over which permission is granted (<option>--attr</option>), a list of allowed actions (<option>--permissions</option>), and the 
+					target entries for the ACI. There are four methods to identify the target entries:
+				</para>
+					<itemizedlist>
+						<listitem>
+							<para>
+								<emphasis>--type</emphasis> looks for an entry type like user, host, or service and then provides a list of all possible attributes for that 
+								entry type.
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								<emphasis>--filter</emphasis> uses an LDAP filter to identify which entries the permission applies to. 
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								<emphasis>--subtree</emphasis> targets every entry beneath the specified subtree entry. 
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								<emphasis>--targetgroup</emphasis> specifies a user group, and all the user entries within that group are available through the ACI. 
+							</para>
+						</listitem>
+					</itemizedlist>
+					<example id="ex.perm-filter"><title>Adding a Permission with a Filter</title>
+						<para>
+							A filter can be any valid LDAP filter.
+						</para>
+<screen>$ ipa permission-add "manage Windows groups" <userinput>--filter="(!(objectclass=posixgroup))"</userinput> --permissions=write --attrs=description</screen>
+					</example>
+					<note><title>NOTE</title>
+						<para>
+							The <command>permission-add</command> command does not validate the given LDAP filter. Verify that the filter returns the expected results before configuring the permission.
+						</para>
+					</note>
+					<example id="ex.perm-subtree"><title>Adding a Permission for a Subtree</title>
+						<para>
+							All a subtree filter requires is a DN within the directory. Since &IPA; uses a simplified, flat directory tree structure, this can be used to target some types of entries, like automount locations, which are containers or parent entries for other configuration.
+						</para>
+<screen>$ ipa permission-add "manage automount locations" <userinput>--subtree="ldap://ldap.example.com:389/cn=automount,dc=example,dc=com"</userinput> --permissions=write --attrs=automountmapname,automountkey,automountInformation</screen>
+					</example>
+					<example id="ex.perm-type"><title>Adding a Permission Based on Object Type</title>
+						<para>
+							There seven object types that can be used to form a permission:
+						</para>
+						<itemizedlist>
+							  <listitem>
+								  <para>
+									  user
+								  </para>
+							  </listitem>
+							  <listitem>
+								  <para>
+									  group
+								  </para>
+							  </listitem>
+							  <listitem>
+								  <para>
+									  host
+							  </para>
+						  </listitem>
+						    <listitem>
+							    <para>
+								    service
+							    </para>
+						    </listitem>
+						    <listitem>
+							    <para>
+								    hostgroup
+							    </para>
+			      			    </listitem>
+						  <listitem>
+							  <para>
+								  netgroup
+							  </para>
+			  			  </listitem>
+						  <listitem>
+							  <para>
+								  dnsrecord
+				  			</para>
+						  </listitem>
+					  </itemizedlist>
+					  <para>
+				  		Each type has its own set of allowed attributes, in a comma-separated list.
+					  </para>
+<screen>$ ipa permission-add "manage service" --permissions=all --type=service --attrs=krbprincipalkey,krbprincipalname,managedby </screen>
+					  <para>
+						  The attributes (<option>--attrs</option>) must exist and be allowed attributes for the given object type, or the permission operation fails with schema syntax errors.
+					</para>
+				  </example>
+			</section>
+		</section>
+
+		<section id="creating-priv"><title>Creating New Privileges</title>
+			<section id="creating-priv-ui"><title>Creating New Privileges from the Web UI</title>
+			<orderedlist>
+				<listitem>
+					<para>
+						Open the <guilabel>IPA Server</guilabel> tab in the top menu, and select the <guilabel>Role Based Access Control</guilabel> subtab.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Select the <guilabel>Privileges</guilabel> task link.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Click the <guilabel>Add</guilabel> link at the top of the list of privileges.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/role-priv-list.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+				</listitem>
+				<listitem>
+					<para>
+						Enter the name and a description of the privilege.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/role-priv-add.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+				</listitem>
+				<listitem>
+					<para>
+						Click the <guibutton>Add and Edit</guibutton> button to go to the privilege configuration page to add permissions.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Select the <guilabel>Permissions</guilabel> tab.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Click the <guilabel>Add</guilabel> link at the top of the list of permissions to add permission to the privilege.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/role-priv-addperm.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+				</listitem>
+					<listitem>
+						<para>
+							Click the checkbox by the names of the permissions to add, and click the right arrows button, <guibutton>>></guibutton>, to move the permissions 
+							to the selection box.
+						</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/role-priv-addperm2.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guibutton>Add</guibutton> button.
+						</para>
+					</listitem>
+			</orderedlist>
+			</section>
+			<section id="creating-priv-cli"><title>Creating New Privileges from the Command Line</title>
+				<para>
+					Privilege entries are created using the <command>privilege-add</command> command, and then permissions are added to the privilege group using the 
+					<command>privilege-add-permission</command> command.
+				</para>
+				<orderedlist>
+					<listitem>
+						<para>
+							Create the privilege entry.
+						</para>
+<screen>$ ipa privilege-add "managing filesystems" --desc="for filesystems"</screen>
+					</listitem>
+					<listitem>
+						<para>
+							Assign the desired permissions. For example:
+						</para>
+<screen>$ ipa privilege-add-permission "managing filesystems" --permissions="managing automount","managing ftp services"</screen>
+					</listitem>
+				</orderedlist>
+			</section>
+		</section>
+			
+	</section>
+
 </chapter>
+
+

@@ -1,1681 +1,1601 @@
-<?xml version='1.0' encoding='utf-8'?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
-[
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 ]>
 <chapter id="active-directory-trust">
-    <title>Identity: Integrating with Active Directory Through Cross-Realm
-    Kerberos Trusts &TITLE_TPREVIEW;</title>
-    <para>Kerberos allows the configuration of 
-    <emphasis>trusted realms</emphasis>. Each realm has its own resources and
-    users, yet the trust relationship allows users of any trusted realm to
-    obtain tickets and connect to machines or services in a peer realm as if
-    they were members of that peer realm.</para>
-    <para>Because of differences in the way that Windows and Linux domains
-    implement LDAP services, DNS management, and even Kerberos realms, it is
-    difficult to establish a direct trust between &AD; and Linux domains
-    manually. A trust relationship using &IPA; centrally defines and
-    establishes the Kerberos trust and DNS mappings so that &AD; users can
-    access Linux hosts and services completely transparently, using one set of
-    credentials.</para>
-    <section id="trust-defined">
-        <title>The Meaning of "Trust"</title>
-        <para>Kerberos has the ability to create a relationship between two
-        otherwise separate realms. This is called a 
-        <emphasis>cross-realm trust</emphasis>. This is described in some
-        detail in 
-        <ulink url="https://access.redhat.com/knowledge/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Managing_Smart_Cards/Setting_Up_Cross_Realm_Authentication.html">
-        Managing Single Sign-On and Smart Cards</ulink>. These realms create a
-        shared ticket and key so a member of one realm is perceived as a member
-        of both realms. One realm 
-        <emphasis>trusts</emphasis>another.</para>
-        <section id="trust-realms">
-            <title>How Trust Works: Transparency Between Kerberos and DNS
-            Realms</title>
-            <para>Both &AD; and &PROD; manage a variety of core services:
-            Kerberos, LDAP, DNS, certificate services. For these two disparate
-            domains to be integrated transparently, all of these core services
-            need to be able to interact cleanly with one another.</para>
-            <para>Those services can be broken into two major points of
-            interaction: a Kerberos realm and a DNS domain. Certificate
-            services, LDAP entries, and other services can be managed
-            independently for &AD; and &IPA;. The place where they interect is
-            where identities need to be authenticated (Kerberos) and a
-            mechanism to route queries between domains (DNS).</para>
-            <section id="trust-components">
-                <title>Components Involved in Trusts</title>
-                <para>&IPA; cross-realm trusts leverage four primary
-                components:</para>
-                <itemizedlist>
-                    <listitem>
-                        <para>&AD;</para>
-                    </listitem>
-                    <listitem>
-                        <para>Samba, to perform identity lookups on &AD; and
-                        retrieve user and group security identifiers (SIDs) for
-                        authorization information</para>
-                    </listitem>
-                    <listitem>
-                        <para>SSSD, to cache user, group, and ticket
-                        information for users and to map Kerberos and DNS
-                        domains</para>
-                    </listitem>
-                    <listitem>
-                        <para>&PROD;</para>
-                    </listitem>
-                </itemizedlist>
-                <figure id="fig.trust-components">
-                    <title>Applications and Services for Trust</title>
-                    <mediaobject>
-                        <imageobject>
-                            <imagedata fileref="images/trust-components.png" />
-                        </imageobject>
-                    </mediaobject>
-                </figure>
-            </section>
-            <section id="comp-trust-dirs">
-                <title>&AD; and &PROD; Directories</title>
-                <para>One of the most common backends for user identities is
-                &AD;, and many environments &mdash; even primarily Linux or
-                heterogenous environments &mdash; rely on &AD; for user
-                management. In many environments, however, that means that an
-                entirely different set of users must be defined to access Linux
-                systems.</para>
-                <para>Trusts allows a natural division of labor in an IT
-                environment between user administration (in &AD;) and Linux or
-                data center management (through &IPA;). All user accounts can
-                be stored in &AD;, without needing to recreate user accounts on
-                Linux systems, while all Linux systems can still be centrally
-                managed using native Linux tools.</para>
-                <figure id="fig.trust-direction">
-                    <title>Trust Direction: &AD; Users to Linux
-                    Resources</title>
-                    <mediaobject>
-                        <imageobject>
-                            <imagedata fileref="images/trust-direction.png" />
-                        </imageobject>
-                    </mediaobject>
-                </figure>
-                <para>Trusts, then, are essentially unidirectional. &AD; users
-                can access &IPA; resources and services, but &IPA; users cannot
-                access &AD; resources. Trust allows Windows administrators and
-                users to be able to access and manage Linux resources 
-                <footnote>
-                    <para>Trusted users, however, cannot manage &PROD;
-                    itself.</para>
-                </footnote>.</para>
-                <para>
-                    <emphasis role="bold">A trust relationship is established
-                    between a single &AD; domain and a single &IPA;
-                    domain.</emphasis>
-                </para>
-                <note>
-                    <title>NOTE</title>
-                    <para>No Windows machine can be a client of the &IPA;
-                    domain in a trust environment. All Windows machines must be
-                    in the &AD; domain.</para>
-                </note>
-                <para>A relationship is established between the &AD;
-                environment and the &IPA; environment through a 
-                <emphasis>trust agreement</emphasis>, which identifies the
-                involved domains and the settings for the trust
-                environment.</para>
-            </section>
-            <section id="comp-trust-dns">
-                <title>DNS Domains</title>
-                <para>Both &AD; and &PROD; can define DNS services, and those
-                DNS domains must interact cleanly with each other. There are
-                two potential DNS configurations:</para>
-                <itemizedlist>
-                    <listitem>
-                        <para>The DNS domains can be independent.</para>
-                    </listitem>
-                    <listitem>
-                        <para>&PROD; can be configured as a subdomain of
-                        &AD;.</para>
-                    </listitem>
-                </itemizedlist>
-                <para>In both cases, the different domains forward requests to
-                each other as necessary and maintain different DNS namespaces.
-                It is just a matter of defining how they recognize each other
-                for forwarding queries.</para>
-                <important>
-                    <title>IMPORTANT</title>
-                    <para>Both &AD; and &PROD; must be configured with
-                    integrated DNS servers.</para>
-                </important>
-                <formalpara>
-                    <title>Separate DNS Domains</title>
-                    <para>In this case, there are two entirely different
-                    namespaces, such as 
-                    <command>ipaexample.com</command>and 
-                    <command>adexample.com</command>. For these domains to
-                    communicate, they must be configured as conditional
-                    forwarders of each other's domain.</para>
-                </formalpara>
-                <figure id="fig.trust-dns1">
-                    <title>Trust with Separate DNS Domains</title>
-                    <mediaobject>
-                        <imageobject>
-                            <imagedata fileref="images/trust-dns1.png" />
-                        </imageobject>
-                    </mediaobject>
-                </figure>
-                <formalpara>
-                    <title>&PROD; as a Subdomain</title>
-                    <para>In this case, &PROD; is a namespace within the larger
-                    &AD; space, such as 
-                    <command>linux.example.com</command>and 
-                    <command>example.com</command>. &IPA; can be configured to
-                    send all requests to the &AD; domain (a forward-only
-                    policy) or it can send queries first to &AD; and then
-                    attempt to resolve them itself (a foward-first
-                    policy).</para>
-                </formalpara>
-                <figure id="fig.trust-dns2">
-                    <title>Trust with &IPA; as a DNS Subdaomin of &AD;</title>
-                    <mediaobject>
-                        <imageobject>
-                            <imagedata fileref="images/trust-dns2.png" />
-                        </imageobject>
-                    </mediaobject>
-                </figure>
-            </section>
-            <section id="comp-trust-krb">
-                <title>Kerberos Realms, Authentication, and
-                Authorization</title>
-                <para>Group information in &AD; is stored in a list of
-                identifiers in each Kerberos ticket for &AD; users in a special
-                dataset called 
-                <emphasis>privileged access certificates</emphasis>or MS-PAC.
-                The group information in the PAC has to be mapped to the &AD;
-                groups and then to the corresponding &IPA; groups to help
-                determine access. A PAC is essentially an account usability
-                extension.</para>
-                <para>Understanding the group mapping for trusts can help
-                clarify how groups should be structured in trust
-                environments.</para>
-                <para>Microsoft uses a special authorization structure called 
-                <emphasis>privileged access certificates</emphasis>or MS-PAC. A
-                PAC is embedded in a Kerberos ticket as a way of identifying
-                the entity to other Windows clients and servers in the Windows
-                domain.</para>
-                <para>On &IPA; resources, if an &AD; user requests a ticket for
-                a service, then &IPA; forwards the request to &AD; to retrieve
-                the user information. The PAC information sent back by &AD; is
-                embedded in the Kerberos ticket.</para>
-                <note>
-                    <title>NOTE</title>
-                    <para>All Kerberos communication for both &AD; and &IPA;
-                    for trusts uses GSS-API.</para>
-                </note>
-                <para>&IPA; (through SSSD, as &IPAA; client), extracts the &AD;
-                group 
-                <emphasis>security identifiers</emphasis>(SIDs) from the PAC.
-                &IPA; then compares the &AD; SIDs in the PAC to the group SIDs
-                configured as members in &IPA; groups. If the &AD; group is a
-                member of &IPAA; group, then the &IPA; group SID is added to
-                the PAC, and the Kerberos ticket is updated with the new
-                PAC.</para>
-                <figure id="fig.trust-components2">
-                    <title>&IPA;, SSSD, and &AD;</title>
-                    <mediaobject>
-                        <imageobject>
-                            <imagedata fileref="images/trust-components2.png" />
-                        </imageobject>
-                    </mediaobject>
-                </figure>
-                <para>That new ticket is then used to generate a service ticket
-                for the user, and the user is granted access to the
-                &IPA;-hosted services. according to their access rules.
-                Additionally, the &IPA; group information in the SSSD user
-                cache is updated to include the mapped &IPA; groups for the
-                &AD; user.</para>
-                <para>SSSD stores multiple TGTs and tickets for each user, as
-                new services are accessed.</para>
-                <para>A simpler way of saying this is that &AD; supplies a list
-                of groups for each user, based on an identifier for the group.
-                &IPA; compares that list of &AD; groups to memberships in &IPA;
-                groups (where each group member is identified by that SID,
-                rather than by a name or DN). If the &AD; groups to which the
-                user belongs are known to the &IPA; domain, then the user is
-                recognized by the &IPA; domain.</para>
-                <para>
-                <emphasis role="bold">The crucial factor to realize in this is
-                that &AD; users are recognized to the &IPA; domain not by their
-                &AD; user entry, but by their &AD; group
-                memberships.</emphasis>In a sense, &AD; 
-                <emphasis>users</emphasis>are not trusted by the &IPA; domain
-                &mdash; &AD; 
-                <emphasis>groups</emphasis>are.</para>
-                <para>But this method of mapping &AD; group SIDs to &IPA; group
-                members means that group structure in &IPA; is important. &AD;
-                groups have different attributes than Linux groups and,
-                therefore, different attributes than &IPA; groups. Most
-                critically, &AD; groups are not POSIX groups, while &IPA;
-                groups are.</para>
-                <para>&IPA; has introduced an intermediary, non-POSIX group
-                type, 
-                <emphasis>external groups</emphasis>, which allow entities
-                outside &IPA; or a Linux system to be added as member. That
-                external group can then be added to a standard &IPA; (POSIX)
-                group as a member.</para>
-                <para>When &AD; groups are added to &IPAA; group, they can be
-                idenfitied by their SID or by name, in the formats 
-                <emphasis>DOMAIN\group_name</emphasis>or 
-                <emphasis>group_name@domain</emphasis>. &IPA; then resolves the
-                group name to the SID and stores the SID as the group member
-                entry, to be compared to any offered user PAC.</para>
-                <para>Actually configuring groups for &AD; users is described
-                in 
-                <xref linkend="trust-groups" />.</para>
-                <important>
-                    <title>IMPORTANT</title>
-                    <para>Both &AD; and &PROD; must be configured with
-                    integrated certificate services.</para>
-                </important>
-                <para>All sessions in a trust environment are ultimately
-                secured with Kerberos tickets, but users have different login
-                options:</para>
-                <itemizedlist>
-                    <listitem>
-                        <para>Ticket-based authentication through 
-                        <command>kinit</command></para>
-                    </listitem>
-                    <listitem>
-                        <para>Simple username/password authentication that is
-                        negotiated into a ticket</para>
-                    </listitem>
-                    <listitem>
-                        <para>Passwordless authentication that is negotiated
-                        into a ticket (depending on the Kerberos client
-                        configuration</para>
-                    </listitem>
-                </itemizedlist>
-            </section>
-        </section>
-        <section id="trust-sync">
-            <title>Trust in Contrast to Synchronization</title>
-            <para>Trusts and synchronization are fundamentally different
-            approaches to integrating &IPAA; domain and &AD; domain. The
-            structure of trust domains (outlined in 
-            <xref linkend="trust-realms" />), the complexity of group
-            assignments, the location of user and group entries, and other
-            factors all influence which solution is most effective for a given
-            environment.</para>
-            <para>Synchronization has a certain simplicity in its overall
-            topology and setup, and it has a relatively small administrative
-            footprint. However, it is much more limited in how it handles
-            directory data, its ability to map entries, its overall
-            performance, and its security.</para>
-            <table id="tab.summary-sync-trust">
-                <title>Positives and Negatives of Using Sync</title>
-                <tgroup cols="2">
-                    <thead>
-                        <row>
-                            <entry>Positives of Sync</entry>
-                            <entry>Negatives of Sync</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry>
-                                <itemizedlist>
-                                    <listitem>
-                                        <para>Simple setup procedures</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Few rules about the &AD;
-                                        configuration, including being agnostic
-                                        about DNS and Kerberos domains</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Users and groups can originate in
-                                        both &AD; and &IPA; domains</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>&AD; users can function as &IPA;
-                                        users, including as
-                                        administrators</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Windows machines can be added as
-                                        clients to the &IPA; domain</para>
-                                    </listitem>
-                                </itemizedlist>
-                            </entry>
-                            <entry>
-                                <itemizedlist>
-                                    <listitem>
-                                        <para>Limited set of synchronized
-                                        attributes and problematic data
-                                        mapping</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Potential data inconsistency
-                                        between &AD; and &IPA; entries for the
-                                        same user</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Different LDAP versions,
-                                        synchronization protocols, and other
-                                        technology differences</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Delays in relaying updates
-                                        between directories</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Decreased performance</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Security implications of syncing
-                                        passwords &mdash; or administrative
-                                        complexity for maintaining different
-                                        passwords for the same user account in
-                                        difference locations</para>
-                                    </listitem>
-                                </itemizedlist>
-                            </entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </table>
-            <para>The initial environment configuration for trusts is much more
-            complex than synchronization, but it has advantages in simplifying
-            single sign-on to systems, web applications, or terminals; not
-            requiring additional directory administration; and preserving data
-            integrity.</para>
-            <table id="tab.summary-trust-trust">
-                <title>Positives and Negatives of Using Trusts</title>
-                <tgroup cols="2">
-                    <thead>
-                        <row>
-                            <entry>Positives of Trusts</entry>
-                            <entry>Negatives of Trusts</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry>
-                                <itemizedlist>
-                                    <listitem>
-                                        <para>Pulls in authentication, group,
-                                        and authorization data automatically
-                                        when a user logs in</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Allows true single sign-on, with
-                                        a single stored password and without
-                                        having to synchronize passwords between
-                                        directories</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Caches data in a local
-                                        database</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Allows users to be entirely
-                                        defined in a single domain, yet have
-                                        access to multiple domains</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Can be configured without having
-                                        to know or restructure the underlying
-                                        directory trees</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Allows Kerberos authentication,
-                                        username/password authentication (which
-                                        generates a Kerberos ticket), or
-                                        passwordless logins</para>
-                                    </listitem>
-                                </itemizedlist>
-                            </entry>
-                            <entry>
-                                <itemizedlist>
-                                    <listitem>
-                                        <para>Has very specific DNS
-                                        configuration requirements</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Can potentially have long wait
-                                        times to retrieve data when a user
-                                        initially logs in</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Prefers that users be located in
-                                        a single directory and resources in
-                                        another</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Windows machines 
-                                        <emphasis>cannot</emphasis>be clients
-                                        of the &IPA; domain</para>
-                                    </listitem>
-                                </itemizedlist>
-                            </entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </table>
-            <note>
-                <title>NOTE</title>
-                <para>There is no clear migration path from using
-                synchronization to using trusts because the entries already
-                exist in the backend &IPA; LDAP directory. This means that &AD;
-                user entries (or all user entries, if &IPA; users are also
-                synced) are duplicated, which can lead to odd behavior with
-                logins, group associations, and lookups.</para>
-            </note>
-        </section>
-        <section id="trust-ipa-features">
-            <title>&AD; Users and &IPA; Features: sudo and Host-Based Access
-            Control Policies</title>
-            <para>&AD; users 
-            <emphasis>cannot</emphasis>be added directly to &IPAA; group as a
-            member. This means that policies and configuration in &IPA; which
-            rely on group associations &mdash; such as host-based access
-            control rules and sudo policies &mdash; must be configured in a
-            kind of daisy-chain.</para>
-            <para>The &AD; user is added to an &AD; group, then that &AD; group
-            is added to &IPAA; external group, which is added as a member to a
-            POSIX group. The sudo, host-based access controls, and other
-            policies are applied against that POSIX group and, ultimately,
-            through nesting memberships applied to the &AD; user when accessing
-            &IPA; domain resources.</para>
-            <screen>Active Directory Server Identity Management Server
-            ---------------------------
-            ------------------------------------------------------- | AD user
-            -&gt; AD group -&gt;| -&gt; | External Group -&gt; POSIX Group
-            -&gt; sudo/HBAC policies | ---------------------------
-            -------------------------------------------|----------- ^ V
-            |--------------------------------------------------------------------</screen>
-            <note>
-                <title>NOTE</title>
-                <para>Testing tools such as 
-                <command>hbactest</command>will not work with trusted users
-                because the trusted user group associations are resolved
-                dynamically, not stored in the &IPA; directory.</para>
-            </note>
-        </section>
-        <section id="sid-issues">
-            <title>Potential Issues with Group Mapping and SIDs</title>
-            <formalpara>
-                <title>Losing Kerberos Tickets</title>
-                <para>Running any command to obtain a SID from the Samba
-                service &mdash; such as 
-                <command>net getlocalsid</command>or 
-                <command>net getdomainsid</command>&mdash; kills any existing
-                admin ticket in the Kerberos cache.</para>
-            </formalpara>
-            <formalpara id="trust-group-limits">
-                <title>Cannot Verify Group Membership for Users</title>
-                <para>There is no way to verify that a specific trusted user is
-                associated with a specific &IPA; group, external or
-                POSIX.</para>
-            </formalpara>
-            <formalpara>
-                <title>Cannot Display (Remote) &AD; Group Memberships for an
-                &AD; User</title>
-                <para>For Linux system users, local group associations can be
-                shown for a user using the 
-                <command>id</command>command. However, &AD; group memberships
-                are not displayed with 
-                <command>id</command>for &AD; users, even though they are with
-                Samba tools.</para>
-            </formalpara>
-            <para>The 
-            <command>wbinfo</command>command can be used to obtain a SID for an
-            &AD; user and then to display groups associated with that
-            SID.</para>
-            <screen>[root@ipaserver ~]# wbinfo -n ADDOMAIN\\jsmith
-            S-1-5-21-1689615952-3716327440-3249090444-1104 SID_USER (1)
-            [root@ipaserver ~]# wbinfo
-            --user-domgroups=S-1-5-21-1689615952-3716327440-3249090444-1104
-            S-1-5-21-1689615952-3716327440-3249090444-513
-            S-1-5-21-1689615952-3716327440-3249090444-1106</screen>
-            <para>The same query using 
-            <command>id</command>shows only the user information, not the &AD;
-            group membership information.</para>
-            <screen>[root@ipaserver ~]# id ADDOMAIN\\jsmith
-            uid=1921801104(jsmith@adexample.com)
-            gid=1921801104(jsmith@adexample.com)
-            groups=1921801104(jsmith@adexample.com)</screen>
-            <note>
-                <title>TIP</title>
-                <para>To work around this, ssh into &IPAA; client machine as
-                the given &AD; user. After the first successful login, the &AD;
-                group memberships are detected and returned in the 
-                <command>id</command>search.</para>
-                <screen>[root@ipaserver ~]# id ADDOMAIN\jsmith
-                uid=1921801107(jsmith@adexample.com)
-                gid=1921801107(jsmith@adexample.com)
-                groups=1921801107(jsmith@adexample.com),129600004(ad_users),1921800513(domain
-                users@adexample.com)</screen>
-            </note>
-        </section>
-        <section id="ad-trust-admin">
-            <title>&AD; Users and &IPA; Administration</title>
-            <para>Trust relationships are unidirectional. &AD; users exist only
-            within the &AD; domain and are limited to what resources within the
-            &IPA; domain they can access. 
-            <emphasis role="bold">&AD; users are not administrators for &IPA;
-            because they do not exist within &IPA;.</emphasis></para>
-            <para>&AD; users, then, cannot use any &IPA; administrative tools,
-            including the web UI and command-line tools.</para>
-        </section>
-    </section>
-    <section id="trust-requirements">
-        <title>Environment and Machine Requirements to Set Up Trusts</title>
-        <para>Make sure that both the &AD; and &IPA; servers, machines, and
-        environments meet the requirements and settings in this section 
-        <emphasis>before</emphasis>configuring a trust agreement.</para>
-        <section id="trust-req-domain-names">
-            <title>Domain and Realm Names</title>
-            <para>The &IPA; DNS domain name and Kerberos realm name 
-            <emphasis>must</emphasis>be different than the &AD; DNS domain name
-            and Kerberos realm name.</para>
-        </section>
-        <section id="trust-req-netbios-names">
-            <title>NetBIOS Names</title>
-            <para>The NetBIOS name is the far-left component of the domain
-            name. For example, if the domain is 
-            <emphasis>linux.example.com</emphasis>, the NetBIOS name is 
-            <emphasis>linux</emphasis>, while if the domain name is simply 
-            <emphasis>example.com</emphasis>, it is 
-            <emphasis>example</emphasis>. The NetBIOS name is critical for
-            identifying the &AD; domain and, if the &IPA; domain is within a
-            subdomain of &AD; DNS, for identifying the &IPA; domain and
-            services.</para>
-            <para>The &IPA; domain and &AD; domain must have different NetBIOS
-            names.</para>
-        </section>
-        <section id="trust-req-dns1">
-            <title>Integrated DNS</title>
-            <para>Both the &AD; server and the &IPA; server must be configured
-            to run their own respective DNS services.</para>
-        </section>
-        <section id="trust-req-ports">
-            <title>Firewalls and Ports</title>
-            <formalpara>
-                <title>Required Ports</title>
-                <para>For a trust relationship, the &AD; server and &IPA;
-                server must have almost all of the required system ports open
-                that are required for &IPAA; server installation, 
-                <emphasis role="bold">with the exception of the LDAP
-                ports</emphasis>.</para>
-            </formalpara>
-            <table id="tab.trust-ports">
-                <title>&IPA; Ports</title>
-                <tgroup cols="3">
-                    <thead>
-                        <row>
-                            <entry>Service</entry>
-                            <entry>Ports</entry>
-                            <entry>Type</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry>HTTP/HTTPS</entry>
-                            <entry>
-                                <simplelist>
-                                    <member>80</member>
-                                    <member>443</member>
-                                </simplelist>
-                            </entry>
-                            <entry>TCP</entry>
-                        </row>
-                        <row>
-                            <entry>Kerberos</entry>
-                            <entry>
-                                <simplelist>
-                                    <member>88</member>
-                                    <member>464</member>
-                                </simplelist>
-                            </entry>
-                            <entry>TCP and UDP</entry>
-                        </row>
-                        <row>
-                            <entry>DNS</entry>
-                            <entry>53</entry>
-                            <entry>TCP and UDP</entry>
-                        </row>
-                        <row>
-                            <entry>NTP</entry>
-                            <entry>123</entry>
-                            <entry>UDP</entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </table>
-            <important>
-                <title>IMPORTANT</title>
-                <para>The &IPA; backend LDAP server 
-                <emphasis>must not be reachable</emphasis>by the &AD; domain
-                controller. The associated ports &mdash; 389 and 636 &mdash; on
-                the &IPA; server host must be shut down for the &AD; domain
-                controller.</para>
-            </important>
-            <formalpara>
-                <title>Starting iptables at Boot Time</title>
-                <para>Configure the 
-                <command>iptables</command>service to start when the system
-                boots:</para>
-            </formalpara>
-            <screen>[root@ipaserver ]# chkconfig iptables on</screen>
-            <formalpara>
-                <title>Setting iptables Configuration</title>
-                <para>The 
-                <command>iptables</command>configuration needs to allow access
-                to the required &IPA; ports and reject access to the &IPA; LDAP
-                ports. The order of the rules is important. &AD;-based requests
-                to LDAP ports must be blocked first (based on the &AD; server
-                IP address), then there must be connections allowed to all
-                &IPA; TCP adn UDP ports.</para>
-            </formalpara>
-            <orderedlist>
-                <listitem>
-                    <para>Open the 
-                    <command>iptables</command>configuration file.</para>
-                    <screen>[root@ipaserver ~]# vim
-                    /etc/sysconfig/iptables</screen>
-                </listitem>
-                <listitem>
-                    <para>Add the rule to restrict access to LDAP ports for the
-                    &AD; host.</para>
-                    <screen>-A INPUT -s 
-                    <replaceable>ad_ip_address</replaceable>-p tcp -m multiport
-                    --dports 389,636 -m state --state NEW,ESTABLISHED -j
-                    REJECT</screen>
-                </listitem>
-                <listitem>
-                    <para>Make sure that there lines to allow access to the TCP
-                    and UDP ports required by &IPA;.</para>
-                    <screen>-A INPUT -p tcp -m multiport --dports
-                    80,443,389,636,88,464,53,138,139,445 -m state --state
-                    NEW,ESTABLISHED -j ACCEPT -A INPUT -p udp -m multiport
-                    --dports 88,464,53,123,138,139,389,445 -m state --state
-                    NEW,ESTABLISHED -j ACCEPT</screen>
-                </listitem>
-                <listitem>
-                    <para>Save the file.</para>
-                </listitem>
-                <listitem>
-                    <para>Restart the 
-                    <command>iptables</command>service:</para>
-                    <screen>[root@ipaserver ]# service iptables
-                    restart</screen>
-                </listitem>
-            </orderedlist>
-            <example>
-                <title>Example iptables Configuration File</title>
-                <screen>*filter :INPUT ACCEPT [0:0] :FORWARD ACCEPT [0:0]
-                :OUTPUT ACCEPT [0:0] -A INPUT -m state --state
-                ESTABLISHED,RELATED -j ACCEPT -A INPUT -p icmp -j ACCEPT -A
-                INPUT -i lo -j ACCEPT -A INPUT -m state --state NEW -m tcp -p
-                tcp --dport 22 -j ACCEPT -A INPUT -s 
-                <replaceable>ad_ip_address</replaceable>-p tcp -m multiport
-                --dports 389,636 -m state --state NEW,ESTABLISHED -j REJECT -A
-                INPUT -p tcp -m multiport --dports
-                80,443,389,636,88,464,53,138,139,445 -m state --state
-                NEW,ESTABLISHED -j ACCEPT -A INPUT -p udp -m multiport --dports
-                88,464,53,123,138,139,389,445 -m state --state NEW,ESTABLISHED
-                -j ACCEPT -A INPUT -p udp -j REJECT -A INPUT -p tcp -j REJECT
-                -A FORWARD -j REJECT --reject-with icmp-host-prohibited
-                COMMIT</screen>
-            </example>
-        </section>
-        <section id="trust-req-time">
-            <title>Clock Settings</title>
-            <para>Both the &AD; server and the &IPA; server must have their
-            clocks in sync.</para>
-        </section>
-        <section id="trust-name-formats">
-            <title>Supported Username Formats</title>
-            <para>Username mapping is performed in the local SSSD client. A
-            Python regular expression is used by SSSD to identify the username
-            and the domain to which it belongs.</para>
-            <para>By default in SSSD, the username format is defined in the
-            form 
-            <emphasis>name@domain</emphasis>. This uses the regular
-            expression:</para>
-            <screen>re_expression = 
-<![CDATA[(?P<name>[^@]+)@?(?P<domain>[^@]*$)]]>
-</screen>
-            <para>&AD; can support several different kinds of name formats,
-            however, so the 
-            <parameter>re_expression</parameter>parameter in the SSSD
-            configuration file for &IPA; backends or &AD; backends uses a more
-            complex expression:</para>
-            <screen>re_expression = 
-<![CDATA[(((?P<domain>[^\\]+)\\(?P<name>.+$))|((?P<name>[^@]+)@(?P<domain>.+$))|(^(?P<name>[^@\\]+)$))]]>
-</screen>
-            <para>This supports usernames in multiple formats:</para>
-            <itemizedlist>
-                <listitem>
-                    <para>
-                        <emphasis>username</emphasis>
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <emphasis>username@domain.name</emphasis>
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <emphasis>DOMAIN\username</emphasis>
-                    </para>
-                </listitem>
-            </itemizedlist>
-            <note>
-                <title>TIP</title>
-                <para>An additional SSSD parameter, 
-                <parameter>default_domain_suffix</parameter>, can be used to
-                supply a default domain value for usernames. For example, if
-                all users are in a trusted &AD; domain of 
-                <command>adexample.com</command>and the identity backend is the
-                &IPA; domain of 
-                <command>ipa.example.com</command>, the 
-                <parameter>default_domain_suffix</parameter>parameter can be
-                set with the value 
-                <command>adexample.com</command>. All users are automatically
-                assumed to belong to that user domain unless the domain value
-                is explicitly given with the username.</para>
-            </note>
-            <para>This is explained in more detail in the 
-            <ulink url="https://access.redhat.com/knowledge/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/sssd-user-ids.html">
-            SSSD chapter of the Deployment Guide</ulink>.</para>
-        </section>
-        <section id="rerunning-trust-script">
-            <title>Trust Can Only Be Configured Once</title>
-            <warning>
-                <title>WARNING</title>
-                <para>The 
-                <command>ipa-ad-trust-install</command>command can only be run
-                once. If any information is entered incorrectly &mdash;
-                particularly the NetBIOS name for the &IPA; server, but also
-                the administrative credentials or other settings &mdash; then
-                the trust services and all &IPA; packages must be uninstalled
-                and then reinstalled and rerun.</para>
-                <para>It is not possible to rerun the 
-                <command>ipa-ad-trust-install</command>command to change the
-                settings.</para>
-            </warning>
-        </section>
-    </section>
-    <section id="trust-ipa-subdomain">
-        <title>Setting up Trust with &IPA; as a DNS Subdomain of &AD;</title>
-        <orderedlist>
-            <listitem>
-                <para>Stop the Windows firewall service.</para>
-            </listitem>
-            <listitem>
-                <para>Stop 
-                <command>iptables</command>and 
-                <command>ip6tables</command>on the &IPA; server.</para>
-                <screen>[root@ipaserver ]# service iptables stop</screen>
-            </listitem>
-            <listitem>
-                <para>Install the required trust packages, updated Samba4
-                packages, and LDAP-DNS packages for &IPA; DNS
-                management.</para>
-                <screen>[root@ipaserver ]# yum install ipa-server
-                "*ipa-server-trust-ad" samba4-winbind-clients bind-dyndb-ldap
-                samba4-client</screen>
-                <important>
-                    <title>IMPORTANT</title>
-                    <para>The Samba4 packages conflict with the default Samba3
-                    packages on the &RHEL; system. There may be dependency
-                    issues with other applications as the Samba3 packages are
-                    removed.</para>
-                </important>
-                <para>The 
-                <command>cifs-utils</command>package is removed when Samba3 is
-                removed. This must be re-installed.</para>
-                <screen>[root@ipaserver ]# yum install cifs-utils</screen>
-                <para>It is recommended that you remove the 
-                <command>samba4-winbind-krb5-locator</command>package to
-                improve Kerberos performance.</para>
-                <screen>[root@ipaserver ]# yum remove
-                samba4-winbind-krb5-locator</screen>
-            </listitem>
-            <listitem>
-                <para>
-                <emphasis>For a new &IPA; server.</emphasis>Set up the &IPA;
-                server to use its own, integrated DNS services ( 
-                <option>--setup-dns</option>), its own DNS domain ( 
-                <option>-n</option>), and the &AD; DNS server as a forwarder ( 
-                <option>--forwarder</option>). For example:</para>
-                <screen>[root@ipaserver ]# ipa-server-install --setup-dns
-                --forwarder=2555.255.255.255 -p secret -a secret -r IPAEXAMPLE
-                -n linux.adexample.com --hostname ipaserver.linux.adexample.com
-                -U</screen>
-                <para>
-                <command>ipa-server-install</command>options are described in 
-                <xref linkend="install-command" />.</para>
-                <para>
-                <emphasis>If the &IPA; server was set up without using &AD; as
-                a forwarder.</emphasis>If &IPAA; server was configured without
-                using &AD; as a forwarder, then the &AD; server can be added as
-                a confitional forwarder. This requires the IP address of the
-                &AD; DNS server.</para>
-                <screen>[root@ipaserver ]# ipa dnsconfig-mod
-                --forwarder=255.255.255.255 --forward-policy=first</screen>
-                <para>Using a first policy means that queries are sent to the
-                forwarder first and then to the local 
-                <command>named</command>process. Alternatively, this can be set
-                to only, so that only the DNS forwarder is queried, never 
-                <command>named</command>.</para>
-            </listitem>
-            <listitem>
-                <para>Add the &IPA; domain as a subdomain entry in the &AD;
-                configuration and add an NS record for the &IPA; DNS. For this
-                exmaple, the &IPA; configuration has a NetBIOS name of 
-                <command>linux</command>(the subdomain) and the domain name is 
-                <command>adexample.com</command>.</para>
-                <orderedlist>
-                    <listitem>
-                        <para>Open the command prompt, using 
-                        <emphasis>Run as Administrator</emphasis>.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Use the 
-                        <command>dnscmd</command>command to add the A record
-                        for the &IPA; server, using the &IPA; hostname, NetBIOS
-                        name, and IP address.</para>
-                        <screen>/RecordAdd ad_domain ipa_hostname.ipa_netbios A
-                        ipa_ip_address</screen>
-                        <para>For example:</para>
-                        <screen>C:\&gt; dnscmd 127.0.0.1 /RecordAdd
-                        adexample.com ipaserver.linux A 255.255.255.0</screen>
-                    </listitem>
-                    <listitem>
-                        <para>Then add the NS record for the &IPA; server. This
-                        has the format:</para>
-                        <screen>/RecordAdd ad_domain ipa_netbios NS
-                        ipa_hostname.ipa_subdomain</screen>
-                        <para>For example:</para>
-                        <screen>C:\&gt; dnscmd 127.0.0.1 /RecordAdd
-                        adexample.com linux NS
-                        ipaserver.linux.adexample.com</screen>
-                    </listitem>
-                </orderedlist>
-            </listitem>
-            <listitem>
-                <para>Check the SRV records for both domains from both
-                servers.</para>
-                <para>On the &IPA; server, use the 
-                <command>dig SRV</command>command to list the records for the
-                &AD; domain and the &IPA; domain.</para>
-                <screen>[root@ipaserver ~]# dig SRV _ldap._tcp.adexample.com ;;
-                ANSWER SECTION: _ldap._tcp.adexample.com. 600 IN SRV 0 100 389
-                adserver.adexample.com. ;; ADDITIONAL SECTION:
-                adserver.adexample.com. 3600 IN A 192.168.2.161 ;; ADDITIONAL
-                SECTION: adserver.adexample.com. 3600 IN A 192.168.2.161
-                [root@ipaserver ~]# dig SRV _ldap._tcp.linux.adexample.com ;;
-                ANSWER SECTION: _ldap._tcp.linux.adexample.com. 86400 IN SRV 0
-                100 389 ipaserver.linux.adexample.com. ;; AUTHORITY SECTION:
-                linux.adexample.com. 86400 IN NS ipaserver.linux.adexample.com.
-                ;; ADDITIONAL SECTION: ipaserver.linux.adexample.com. 1200 IN A
-                192.168.2.158</screen>
-                <para>On the &AD; server, open the 
-                <command>nslookup</command>tool and check the corresponding SRV
-                records.</para>
-                <screen>&gt; nslookup &gt; set type=srv &gt;
-                _ldap._tcp.adexample.com &gt; _ldap._tcp.linux.adexample.com
-                &gt; quit</screen>
-            </listitem>
-            <listitem>
-                <para>Enable DNS lookups in the Kerberos realm for the Kerberos
-                client.</para>
-                <orderedlist>
-                    <listitem>
-                        <para>Open the 
-                        <filename>/etc/krb5.conf</filename>configuration
-                        file.</para>
-                        <screen>[root@ipaserver ]# vim /etc/krb5.conf</screen>
-                    </listitem>
-                    <listitem>
-                        <para>In the 
-                        <command>[libdefaults]</command>section, add or set the
-                        
-                        <command>dns_lookup_kdc</command>value to true.</para>
-                        <screen>[libdefaults] .... dns_lookup_kdc =
-                        true</screen>
-                    </listitem>
-                </orderedlist>
-            </listitem>
-            <listitem>
-                <para>Configure the &IPA; server to enable trust services. This
-                requires the NetBIOS name 
-                <emphasis role="bold">of the &IPA; server</emphasis>and the
-                password of the &IPA; administrator with the 
-                <option>-a</option>. Optionally, use the 
-                <option>-U</option>argument to run the script
-                non-interactively.</para>
-                <screen>[root@ipaserver ]# ipa-adtrust-install
-                --netbios-name=IPAEXAMPLE -a secret -U</screen>
-            </listitem>
-            <listitem>
-                <para>To verify the &IPA; configuration at this point, use the
-                Samba tools to check that the Windows-related services are
-                running and accessible. The 
-                <command>smbclient</command>command shows whether the domain is
-                in the Samba registry.</para>
-                <screen>[root@ipaserver ~]# smbclient -L
-                ipaserver.ipaexample.com -k lp_load_ex: changing to config
-                backend registry Domain=[IPAEXAMPLE] OS=[Unix] Server=[Samba
-                4.0.0rc4] Sharename Type Comment --------- ---- ------- IPC$
-                IPC IPC Service (Samba 4.0.0rc4) Domain=[IPAEXAMPLE] OS=[Unix]
-                Server=[Samba 4.0.0rc4] Server Comment --------- -------
-                Workgroup Master --------- -------</screen>
-                <para>The 
-                <command>wbinfo</command>command shows whether the &IPA; domain
-                is online.</para>
-                <screen>[root@ipaserver ~]# wbinfo --online-status BUILTIN :
-                online IPAEXAMPLE : online</screen>
-            </listitem>
-            <listitem>
-                <para>
-                <emphasis>If there are existing &IPA; users and
-                groups.</emphasis>For existing &IPA; users, it is required that
-                all users and groups have an &AD;-style security identifier
-                (SID). A new 
-                <parameter>ipaNTSecurityIdentifier</parameter>containing a SID
-                can be created automatically for each entry by running a
-                special 
-                <command>ipa-sidgen-task</command>operation on the backend LDAP
-                directory.</para>
-                <para>
-                    <emphasis role="bold">If there are no existing &IPA; users
-                    or groups, then this step can be skipped.</emphasis>
-                </para>
-                <screen>[root@ipaserver ]# ldapmodify -x -H
-                ldap://ipaserver.ipaexample.com:389 -D "cn=directory manager"
-                -w 
-                <replaceable>Passwd</replaceable>-f dn:
-                cn=sidgen,cn=ipa-sidgen-task,cn=tasks,cn=config changetype: add
-                objectClass: top objectClass: extensibleObject cn: sidgen
-                nsslapd-basedn: dc=ipadomain,dc=com delay: 0 adding new entry
-                "cn=sidgen,cn=ipa-sidgen-task,cn=tasks,cn=config"</screen>
-                <para>When the task completes successfully, there will be a
-                message in the error logs that the SID generation task ( 
-                <command>Sidgen task</command>) finished with a status of zero
-                (0).</para>
-                <screen>[root@ipaserver ]# grep "sidgen_task_thread"
-                /var/log/dirsrv/slapd-IPALAB-QE/errors [20/Jul/2012:18:17:16
-                +051800] sidgen_task_thread - [file ipa_sidgen_task.c, line
-                191]: Sidgen task starts ... [20/Jul/2012:18:17:16 +051800]
-                sidgen_task_thread - [file ipa_sidgen_task.c, line 196]: Sidgen
-                task finished [0].</screen>
-            </listitem>
-            <listitem>
-                <para>Create a trust agreement for the &AD; domain and the
-                &IPA; domain. This command requires the &AD; domain and the
-                credentials of an administrative user to use to connect to the
-                domain.</para>
-                <screen>ipa trust-add --type= 
-                <replaceable>type ad_domain_name</replaceable>--admin 
-                <replaceable>ad_admin_username</replaceable>--password</screen>
-                <para>For example:</para>
-                <screen>[root@ipaserver ~]# ipa trust-add --type=ad
-                adexample.com --admin Administrator --password Active directory
-                domain administrator's password:
-                ------------------------------------------------------ Added
-                Active Directory trust for realm "adexample.com"
-                ------------------------------------------------------ Realm
-                name: adexample.com Domain NetBIOS name: ADEXAMPLE Domain
-                Security Identifier: S-1-5-21-1689615952-3716327440-3249090444
-                Trust direction: Two-way trust Trust type: Active Directory
-                domain Trust status: Established and verified</screen>
-            </listitem>
-            <listitem>
-                <para>Request a ticket for &IPAA; user to check the Kerberos
-                configuration, and then check that that user can request
-                service tickets.</para>
-                <screen>[root@ipaserver ~]# kinit jsmith</screen>
-                <para>First, request service tickets for services within the
-                &IPA; domain.</para>
-                <screen>[root@ipaserver ]# kvno
-                host/ipaserver.ipaexample.com@IPA.DOMAIN</screen>
-                <para>Then, request service tickets for services within the
-                &AD; domain.</para>
-                <screen>[root@ipaserver ]# kvno
-                cifs/adserver.adexample.com@AD.DOMAIN</screen>
-                <para>If the &AD; service ticket is succcessfully granted, then
-                there will be a cross-realm TGT listed with all of the other
-                requested tickets. This will have the name 
-                <command>krbtgt/</command>
-                <emphasis>AD.DOMAIN@IPA.DOMAIN</emphasis>.</para>
-                <screen>[root@ipaserver ]# klist Ticket cache:
-                FILE:/tmp/krb5cc_0 Default principal: jsmith@IPA.DOMAIN Valid
-                starting Expires Service principal 06/15/12 12:13:04 06/16/12
-                12:12:55 krbtgt/IPA.DOMAIN@IPA.DOMAIN 06/15/12 12:13:13
-                06/16/12 12:12:55 host/ipaserver.ipaexample.com@IPA.DOMAIN 
-                <userinput>06/15/12 12:13:23 06/16/12 12:12:55
-                krbtgt/AD.DOMAIN@IPA.DOMAIN</userinput>06/15/12 12:14:58
-                06/15/12 22:14:58
-                cifs/adserver.adexample.com@AD.DOMAIN</screen>
-                <note>
-                    <title>NOTE</title>
-                    <para>This ticket is requested as &IPAA; user because
-                    Kerberos realm mappings are not yet configured to allow
-                    &AD; users to use Kerberos authentication to the
-                    realm.</para>
-                </note>
-            </listitem>
-            <listitem>
-                <para>Configure realm mapping in the Kerberos configuration.
-                This allows Kerberos authentication for &AD; users.</para>
-                <orderedlist>
-                    <listitem>
-                        <para>Open the 
-                        <filename>/etc/krb5.conf</filename>configuration
-                        file.</para>
-                        <screen>[root@ipaserver ]# vim /etc/krb5.conf</screen>
-                    </listitem>
-                    <listitem>
-                        <para>In the 
-                        <command>[libdefaults]</command>section, enable DNS
-                        lookups in the Kerberos realm.</para>
-                        <screen>[libdefaults] .... dns_lookup_kdc =
-                        true</screen>
-                    </listitem>
-                    <listitem>
-                        <para>In the 
-                        <command>[realms]</command>section, identify the &IPA;
-                        realm by name, and then add two 
-                        <parameter>auth_to_local</parameter>lines to define the
-                        Kerberos principal name mapping. One rule should have a
-                        value of DEFAULT, for standard Unix usernames, and the
-                        other should include a rule which maps different &AD;
-                        username formats and the specific &AD; domain. For
-                        example, this rule allows usernames in the format 
-                        <emphasis>first.last@ADDOMAIN</emphasis>, 
-                        <emphasis>username@ADDOMAIN[.something]</emphasis>, or 
-                        <emphasis>username@addomain[.something]</emphasis>; the
-                        last two expressions allow upper-case or lower-case
-                        domain names, since Kerberos is case-sensitive.</para>
-                        <screen>[realms] IDM = { .... auth_to_local =
-                        RULE:[1:$1@$0](^.*@ADDOMAIN$)s/@ADDOMAIN/@addomain/
-                        auth_to_local = DEFAULT }</screen>
-                    </listitem>
-                    <listitem>
-                        <para>Restart the KDC service.</para>
-                        <screen>[root@ipaserver ~]# service krb5kdc
-                        restart</screen>
-                    </listitem>
-                </orderedlist>
-            </listitem>
-            <listitem>
-                <para>Configure domain mapping in SSSD.</para>
-                <orderedlist>
-                    <listitem>
-                        <para>Open the 
-                        <filename>/etc/sssd/sssd.conf</filename>.</para>
-                        <screen>[root@ipaserver ]# vim
-                        /etc/sssd/sssd.conf</screen>
-                    </listitem>
-                    <listitem>
-                        <para>In the 
-                        <command>[sssd]</command>section, add 
-                        <command>pac</command>to the 
-                        <parameter>services</parameter>list to enable the SSSD
-                        service to request and use Kerberos tickets with PAC
-                        data.</para>
-                        <screen>[sssd] services = nss, pam, ssh, 
-                        <userinput>pac</userinput>....</screen>
-                    </listitem>
-                    <listitem>
-                        <para>In the &IPA; domain section, add the 
-                        <parameter>subdomains_provider</parameter>parameter to
-                        explicitly enable SSSD to refer from the configured
-                        &IPA; domain to any domains trusted by that
-                        domain.</para>
-                        <screen>[domain/ipa.lan] cache_credentials = True
-                        krb5_store_password_if_offline = True ipa_domain =
-                        example2b.com id_provider = ipa auth_provider = ipa
-                        access_provider = ipa ipa_hostname = ipa2.example.com
-                        chpass_provider = ipa ipa_server = ipa2.example.com
-                        ldap_tls_cacert = /etc/ipa/ca.crt 
-                        <userinput>subdomains_provider =
-                        ipa</userinput></screen>
-                        <para>The trusted &AD; domain is 
-                        <emphasis>not</emphasis>explicitly defined in the SSSD
-                        configuration. The &IPA; domain is automatically
-                        created in the SSSD configuration when the client is
-                        installed; adding this line makes it possible to use
-                        the existing configuration.</para>
-                        <para>Subdomains and SSSD are described in more detail
-                        in the 
-                        <ulink url="https://access.redhat.com/knowledge/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/ipa-domain-sssd.html">
-                        &IPA; provider configuration examples in the SSSD
-                        chapter of the Deployment Guide</ulink>.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Save the changes to the 
-                        <filename>sssd.conf</filename>file.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Restart SSSD.</para>
-                        <screen>[root@ipaserver ]# service sssd
-                        restart</screen>
-                    </listitem>
-                </orderedlist>
-            </listitem>
-            <listitem>
-                <para>Restart the 
-                <command>iptables</command>and 
-                <command>ip6tables</command>services on the &IPA;
-                server.</para>
-                <screen>[root@ipaserver ]# service iptables start</screen>
-            </listitem>
-            <listitem>
-                <para>Restart the Windows firewall.</para>
-            </listitem>
-        </orderedlist>
-    </section>
-    <section id="trust-diff-dns-domains">
-        <title>Setting up Trust with &IPA; and &AD; in Different DNS
-        Domains</title>
-        <orderedlist>
-            <listitem>
-                <para>Stop the Windows firewall service.</para>
-            </listitem>
-            <listitem>
-                <para>Stop 
-                <command>iptables</command>and 
-                <command>ip6tables</command>on the &IPA; server.</para>
-                <screen>[root@ipaserver ]# service iptables stop</screen>
-            </listitem>
-            <listitem>
-                <para>Install the required trust packages, updated Samba4
-                packages, and LDAP-DNS packages for &IPA; DNS
-                management.</para>
-                <screen>[root@ipaserver ]# yum install ipa-server
-                "*ipa-server-trust-ad" samba4-winbind-clients bind-dyndb-ldap
-                samba4-client</screen>
-                <important>
-                    <title>IMPORTANT</title>
-                    <para>The Samba4 packages conflict with the default Samba3
-                    packages on the &RHEL; system. There may be dependency
-                    issues with other applications as the Samba3 packages are
-                    removed.</para>
-                </important>
-                <para>The 
-                <command>cifs-utils</command>package is removed when Samba3 is
-                removed. This must be re-installed.</para>
-                <screen>[root@ipaserver ]# yum install cifs-utils</screen>
-                <para>It is recommended that you remove the 
-                <command>samba4-winbind-krb5-locator</command>package to
-                improve Kerberos performance.</para>
-                <screen>[root@ipaserver ]# yum remove
-                samba4-winbind-krb5-locator</screen>
-            </listitem>
-            <listitem>
-                <para>
-                <emphasis>For a new &IPA; server.</emphasis>Set up the &IPA;
-                server to use its own, integrated DNS services ( 
-                <option>--setup-dns</option>), its own DNS domain ( 
-                <option>-n</option>), and the &AD; DNS server as a forwarder ( 
-                <option>--forwarder</option>). For example:</para>
-                <screen>[root@ipaserver ]# ipa-server-install --setup-dns
-                --forwarder=ad-dns.adserver.example.com -p secret -a secret -r
-                IPAEXAMPLE -n ipaexample.com --hostname
-                ipaserver.ipaexample.com -U</screen>
-                <para>
-                <command>ipa-server-install</command>options are described in 
-                <xref linkend="install-command" />.</para>
-                <para>
-                <emphasis>If the &IPA; server was set up without using &AD; as
-                a forwarder.</emphasis>If &IPAA; server was configured without
-                using &AD; as a forwarder, then the &AD; server can be added as
-                a confitional forwarder. This requires the IP address of the
-                &AD; DNS server.</para>
-                <screen>[root@ipaserver ]# ipa dnsconfig-mod
-                --forwarder=255.255.255.255 --forward-policy=first</screen>
-                <para>Using a first policy means that queries are sent to the
-                forwarder first and then to the local 
-                <command>named</command>process. Alternatively, this can be set
-                to only, so that only the DNS forwarder is queried, never 
-                <command>named</command>.</para>
-            </listitem>
-            <listitem>
-                <para>Add the &IPA; server as a conditional forwarder in the
-                &AD; DNS configuration.</para>
-                <orderedlist>
-                    <listitem>
-                        <para>Open the 
-                        <guilabel>Administrative Tools</guilabel>menu, and
-                        select the 
-                        <guilabel>DNS</guilabel>item.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Right-click the 
-                        <guilabel>Conditional Forwarders</guilabel>item in the
-                        left column of the window.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Select the 
-                        <guilabel>New Conditional
-                        Forwarder...</guilabel>button.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Enter the DNS domain name of the &IPA; domain and
-                        the IP address of the &IPA; DNS server.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Save the new forwarder.</para>
-                    </listitem>
-                </orderedlist>
-                <para>Alternatively, use the 
-                <command>dnscmd</command>command-line utility to add the
-                forwarder entry:</para>
-                <screen>&gt; dnscmd 127.0.0.1 /ZoneAdd IPAEXAMPLE.COM
-                /Forwarder 255.255.255.0</screen>
-            </listitem>
-            <listitem>
-                <para>Check the SRV records for both domains from both
-                servers.</para>
-                <para>On the &IPA; server, use the 
-                <command>dig SRV</command>command to list the records for the
-                &AD; domain and the &IPA; domain.</para>
-                <screen>[root@ipaserver ~]# dig SRV _ldap._tcp.adexample.com ;;
-                ANSWER SECTION: _ldap._tcp.adexample.com. 600 IN SRV 0 100 389
-                adserver.adexample.com. ;; ADDITIONAL SECTION:
-                adserver.adexample.com. 3600 IN A 192.168.2.161 ;; ADDITIONAL
-                SECTION: adserver.adexample.com. 3600 IN A 192.168.2.161
-                [root@ipaserver ~]# dig SRV _ldap._tcp.ipaexample.com ;; ANSWER
-                SECTION: _ldap._tcp.ipaexample.com. 86400 IN SRV 0 100 389
-                ipaserver.ipaexample.com. ;; AUTHORITY SECTION: ipaexample.com.
-                86400 IN NS ipaserver.ipaexample.com. ;; ADDITIONAL SECTION:
-                ipaserver.ipaexample.com. 1200 IN A 192.168.2.158</screen>
-                <para>On the &AD; server, open the 
-                <command>nslookup</command>tool and check the corresponding SRV
-                records.</para>
-                <screen>&gt; nslookup &gt; set type=srv &gt;
-                _ldap._tcp.adexample.com &gt; _ldap._tcp.ipaexample.com &gt;
-                quit</screen>
-            </listitem>
-            <listitem>
-                <para>Enable DNS lookups in the Kerberos realm for the Kerberos
-                client.</para>
-                <orderedlist>
-                    <listitem>
-                        <para>Open the 
-                        <filename>/etc/krb5.conf</filename>configuration
-                        file.</para>
-                        <screen>[root@ipaserver ]# vim /etc/krb5.conf</screen>
-                    </listitem>
-                    <listitem>
-                        <para>In the 
-                        <command>[libdefaults]</command>section, add or set the
-                        
-                        <command>dns_lookup_kdc</command>value to true.</para>
-                        <screen>[libdefaults] .... dns_lookup_kdc =
-                        true</screen>
-                    </listitem>
-                </orderedlist>
-            </listitem>
-            <listitem>
-                <para>Configure the &IPA; server to enable trust services. This
-                requires the NetBIOS name 
-                <emphasis role="bold">of the &IPA; server</emphasis>and the
-                password of the &IPA; administrator with the 
-                <option>-a</option>. Optionally, use the 
-                <option>-U</option>argument to run the script
-                non-interactively.</para>
-                <screen>[root@ipaserver ]# ipa-adtrust-install
-                --netbios-name=IPAEXAMPLE -a secret -U</screen>
-            </listitem>
-            <listitem>
-                <para>To verify the &IPA; configuration at this point, use the
-                Samba tools to check that the Windows-related services are
-                running and accessible. The 
-                <command>smbclient</command>command shows whether the domain is
-                in the Samba registry.</para>
-                <screen>[root@ipaserver ~]# smbclient -L
-                ipaserver.ipaexample.com -k lp_load_ex: changing to config
-                backend registry Domain=[IPAEXAMPLE] OS=[Unix] Server=[Samba
-                4.0.0rc4] Sharename Type Comment --------- ---- ------- IPC$
-                IPC IPC Service (Samba 4.0.0rc4) Domain=[IPAEXAMPLE] OS=[Unix]
-                Server=[Samba 4.0.0rc4] Server Comment --------- -------
-                Workgroup Master --------- -------</screen>
-                <para>The 
-                <command>wbinfo</command>command shows whether the &IPA; domain
-                is online.</para>
-                <screen>[root@ipaserver ~]# wbinfo --online-status BUILTIN :
-                online IPAEXAMPLE : online</screen>
-            </listitem>
-            <listitem>
-                <para>
-                <emphasis>If there are existing &IPA; users and
-                groups.</emphasis>For existing &IPA; users, it is required that
-                all users and groups have an &AD;-style security identifier
-                (SID). A new 
-                <parameter>ipaNTSecurityIdentifier</parameter>containing a SID
-                can be created automatically for each entry by running a
-                special 
-                <command>ipa-sidgen-task</command>operation on the backend LDAP
-                directory.</para>
-                <para>
-                    <emphasis role="bold">If there are no existing &IPA; users
-                    or groups, then this step can be skipped.</emphasis>
-                </para>
-                <screen>[root@ipaserver ]# ldapmodify -x -H
-                ldap://ipaserver.ipaexample.com:389 -D "cn=directory manager"
-                -w 
-                <replaceable>Passwd</replaceable>-f dn:
-                cn=sidgen,cn=ipa-sidgen-task,cn=tasks,cn=config changetype: add
-                objectClass: top objectClass: extensibleObject cn: sidgen
-                nsslapd-basedn: dc=ipadomain,dc=com delay: 0 adding new entry
-                "cn=sidgen,cn=ipa-sidgen-task,cn=tasks,cn=config"</screen>
-                <para>When the task completes successfully, there will be a
-                message in the error logs that the SID generation task ( 
-                <command>Sidgen task</command>) finished with a status of zero
-                (0).</para>
-                <screen>[root@ipaserver ]# grep "sidgen_task_thread"
-                /var/log/dirsrv/slapd-IPALAB-QE/errors [20/Jul/2012:18:17:16
-                +051800] sidgen_task_thread - [file ipa_sidgen_task.c, line
-                191]: Sidgen task starts ... [20/Jul/2012:18:17:16 +051800]
-                sidgen_task_thread - [file ipa_sidgen_task.c, line 196]: Sidgen
-                task finished [0].</screen>
-            </listitem>
-            <listitem>
-                <para>Create a trust agreement for the &AD; domain and the
-                &IPA; domain. This command requires the &AD; domain and the
-                credentials of an administrative user to use to connect to the
-                domain.</para>
-                <screen>ipa trust-add --type= 
-                <replaceable>type ad_domain_name</replaceable>--admin 
-                <replaceable>ad_admin_username</replaceable>--password</screen>
-                <para>For example:</para>
-                <screen>[root@ipaserver ~]# ipa trust-add --type=ad
-                adexample.com --admin Administrator --password Active directory
-                domain administrator's password:
-                ------------------------------------------------------ Added
-                Active Directory trust for realm "adexample.com"
-                ------------------------------------------------------ Realm
-                name: adexample.com Domain NetBIOS name: ADEXAMPLE Domain
-                Security Identifier: S-1-5-21-1689615952-3716327440-3249090444
-                Trust direction: Two-way trust Trust type: Active Directory
-                domain Trust status: Established and verified</screen>
-            </listitem>
-            <listitem>
-                <para>Request a ticket for &IPAA; user to check the Kerberos
-                configuration, and then check that that user can request
-                service tickets.</para>
-                <screen>[root@ipaserver ~]# kinit jsmith</screen>
-                <para>First, request service tickets for services within the
-                &IPA; domain.</para>
-                <screen>[root@ipaserver ]# kvno
-                host/ipaserver.ipaexample.com@IPA.DOMAIN</screen>
-                <para>Then, request service tickets for services within the
-                &AD; domain.</para>
-                <screen>[root@ipaserver ]# kvno
-                cifs/adserver.adexample.com@AD.DOMAIN</screen>
-                <para>If the &AD; service ticket is succcessfully granted, then
-                there will be a cross-realm TGT listed with all of the other
-                requested tickets. This will have the name 
-                <command>krbtgt/</command>
-                <emphasis>AD.DOMAIN@IPA.DOMAIN</emphasis>.</para>
-                <screen>[root@ipaserver ]# klist Ticket cache:
-                FILE:/tmp/krb5cc_0 Default principal: jsmith@IPA.DOMAIN Valid
-                starting Expires Service principal 06/15/12 12:13:04 06/16/12
-                12:12:55 krbtgt/IPA.DOMAIN@IPA.DOMAIN 06/15/12 12:13:13
-                06/16/12 12:12:55 host/ipaserver.ipaexample.com@IPA.DOMAIN 
-                <userinput>06/15/12 12:13:23 06/16/12 12:12:55
-                krbtgt/AD.DOMAIN@IPA.DOMAIN</userinput>06/15/12 12:14:58
-                06/15/12 22:14:58
-                cifs/adserver.adexample.com@AD.DOMAIN</screen>
-                <note>
-                    <title>NOTE</title>
-                    <para>This ticket is requested as &IPAA; user because
-                    Kerberos realm mappings are not yet configured to allow
-                    &AD; users to use Kerberos authentication to the
-                    realm.</para>
-                </note>
-            </listitem>
-            <listitem>
-                <para>Configure realm mapping in the Kerberos configuration.
-                This allows Kerberos authentication for &AD; users.</para>
-                <orderedlist>
-                    <listitem>
-                        <para>Open the 
-                        <filename>/etc/krb5.conf</filename>configuration
-                        file.</para>
-                        <screen>[root@ipaserver ]# vim /etc/krb5.conf</screen>
-                    </listitem>
-                    <listitem>
-                        <para>In the 
-                        <command>[libdefaults]</command>section, enable DNS
-                        lookups in the Kerberos realm.</para>
-                        <screen>[libdefaults] .... dns_lookup_kdc =
-                        true</screen>
-                    </listitem>
-                    <listitem>
-                        <para>In the 
-                        <command>[realms]</command>section, identify the &IPA;
-                        realm by name, and then add two 
-                        <parameter>auth_to_local</parameter>lines to define the
-                        Kerberos principal name mapping. One rule should have a
-                        value of DEFAULT, for standard Unix usernames, and the
-                        other should include a rule which maps different &AD;
-                        username formats and the specific &AD; domain. For
-                        example, this rule allows usernames in the format 
-                        <emphasis>first.last@ADDOMAIN</emphasis>, 
-                        <emphasis>username@ADDOMAIN[.something]</emphasis>, or 
-                        <emphasis>username@addomain[.something]</emphasis>; the
-                        last two expressions allow upper-case or lower-case
-                        domain names, since Kerberos is case-sensitive.</para>
-                        <screen>[realms] IDM = { .... auth_to_local =
-                        RULE:[1:$1@$0](^.*@ADDOMAIN$)s/@ADDOMAIN/@addomain/
-                        auth_to_local = DEFAULT }</screen>
-                    </listitem>
-                    <listitem>
-                        <para>Restart the KDC service.</para>
-                        <screen>[root@ipaserver ~]# service krb5kdc
-                        restart</screen>
-                    </listitem>
-                </orderedlist>
-            </listitem>
-            <listitem>
-                <para>Configure domain mapping in SSSD.</para>
-                <orderedlist>
-                    <listitem>
-                        <para>Open the 
-                        <filename>/etc/sssd/sssd.conf</filename>.</para>
-                        <screen>[root@ipaserver ]# vim
-                        /etc/sssd/sssd.conf</screen>
-                    </listitem>
-                    <listitem>
-                        <para>In the 
-                        <command>[sssd]</command>section, add 
-                        <command>pac</command>to the 
-                        <parameter>services</parameter>list to enable the SSSD
-                        service to request and use Kerberos tickets with PAC
-                        data.</para>
-                        <screen>[sssd] services = nss, pam, ssh, 
-                        <userinput>pac</userinput>....</screen>
-                    </listitem>
-                    <listitem>
-                        <para>In the &IPA; domain section, add the 
-                        <parameter>subdomains_provider</parameter>parameter to
-                        explicitly enable SSSD to refer from the configured
-                        &IPA; domain to any domains trusted by that
-                        domain.</para>
-                        <screen>[domain/ipa.lan] cache_credentials = True
-                        krb5_store_password_if_offline = True ipa_domain =
-                        example2b.com id_provider = ipa auth_provider = ipa
-                        access_provider = ipa ipa_hostname = ipa2.example.com
-                        chpass_provider = ipa ipa_server = ipa2.example.com
-                        ldap_tls_cacert = /etc/ipa/ca.crt 
-                        <userinput>subdomains_provider =
-                        ipa</userinput></screen>
-                        <para>The trusted &AD; domain is 
-                        <emphasis>not</emphasis>explicitly defined in the SSSD
-                        configuration. The &IPA; domain is automatically
-                        created in the SSSD configuration when the client is
-                        installed; adding this line makes it possible to use
-                        the existing configuration.</para>
-                        <para>Subdomains and SSSD are described in more detail
-                        in the 
-                        <ulink url="https://access.redhat.com/knowledge/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/ipa-domain-sssd.html">
-                        &IPA; provider configuration examples in the SSSD
-                        chapter of the Deployment Guide</ulink>.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Save the changes to the 
-                        <filename>sssd.conf</filename>file.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Restart SSSD.</para>
-                        <screen>[root@ipaserver ]# service sssd
-                        restart</screen>
-                    </listitem>
-                </orderedlist>
-            </listitem>
-            <listitem>
-                <para>Restart the 
-                <command>iptables</command>and 
-                <command>ip6tables</command>services on the &IPA;
-                server.</para>
-                <screen>[root@ipaserver ]# service iptables start</screen>
-            </listitem>
-            <listitem>
-                <para>Restart the Windows firewall.</para>
-            </listitem>
-        </orderedlist>
-    </section>
-    <section id="trust-groups">
-        <title>Creating &IPA; Groups for &AD; Users</title>
-        <para>User groups are required to set access permissions, host-based
-        access control, sudo rules, and other controls on &IPA; users. These
-        groups are what grant access to &IPA; domain resources, as well as
-        restricting access.</para>
-        <para>However, &AD; users cannot be added directly to &IPA; user
-        groups. This means that &AD; users require special configuration in
-        order to access &IPA; domain resources.</para>
-        <para>As described in 
-        <xref linkend="comp-trust-krb" />, &AD; users are added to the &IPA;
-        domain in a kind of daisy chain. They are added to a group on the &AD;
-        side, then that group is added to &IPAA; external group (meaning, a
-        non-POSIX group), and then that external group is added to a local
-        POSIX group as a member. The &IPA; POSIX group can then be used for
-        user/role management of &AD; users.</para>
-        <orderedlist>
-            <listitem>
-                <para>Create or select the group in the &AD; domain to use to
-                manage &AD; users in the &IPA; realm. (Multiple groups can be
-                used and added to different groups on the &IPA; side.)</para>
-            </listitem>
-            <listitem>
-                <para>Create an 
-                <emphasis>external</emphasis>group in the &IPA; domain for the
-                &AD; users. This correlates to the &AD; group. Using the 
-                <option>--external</option>argument indicates that this group
-                will contain members from outside the &IPA; domain. For
-                example:</para>
-                <screen>[root@ipaserver ~]# ipa group-add --desc='AD users
-                external map' ad_users_external --external
-                ------------------------------- Added group "ad_users_external"
-                ------------------------------- Group name: ad_users_external
-                Description: AD users external map</screen>
-            </listitem>
-            <listitem>
-                <para>Create the 
-                <emphasis>POSIX</emphasis>group for actually administering the
-                &IPA; policies.</para>
-                <screen>[root@ipaserver ~]# ipa group-add --desc='AD users'
-                ad_users ---------------------- Added group "ad_users"
-                ---------------------- Group name: ad_users Description: AD
-                users GID: 129600004</screen>
-            </listitem>
-            <listitem>
-                <para>Add the &AD; group to the &IPA; external group as an
-                external member. The &AD; group is identified by the name 
-                <emphasis>DOMAIN\group_name</emphasis>. The group name is then
-                mapped to the &AD; SID for the group. For example:</para>
-                <screen>[root@ipaserver ~]# ipa group-add-member
-                ad_users_external --external "AD\Domain Users" [member user]:
-                [member group]: Group name: ad_users_external Description: AD
-                users external map External member:
-                S-1-5-21-3655990580-1375374850-1633065477-513 SID_DOM_GROUP (2)
-                ------------------------- Number of members added 1
-                -------------------------</screen>
-            </listitem>
-            <listitem>
-                <para>Add the external &IPA; group to the POSIX &IPA; group as
-                a member. For example:</para>
-                <screen>[root@ipaserver ~]# ipa group-add-member ad_users
-                --groups ad_users_external Group name: ad_users Description: AD
-                users GID: 129600004 Member groups: ad_users_external
-                ------------------------- Number of members added 1
-                -------------------------</screen>
-            </listitem>
-        </orderedlist>
-    </section>
-    <section id="trust-ssh">
-        <title>Using SSH from &AD; Machines for &IPA; Resources</title>
-        <para>When a trust is configured, &AD; users can access machines,
-        services, and files on &IPA; hosts using SSH and their &AD;
-        credentials.</para>
-        <para>One critical factor when using SSH is the username. The username
-        must meet several criteria:</para>
-        <itemizedlist>
-            <listitem>
-                <para>The username must have the format 
-                <emphasis>ad_user@ad_domain</emphasis>.</para>
-            </listitem>
-            <listitem>
-                <para>The domain name itself must be lower-case. This is
-                required for Kerberos principal mapping.</para>
-            </listitem>
-            <listitem>
-                <para>The case of the username must match, exactly, the case of
-                the username in &AD;. 
-                <emphasis>jsmith</emphasis>and 
-                <emphasis>JSmith</emphasis>are considered different users
-                because of the different cases.</para>
-            </listitem>
-        </itemizedlist>
-        <note>
-            <title>NOTE</title>
-            <para>When using PuTTY on the Windows machine, make sure that
-            GSS-API credential delegation is enabled.</para>
-        </note>
-    </section>
-    <section id="trust-webapps">
-        <title>Using Trust with Kerberized Web Applications</title>
-        <para>Any existing web application can be configured to use Kerberos
-        authentication, which references the trusted &AD; and &IPA; Kerberos
-        realms.</para>
-        <para>For example, for an Apache server, set the 
-        <parameter>KrbAuthRealms</parameter>directive for the application
-        location to the name of the &IPA; domain and set the location for the
-        keytab ( 
-        <parameter>Krb5Keytab</parameter>). Also set other paramters to enable
-        Kerberos authentication, the service name used for the keytab (HTTP),
-        and the Kerberos methods (which enables password-based authentication
-        for valid users).</para>
-        <programlisting language="XML">
-<![CDATA[<Location "/mywebapp">]]>
-AuthType Kerberos AuthName "IPA Kerberos authentication" KrbMethodNegotiate on
-KrbMethodK5Passwd on KrbServiceName HTTP 
-        <userinput>KrbAuthRealms IDM_DOMAIN</userinput>
-        <userinput>Krb5Keytab
-        /etc/httpd/conf/ipa.keytab</userinput>KrbSaveCredentials off Require
-        valid-user 
-<![CDATA[</Location>]]>
-</programlisting>
-        <para>The Kerberos configuration directives are covered in the 
-        <ulink url="http://modauthkerb.sourceforge.net/configure.html">
-        mod_auth_kerb</ulink>module man pages.</para>
-        <para>After changing the Apache application configuration, restart the
-        Apache service:</para>
-        <screen>[root@ipaserver ~]# service httpd restart</screen>
-    </section>
+	<title>Identity: Integrating with Active Directory Through Cross-Realm Kerberos Trusts &TITLE_TPREVIEW;</title>
+	<para>
+		Kerberos allows the configuration of <emphasis>trusted realms</emphasis>. Each realm has its own
+		resources and users, yet the trust relationship allows users of any trusted realm to obtain tickets 
+		and connect to machines or services in a peer realm as if they were members of that peer realm.
+	</para>
+	<para>
+		Because of differences in the way that Windows and Linux domains implement LDAP services, DNS
+		management, and even Kerberos realms, it is difficult to establish a direct trust between &AD;
+		and Linux domains manually. A trust relationship using &IPA; centrally defines and establishes
+		the Kerberos trust and DNS mappings so that &AD; users can access Linux hosts and services 
+		completely transparently, using one set of credentials.
+	</para>
+
+	<section id="trust-defined"><title>The Meaning of "Trust"</title>
+		<para>
+			Kerberos has the ability to create a relationship between two otherwise separate realms. This is called 
+			a <emphasis>cross-realm trust</emphasis>. This is described in some detail in <ulink url="https://access.redhat.com/knowledge/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Managing_Smart_Cards/Setting_Up_Cross_Realm_Authentication.html">Managing Single Sign-On and Smart Cards</ulink>.
+			These realms create a shared ticket and key so a member of one realm is perceived as a member of
+			both realms. One realm <emphasis>trusts</emphasis> another.
+		</para>
+		<section id="trust-realms"><title>How Trust Works: Transparency Between Kerberos and DNS Realms</title>
+			<para>
+				Both &AD; and &PROD; manage a variety of core services: Kerberos, LDAP, DNS, certificate services. For these two disparate 
+				domains to be integrated transparently, all of these core services need to be able to interact cleanly with one another.
+			</para>
+			<para>
+				Those services can be broken into two major points of interaction: a Kerberos realm and a DNS domain. Certificate services, 
+				LDAP entries, and other services can be managed independently for &AD; and &IPA;. The place where they interect is where
+				identities need to be authenticated (Kerberos) and a mechanism to route queries between domains (DNS).
+			</para>
+			<section id="trust-components"><title>Components Involved in Trusts</title>
+			<para>
+				&IPA; cross-realm trusts leverage four primary components:
+			</para>
+			<itemizedlist>
+				<listitem>
+					<para>
+						&AD;
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Samba, to perform identity lookups on &AD; and retrieve user and group security identifiers (SIDs) for authorization information
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						SSSD, to cache user, group, and ticket information for users and to map Kerberos and DNS domains
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						&PROD;
+					</para>
+				</listitem>
+			</itemizedlist>
+			<figure id="fig.trust-components"><title>Applications and Services for Trust</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/trust-components.png" />
+					</imageobject>
+				</mediaobject>
+			</figure>
+		</section>
+		<section id="comp-trust-dirs"><title>&AD; and &PROD; Directories</title>
+			<para>
+				One of the most common backends for user identities is &AD;, and many environments &mdash; even primarily Linux or heterogenous environments
+				&mdash; rely on &AD; for user management. In many environments, however, that means that an entirely different set of users must be defined 
+				to access Linux systems.
+			</para>
+			<para>
+				Trusts allows a natural division of labor in an IT environment between user administration (in &AD;) and Linux or data center management
+				(through &IPA;). All user accounts can be stored in &AD;, without needing to recreate user accounts on Linux systems, while all Linux systems
+				can still be centrally managed using native Linux tools.
+			</para>
+			<figure id="fig.trust-direction"><title>Trust Direction: &AD; Users to Linux Resources</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/trust-direction.png" />
+					</imageobject>
+				</mediaobject>
+			</figure>
+			<para>
+				Trusts, then, are essentially unidirectional. &AD; users can access &IPA; resources and services, but &IPA; users
+				cannot access &AD; resources. Trust allows Windows administrators and users to be able to access and manage Linux resources<footnote><para>Trusted users, however,
+					cannot manage &PROD; itself.</para></footnote>.
+			</para>
+			<para>
+				<emphasis role="bold">A trust relationship is established between a single &AD; domain and a single &IPA; domain.</emphasis>
+			</para>
+			<note><title>NOTE</title>
+				<para>
+					No Windows machine can be a client of the &IPA; domain in a trust environment.
+					All Windows machines must be in the &AD; domain.
+				</para>
+			</note>
+			<para>
+				A relationship is established between the &AD; environment and the &IPA; environment through a <emphasis>trust agreement</emphasis>, which 
+				identifies the involved domains and the settings for the trust environment.
+			</para>
+		</section>
+
+		<section id="comp-trust-dns"><title>DNS Domains</title>
+			<para>
+				Both &AD; and &PROD; can define DNS services, and those DNS domains must interact cleanly with each other. There are two 
+				potential DNS configurations:
+			</para>
+			<itemizedlist>
+				<listitem>
+					<para>
+						The DNS domains can be independent.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						&PROD; can be configured as a subdomain of &AD;.
+					</para>
+				</listitem>
+			</itemizedlist>
+			<para>
+				In both cases, the different domains forward requests to each other as necessary and maintain different
+				DNS namespaces. It is just a matter of defining how they recognize each other for forwarding queries.
+			</para>
+			<important><title>IMPORTANT</title>
+				<para>
+					Both &AD; and &PROD; must be configured with integrated DNS servers.
+				</para>
+			</important>
+			<formalpara><title>Separate DNS Domains</title>
+				<para>
+					In this case, there are two entirely different namespaces, such as <command>ipaexample.com</command> and 
+					<command>adexample.com</command>. For these domains to communicate, they must be configured as conditional 
+					forwarders of each other's domain.
+				</para>
+			</formalpara>
+			<figure id="fig.trust-dns1"><title>Trust with Separate DNS Domains</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/trust-dns1.png"/>
+					</imageobject>
+				</mediaobject>
+			</figure>
+			<formalpara><title>&PROD; as a Subdomain</title>
+				<para>
+					In this case, &PROD; is a namespace within the larger &AD; space, such as <command>linux.example.com</command> and 
+					<command>example.com</command>. &IPA; can be configured to send all requests to the &AD; domain (a forward-only policy)
+					or it can send queries first to &AD; and then attempt to resolve them itself (a foward-first policy).
+				</para>
+			</formalpara>
+			<figure id="fig.trust-dns2"><title>Trust with &IPA; as a DNS Subdaomin of &AD;</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/trust-dns2.png"/>
+					</imageobject>
+				</mediaobject>
+			</figure>
+		</section>
+
+		<section id="comp-trust-krb"><title>Kerberos Realms, Authentication, and Authorization</title>
+			<para>
+			Group information in &AD; is stored in a list of identifiers in each Kerberos ticket for 
+			&AD; users in a special dataset called <emphasis>privileged access certificates</emphasis>
+			or MS-PAC. The group information in the PAC has to be mapped to the &AD; groups and then
+			to the corresponding &IPA; groups to help determine access. A PAC is essentially an account usability 
+			extension.
+		</para>
+		<para>
+			Understanding the group mapping for trusts can help clarify how groups should be structured
+			in trust environments.
+		</para>
+
+			<para>
+				Microsoft uses a special authorization structure called <emphasis>privileged access certificates</emphasis> 
+				or MS-PAC. A PAC is embedded in a Kerberos ticket as a way of identifying the entity to other Windows clients and servers in the Windows domain.
+			</para>
+			<para>
+				On &IPA; resources, if an &AD; user requests a ticket for a service, then &IPA; 
+				forwards the request
+				to &AD; to retrieve the user information. The PAC information sent back by &AD;
+				is embedded in the Kerberos ticket.
+			</para>
+			<note><title>NOTE</title>
+				<para>
+					All Kerberos communication for both &AD; and &IPA; for trusts uses GSS-API.
+				</para>
+			</note>
+			<para>
+				&IPA; (through SSSD, as &IPAA; client), extracts the &AD; group <emphasis>security
+				identifiers</emphasis> (SIDs) from the PAC. &IPA; then compares the &AD; SIDs in the PAC
+				to the group SIDs configured as members in &IPA; groups. If the &AD; group is
+				a member of &IPAA; group, then the &IPA; group SID is added to the PAC, and the 
+				Kerberos ticket is updated with the new PAC. 
+			</para>
+			
+			<figure id="fig.trust-components2"><title>&IPA;, SSSD, and &AD;</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/trust-components2.png" />
+					</imageobject>
+				</mediaobject>
+			</figure>
+			<para>
+				That new ticket is then used to generate a service ticket for the user, and 
+				the user is granted access to the &IPA;-hosted services.
+				according to their access rules. Additionally, the &IPA; group information in the
+				SSSD user cache is updated to include the mapped &IPA; groups for the &AD; user.
+			</para>
+			<para>
+				SSSD stores multiple TGTs and tickets for each user, as new services are accessed.
+			</para>
+			<para>
+				A simpler way of saying this is that &AD; supplies a list of groups for 
+				each user, based on an identifier for the group. &IPA; compares that list of 
+				&AD; groups to memberships in &IPA; groups (where each group member is identified
+				by that SID, rather than by a name or DN). If the &AD; groups to which the user
+				belongs are known to the &IPA; domain, then the user is recognized by the &IPA;
+				domain.
+			</para>
+			<para>
+				<emphasis role="bold">The crucial factor to realize in this is that &AD; users 
+					are recognized to the &IPA; domain not by their &AD; user entry, but
+					by their &AD; group memberships.</emphasis>
+				In a sense, &AD; <emphasis>users</emphasis> are not trusted by the &IPA; domain
+				&mdash; &AD; <emphasis>groups</emphasis> are.
+			</para>
+			<para>
+				But this method of mapping &AD; group SIDs to &IPA; group members means that 
+				group structure in &IPA; is important. &AD; groups have different attributes
+				than Linux groups and, therefore, different attributes than &IPA; groups. Most
+				critically, &AD; groups are not POSIX groups, while &IPA; groups are.
+			</para>
+			<para>
+				&IPA; has introduced an intermediary, non-POSIX group type, <emphasis>external groups</emphasis>, which 
+				allow entities outside &IPA; or a Linux system to be added as member. That external group can then be 
+				added to a standard &IPA; (POSIX) group as a member.
+			</para>
+			<para>
+				When &AD; groups are added to &IPAA; group, they can be idenfitied by
+				their SID or by name, in the formats <emphasis>DOMAIN\group_name</emphasis> or
+				<emphasis>group_name@domain</emphasis>. &IPA; then resolves the group name to 
+				the SID and stores the SID as the group member entry, to be compared to any 
+				offered user PAC.
+			</para>
+			<para>
+				Actually configuring groups for &AD; users is described in <xref linkend="trust-groups" />.
+			</para>
+			<important><title>IMPORTANT</title>
+				<para>
+					Both &AD; and &PROD; must be configured with integrated certificate services.
+				</para>
+			</important>
+			<para>
+				All sessions in a trust environment are ultimately secured with Kerberos tickets, but users have different 
+				login options:
+			</para>
+			<itemizedlist>
+				<listitem>
+					<para>
+						Ticket-based authentication through <command>kinit</command>
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Simple username/password authentication that is negotiated into a ticket
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Passwordless authentication that is negotiated into a ticket (depending on the Kerberos
+						client configuration
+					</para>
+				</listitem>
+			</itemizedlist>
+
+		</section>
+		</section>
+
+		<section id="trust-sync"><title>Trust in Contrast to Synchronization</title>
+			<para>
+				Trusts and synchronization are fundamentally different approaches to integrating &IPAA; domain and &AD; domain. The structure of trust domains (outlined in <xref linkend="trust-realms" />), the complexity of group assignments, the location of user and group entries, and other factors all influence which solution is most effective for a given environment.
+			</para>
+			<para>
+				Synchronization has a certain simplicity in its overall topology and setup, and 
+				it has a relatively small administrative footprint. However, it is much more 
+				limited in how it handles directory data, its ability to map entries, its 
+				overall performance, and its security.
+			</para>
+			<table id="tab.summary-sync-trust"><title>Positives and Negatives of Using Sync</title>
+				<tgroup cols="2">
+					<thead>
+						<row>
+							<entry>
+								Positives of Sync
+							</entry>
+							<entry>
+								Negatives of Sync
+							</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+						<entry>
+					<itemizedlist>
+						<listitem>
+							<para>
+								Simple setup procedures
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Few rules about the &AD; configuration, including being agnostic about DNS and Kerberos domains
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Users and groups can originate in both &AD; and &IPA; domains
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								&AD; users can function as &IPA; users, including as administrators
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Windows machines can be added as clients to the &IPA; domain
+							</para>
+						</listitem>
+					</itemizedlist>
+							</entry>
+							<entry>
+					<itemizedlist>
+						<listitem>
+							<para>
+								Limited set of synchronized attributes and problematic data mapping
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Potential data inconsistency between &AD; and &IPA; entries for the same user
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Different LDAP versions, synchronization protocols, and other technology differences
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Delays in relaying updates between directories
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Decreased performance
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Security implications of syncing passwords &mdash; or administrative complexity for maintaining different passwords for the same user account in difference locations
+							</para>
+						</listitem>
+					</itemizedlist>
+						</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+		<para>
+			The initial environment configuration for trusts is much more complex than synchronization, but it has advantages in simplifying single sign-on to systems, web applications, or terminals; not requiring additional directory administration; and preserving data integrity.
+		</para>
+		<table id="tab.summary-trust-trust"><title>Positives and Negatives of Using Trusts</title>
+				<tgroup cols="2">
+					<thead>
+						<row>
+							<entry>
+								Positives of Trusts
+							</entry>
+							<entry>
+								Negatives of Trusts
+							</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+						<entry>
+					<itemizedlist>
+						<listitem>
+							<para>
+								Pulls in authentication, group, and authorization data automatically when a user logs in
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Allows true single sign-on, with a single stored password and without having to synchronize passwords between directories
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Caches data in a local database
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Allows users to be entirely defined in a single domain, yet have access to multiple domains
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Can be configured without having to know or restructure the underlying directory trees
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Allows Kerberos authentication, username/password authentication (which generates a Kerberos ticket), or passwordless logins
+							</para>
+						</listitem>
+					</itemizedlist>
+				</entry>
+						<entry>
+					<itemizedlist>
+						<listitem>
+							<para>
+								Has very specific DNS configuration requirements
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Can potentially have long wait times to retrieve data when a user initially logs in
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Prefers that users be located in a single directory and resources in another
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Windows machines <emphasis>cannot</emphasis> be clients of the &IPA; domain
+							</para>
+						</listitem>
+					</itemizedlist>
+						</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+			<note><title>NOTE</title>
+				<para>
+					There is no clear migration path from using synchronization to using trusts because the entries already exist in the backend &IPA; LDAP directory. This means that &AD; user entries (or all user entries, if &IPA; users are also synced) are duplicated, which can lead to odd behavior with logins, group associations, and lookups.
+				</para>
+			</note>
+		</section>
+	
+		<section id="trust-ipa-features"><title>&AD; Users and &IPA; Features: sudo and Host-Based Access Control Policies</title>
+			<para>
+				&AD; users <emphasis>cannot</emphasis> be added directly to &IPAA; group as a member. 
+				This means that policies and configuration in &IPA; which rely on group associations &mdash; such as host-based access control rules and sudo policies &mdash; must be configured in a kind of daisy-chain. 
+			</para>
+			<para>
+				The &AD; user is added to an &AD; group, then that &AD; group is added to &IPAA; external group, which is added as a member to a POSIX group. The sudo, host-based access controls, and other policies are applied against that POSIX group and, ultimately, through nesting memberships applied to the &AD; user when accessing &IPA; domain resources.
+			</para>
+<screen>  Active Directory Server                    Identity Management Server
+---------------------------    -------------------------------------------------------
+|   AD user -> AD group ->| -> | External Group -> POSIX Group -> sudo/HBAC policies |
+---------------------------    -------------------------------------------|-----------
+      ^                                                                   V
+      |--------------------------------------------------------------------</screen>
+      			<note><title>NOTE</title>
+				<para>
+					Testing tools such as <command>hbactest</command> will not work with trusted users because
+					the trusted user group associations are resolved dynamically, not stored in the &IPA; directory.
+				</para>
+			</note>
+		</section>
+			
+		<section id="sid-issues"><title>Potential Issues with Group Mapping and SIDs</title>
+			<formalpara><title>Losing Kerberos Tickets</title>
+				<para>
+					Running any command to obtain a SID from the Samba service &mdash; such as 
+					<command>net getlocalsid</command> or <command>net getdomainsid</command> &mdash;
+				       	kills any existing admin ticket in the Kerberos cache.
+				</para>
+			</formalpara>
+
+			<formalpara id="trust-group-limits"><title>Cannot Verify Group Membership for Users</title>
+			<para>
+				There is no way to verify that a specific trusted user is associated with a specific &IPA; group, external or POSIX.
+			</para>
+		</formalpara>
+		<formalpara><title>Cannot Display (Remote) &AD; Group Memberships for an &AD; User</title>
+			<para>
+				For Linux system users, local group associations can be shown for a user
+				using the <command>id</command> command. However, &AD; group memberships are not 
+				displayed with <command>id</command> for &AD; users, even though they
+				are with Samba tools.
+			</para>
+		</formalpara>
+			<para>
+				The <command>wbinfo</command> command can be used to obtain a SID for an &AD;
+				user and then to display groups associated with that SID.
+			</para>
+<screen>[root@ipaserver ~]# wbinfo -n ADDOMAIN\\jsmith
+S-1-5-21-1689615952-3716327440-3249090444-1104 SID_USER (1)
+
+[root@ipaserver ~]# wbinfo --user-domgroups=S-1-5-21-1689615952-3716327440-3249090444-1104
+S-1-5-21-1689615952-3716327440-3249090444-513
+S-1-5-21-1689615952-3716327440-3249090444-1106</screen>
+			<para>
+				The same query using <command>id</command> shows only the user information,
+				not the &AD; group membership information.
+			</para>
+<screen>[root@ipaserver ~]# id ADDOMAIN\\jsmith
+uid=1921801104(jsmith@adexample.com) gid=1921801104(jsmith@adexample.com) groups=1921801104(jsmith@adexample.com)</screen>
+			<note><title>TIP</title>
+				<para>
+					To work around this, ssh into &IPAA; client machine as the given
+					&AD; user. After the first successful login, the &AD; group memberships
+					are detected and returned in the <command>id</command> search.
+				</para>
+<screen>[root@ipaserver ~]# id ADDOMAIN\jsmith
+uid=1921801107(jsmith@adexample.com) gid=1921801107(jsmith@adexample.com) groups=1921801107(jsmith@adexample.com),129600004(ad_users),1921800513(domain users@adexample.com)</screen>
+			</note>
+		</section>
+
+		<section id="ad-trust-admin"><title>&AD; Users and &IPA; Administration</title>
+			<para>
+				Trust relationships are unidirectional. &AD; users exist only within the &AD; domain and are limited to what resources within the &IPA; domain they can access. <emphasis role="bold">&AD; users are not administrators for &IPA; because they do not exist within &IPA;.</emphasis>
+			</para>
+			<para>
+				&AD; users, then, cannot use any &IPA; administrative tools, including the web UI 
+				and command-line tools.
+			</para>
+		</section>
+		
+	</section>
+
+	<section id="trust-requirements"><title>Environment and Machine Requirements to Set Up Trusts</title>
+		<para>
+			Make sure that both the &AD; and &IPA; servers, machines, and environments meet the 
+			requirements and settings in this section <emphasis>before</emphasis> configuring 
+			a trust agreement.
+		</para>
+		<section id="trust-req-domain-names"><title>Domain and Realm Names</title>
+			<para>
+				The &IPA; DNS domain name and Kerberos realm name <emphasis>must</emphasis> be different than the &AD; DNS domain name and Kerberos realm name.
+			</para>
+		</section>
+		<section id="trust-req-netbios-names"><title>NetBIOS Names</title>
+			<para>
+				The NetBIOS name is the far-left component of the domain name. For example, if the domain is <emphasis>linux.example.com</emphasis>, the NetBIOS name is <emphasis>linux</emphasis>, while if the domain name is simply <emphasis>example.com</emphasis>, it is <emphasis>example</emphasis>. The NetBIOS name is critical for identifying the &AD; domain and, if the &IPA; domain is within a subdomain of &AD; DNS, for identifying the &IPA; domain and services.
+			</para>
+			<para>
+				The &IPA; domain and &AD; domain must have different NetBIOS names.
+			</para>
+		</section>
+		<section id="trust-req-dns1"><title>Integrated DNS</title>
+			<para>
+				Both the &AD; server and the &IPA; server must be configured to run their own respective DNS services.
+			</para>
+			
+		</section>
+
+		<section id="trust-req-ports"><title>Firewalls and Ports</title>
+			<formalpara><title>Required Ports</title>
+				<para>
+					For a trust relationship, the &AD; server and &IPA; server must have almost all of the required system ports open that are required for &IPAA; server installation, <emphasis role="bold">with the exception of the LDAP ports</emphasis>.
+				</para>
+			</formalpara>
+			<table id="tab.trust-ports"><title>&IPA; Ports</title>
+				<tgroup cols="3">
+					<thead>
+						<row>
+							<entry>
+								Service
+							</entry>
+							<entry>
+								Ports
+							</entry>
+							<entry>
+								Type
+							</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>
+								HTTP/HTTPS
+						</entry>
+						<entry>
+							<simplelist>
+								<member>80</member>
+								<member>443</member>
+							</simplelist>
+							</entry>
+							<entry>
+							TCP
+							</entry>
+						</row>
+								
+					<row>
+						<entry>
+							Kerberos
+							</entry>
+							<entry>
+							<simplelist>
+								<member>88</member>
+								<member>464</member>
+							</simplelist>
+							</entry>
+							<entry>
+							TCP and UDP
+						</entry>
+						</row>
+						<row>
+						<entry>
+							DNS
+						</entry>
+						<entry>
+							53
+						</entry>
+						<entry>
+							TCP and UDP
+						</entry>
+							</row>
+							<row>
+								<entry>
+									NTP
+							</entry>
+							<entry>
+							123
+							</entry>
+							<entry>
+								UDP
+						</entry>
+							</row>
+						
+					</tbody>
+				</tgroup>
+			</table>
+			<important><title>IMPORTANT</title>
+				<para>
+					The &IPA; backend LDAP server <emphasis>must not be reachable</emphasis> by the &AD; domain controller. The associated ports &mdash; 389 and 636 &mdash; on the &IPA; server host must be shut down for the &AD; domain controller.
+				</para>
+			</important>
+			<formalpara><title>Starting iptables at Boot Time</title>
+				<para>
+					Configure the <command>iptables</command> service to start when the system boots:
+				</para>
+			</formalpara>
+			<screen>[root@ipaserver ]# chkconfig iptables on</screen>
+			<formalpara><title>Setting iptables Configuration</title>
+				<para>
+					The <command>iptables</command> configuration needs to allow access to the required &IPA; ports and reject access to the &IPA; LDAP ports. The order of the rules is important. &AD;-based requests to LDAP ports must be blocked first (based on the &AD; server IP address), then there must be connections allowed to all &IPA; TCP adn UDP ports.
+				</para>
+			</formalpara>
+			<orderedlist>
+				<listitem>
+					<para>
+						Open the <command>iptables</command> configuration file.
+					</para>
+					<screen>[root@ipaserver ~]# vim /etc/sysconfig/iptables</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Add the rule to restrict access to LDAP ports for the &AD; host.
+					</para>
+					<screen>-A INPUT -s <replaceable>ad_ip_address</replaceable> -p tcp -m multiport --dports 389,636 -m state --state NEW,ESTABLISHED -j REJECT</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Make sure that there lines to allow access to the TCP and UDP ports required by &IPA;.
+					</para>
+					<screen>-A INPUT -p tcp -m multiport --dports 80,443,389,636,88,464,53,138,139,445 -m state --state NEW,ESTABLISHED -j ACCEPT
+						-A INPUT -p udp -m multiport --dports 88,464,53,123,138,139,389,445 -m state --state NEW,ESTABLISHED -j ACCEPT</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Save the file.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Restart the <command>iptables</command> service: 
+					</para>
+		<screen>[root@ipaserver ]# service iptables restart</screen>
+					</listitem>
+				</orderedlist>
+				<example><title>Example iptables Configuration File</title>
+<screen>*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 22 -j ACCEPT
+-A INPUT -s <replaceable>ad_ip_address</replaceable> -p tcp -m multiport --dports 389,636 -m state --state NEW,ESTABLISHED -j REJECT
+-A INPUT -p tcp -m multiport --dports 80,443,389,636,88,464,53,138,139,445 -m state --state NEW,ESTABLISHED -j ACCEPT
+-A INPUT -p udp -m multiport --dports 88,464,53,123,138,139,389,445 -m state --state NEW,ESTABLISHED -j ACCEPT
+-A INPUT -p udp -j REJECT
+-A INPUT -p tcp -j REJECT
+-A FORWARD -j REJECT --reject-with icmp-host-prohibited
+COMMIT</screen>
+</example>
+		</section>
+		<section id="trust-req-time"><title>Clock Settings</title>
+			<para>
+				Both the &AD; server and the &IPA; server must have their clocks in sync.
+			</para>
+		</section>
+
+		<section id="trust-name-formats"><title>Supported Username Formats</title>
+			<para>
+				Username mapping is performed in the local SSSD client. A Python regular expression is used by SSSD to identify the username and the domain to which it belongs. 
+			</para>
+			<para>
+				By default in SSSD, the username format is defined in the form <emphasis>name@domain</emphasis>. This uses the regular expression:
+			</para>
+<screen>re_expression = <![CDATA[(?P<name>[^@]+)@?(?P<domain>[^@]*$)]]></screen>
+			<para>
+				&AD; can support several different kinds of name formats, however, so the <parameter>re_expression</parameter> parameter in the SSSD configuration file for &IPA; backends or &AD; backends uses a more complex expression:
+			</para>
+<screen>re_expression = <![CDATA[(((?P<domain>[^\\]+)\\(?P<name>.+$))|((?P<name>[^@]+)@(?P<domain>.+$))|(^(?P<name>[^@\\]+)$))]]></screen>
+			<para>
+				This supports usernames in multiple formats:
+			</para>
+			<itemizedlist>
+				<listitem>
+					<para>
+						<emphasis>username</emphasis>
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<emphasis>username@domain.name</emphasis>
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						<emphasis>DOMAIN\username</emphasis>
+					</para>
+				</listitem>
+			</itemizedlist>
+			<note><title>TIP</title>
+				<para>
+					An additional SSSD parameter, <parameter>default_domain_suffix</parameter>, can be used to supply a default domain value for usernames. For example, if all users are in a trusted &AD; domain of <command>adexample.com</command> and the identity backend is the &IPA; domain of <command>ipa.example.com</command>, the <parameter>default_domain_suffix</parameter> parameter can be set with the value <command>adexample.com</command>. All users are automatically assumed to belong to that user domain unless the domain value is explicitly given with the username.
+				</para>
+			</note>
+			<para>
+				This is explained in more detail in the <ulink url="https://access.redhat.com/knowledge/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/sssd-user-ids.html">SSSD chapter of the Deployment Guide</ulink>.
+			</para>
+		</section>
+		<section id="rerunning-trust-script"><title>Trust Can Only Be Configured Once</title>
+			<warning><title>WARNING</title>
+				<para>
+					The <command>ipa-ad-trust-install</command> command can only be run once. If any information is entered incorrectly &mdash; particularly the NetBIOS name for the &IPA; server, but also the administrative credentials or other settings &mdash; then the trust services and all &IPA; packages must be uninstalled and then reinstalled and rerun.
+				</para>
+				<para>
+					It is not possible to rerun the <command>ipa-ad-trust-install</command> command to change the settings.
+				</para>
+			</warning>
+		</section>
+	</section>
+	<section id="trust-ipa-subdomain"><title>Setting up Trust with &IPA; as a DNS Subdomain of &AD;</title>
+		<orderedlist>
+			<listitem>
+				<para>
+					Stop the Windows firewall service.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Stop <command>iptables</command> and <command>ip6tables</command> on the &IPA; server.
+				</para>
+				<screen>[root@ipaserver ]# service iptables stop</screen>
+			</listitem>
+		<listitem>
+			<para>
+				Install the required trust packages, updated Samba4 packages, and LDAP-DNS packages for &IPA; DNS management.
+			</para>
+			<screen>[root@ipaserver ]# yum install ipa-server "*ipa-server-trust-ad" samba4-winbind-clients bind-dyndb-ldap samba4-client</screen>
+			<important><title>IMPORTANT</title>
+				<para>
+					The Samba4 packages conflict with the default Samba3 packages on the &RHEL; system. There may be dependency issues with other applications as the Samba3 packages are removed.
+				</para>
+			</important>
+			<para>
+				The <command>cifs-utils</command> package is removed when Samba3 is removed. This must be re-installed.
+			</para>
+			<screen>[root@ipaserver ]# yum install cifs-utils</screen>
+			<para>
+				It is recommended that you remove the <command>samba4-winbind-krb5-locator</command> package to improve Kerberos performance.
+			</para>
+			<screen>[root@ipaserver ]# yum remove samba4-winbind-krb5-locator</screen>
+		</listitem>
+		<listitem>
+			<para>
+				<emphasis>For a new &IPA; server.</emphasis>
+				Set up the &IPA; server to use its own, integrated DNS services (<option>--setup-dns</option>), its own DNS domain (<option>-n</option>), and the &AD; DNS server as a forwarder (<option>--forwarder</option>). For example:
+			</para>
+			<screen>[root@ipaserver ]# ipa-server-install --setup-dns --forwarder=2555.255.255.255 -p secret -a secret -r IPAEXAMPLE -n linux.adexample.com --hostname ipaserver.linux.adexample.com -U</screen>
+			<para>
+				<command>ipa-server-install</command> options are described in <xref linkend="install-command" />.
+			</para>
+			<para>
+				<emphasis>If the &IPA; server was set up without using &AD; as a forwarder.</emphasis> If &IPAA; server was configured without using &AD; as a forwarder, then the &AD; server can be added as a confitional forwarder. This requires the IP address of the &AD; DNS server.
+			</para>
+			<screen>[root@ipaserver ]# ipa dnsconfig-mod --forwarder=255.255.255.255 --forward-policy=first</screen>
+			<para>
+				Using a first policy means that queries are sent to the forwarder first and then to the local <command>named</command> process. Alternatively, this can be set to only, so that only the DNS forwarder is queried, never <command>named</command>.
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				Add the &IPA; domain as a subdomain entry in the &AD; configuration and add an NS record for the &IPA; DNS. For this exmaple, the &IPA; configuration has a NetBIOS name of <command>linux</command> (the subdomain) and the domain name is <command>adexample.com</command>.
+			</para>
+			<orderedlist>
+				<listitem>
+					<para>
+						Open the command prompt, using <emphasis>Run as Administrator</emphasis>.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Use the <command>dnscmd</command> command to add the A record for the &IPA; server, using the &IPA; hostname, NetBIOS name, and IP address.
+					</para>
+<screen>/RecordAdd ad_domain ipa_hostname.ipa_netbios A ipa_ip_address</screen>
+					<para>
+						For example:
+					</para>
+<screen>C:\> dnscmd 127.0.0.1 /RecordAdd adexample.com ipaserver.linux A 255.255.255.0</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Then add the NS record for the &IPA; server. This has the format:
+					</para>
+					<screen>/RecordAdd ad_domain ipa_netbios NS ipa_hostname.ipa_subdomain</screen>
+					<para>
+						For example:
+					</para>
+<screen>C:\> dnscmd 127.0.0.1 /RecordAdd adexample.com linux NS ipaserver.linux.adexample.com</screen>
+				</listitem>
+			</orderedlist>
+		</listitem>
+				<listitem>
+					<para>
+						Check the SRV records for both domains from both servers.
+					</para>
+			<para>
+				On the &IPA; server, use the <command>dig SRV</command> command to list the records for the &AD; domain and the &IPA; domain.
+			</para>
+<screen>[root@ipaserver ~]# dig SRV _ldap._tcp.adexample.com
+;; ANSWER SECTION:
+_ldap._tcp.adexample.com. 600    IN    SRV    0 100 389 adserver.adexample.com.
+;; ADDITIONAL SECTION:
+adserver.adexample.com.    3600    IN    A    192.168.2.161
+;; ADDITIONAL SECTION:
+adserver.adexample.com.    3600    IN    A    192.168.2.161
+
+[root@ipaserver ~]# dig SRV _ldap._tcp.linux.adexample.com
+;; ANSWER SECTION:
+_ldap._tcp.linux.adexample.com. 86400    IN    SRV    0 100 389 ipaserver.linux.adexample.com.
+;; AUTHORITY SECTION:
+linux.adexample.com.        86400    IN    NS    ipaserver.linux.adexample.com.
+;; ADDITIONAL SECTION:
+ipaserver.linux.adexample.com.    1200    IN    A    192.168.2.158</screen>
+			<para>
+				On the &AD; server, open the <command>nslookup</command> tool and check the corresponding SRV records.
+			</para>
+<screen>> nslookup
+> set type=srv
+> _ldap._tcp.adexample.com
+> _ldap._tcp.linux.adexample.com
+> quit</screen>
+		</listitem>
+		<listitem>
+			<para>
+				Enable DNS lookups in the Kerberos realm for the Kerberos client.
+			</para>
+			<orderedlist>
+				<listitem>
+					<para>
+						Open the <filename>/etc/krb5.conf</filename> configuration file.
+					</para>
+<screen>[root@ipaserver ]# vim /etc/krb5.conf</screen>
+				</listitem>
+				<listitem>
+					<para>
+						In the <command>[libdefaults]</command> section, add or set the <command>dns_lookup_kdc</command> value to true.
+					</para>
+<screen>[libdefaults]
+....
+dns_lookup_kdc = true</screen>
+				</listitem>
+			</orderedlist>
+		</listitem>
+		<listitem>
+			<para>
+				Configure the &IPA; server to enable trust services. This requires the NetBIOS name <emphasis role="bold">of the &IPA; server</emphasis> and the password of the &IPA; administrator with the <option>-a</option>. Optionally, use the <option>-U</option> argument to run the script non-interactively.
+			</para>
+<screen>[root@ipaserver ]# ipa-adtrust-install --netbios-name=IPAEXAMPLE -a secret -U</screen>
+		</listitem>
+		<listitem>
+			<para>
+				To verify the &IPA; configuration at this point, use the Samba tools to check that the Windows-related services are running and accessible. The <command>smbclient</command> command shows whether the domain is in the Samba registry.
+			</para>
+			<screen>
+[root@ipaserver ~]# smbclient -L ipaserver.ipaexample.com -k
+lp_load_ex: changing to config backend registry
+Domain=[IPAEXAMPLE] OS=[Unix] Server=[Samba 4.0.0rc4]
+    Sharename       Type      Comment
+    ---------       ----      -------
+    IPC$            IPC       IPC Service (Samba 4.0.0rc4)
+Domain=[IPAEXAMPLE] OS=[Unix] Server=[Samba 4.0.0rc4]
+    Server               Comment
+    ---------            -------
+    Workgroup            Master
+    ---------            -------</screen>
+    			<para>
+				The <command>wbinfo</command> command shows whether the &IPA; domain is online.
+			</para>
+<screen>[root@ipaserver ~]# wbinfo --online-status
+BUILTIN : online
+IPAEXAMPLE : online
+			</screen>
+		</listitem>
+		<listitem>
+			<para>
+				<emphasis>If there are existing &IPA; users and groups.</emphasis> For existing &IPA; users, it is required that all users and groups have an &AD;-style security identifier (SID). A new <parameter>ipaNTSecurityIdentifier</parameter> containing a SID can be created automatically for each entry by running a special <command>ipa-sidgen-task</command> operation on the backend LDAP directory.
+			</para>
+			<para>
+				<emphasis role="bold">If there are no existing &IPA; users or groups, then this step can be skipped.</emphasis>
+			</para>
+<screen>[root@ipaserver ]# ldapmodify -x -H ldap://ipaserver.ipaexample.com:389 -D "cn=directory manager" -w <replaceable>Passwd</replaceable> -f
+
+dn: cn=sidgen,cn=ipa-sidgen-task,cn=tasks,cn=config
+changetype: add
+objectClass: top
+objectClass: extensibleObject
+cn: sidgen
+nsslapd-basedn: dc=ipadomain,dc=com
+delay: 0
+
+adding new entry "cn=sidgen,cn=ipa-sidgen-task,cn=tasks,cn=config"</screen>
+			<para>
+				When the task completes successfully, there will be a message in the error logs that the SID generation task (<command>Sidgen task</command>) finished with a status of zero (0).
+			</para>
+<screen>[root@ipaserver ]# grep "sidgen_task_thread" /var/log/dirsrv/slapd-IPALAB-QE/errors
+[20/Jul/2012:18:17:16 +051800] sidgen_task_thread - [file ipa_sidgen_task.c, line 191]: Sidgen task starts ...
+[20/Jul/2012:18:17:16 +051800] sidgen_task_thread - [file ipa_sidgen_task.c, line 196]: Sidgen task finished [0].</screen>
+		</listitem>
+		<listitem>
+			<para>
+				Create a trust agreement for the &AD; domain and the &IPA; domain. This command requires the &AD; domain and the credentials of an administrative user to use to connect to the domain.
+			</para>
+			<screen>ipa trust-add --type=<replaceable>type ad_domain_name</replaceable> --admin <replaceable>ad_admin_username</replaceable> --password</screen>
+			<para>
+				For example:
+			</para>	
+<screen>[root@ipaserver ~]# ipa trust-add --type=ad adexample.com --admin Administrator --password
+Active directory domain administrator's password: 
+------------------------------------------------------
+Added Active Directory trust for realm "adexample.com"
+------------------------------------------------------
+  Realm name: adexample.com
+  Domain NetBIOS name: ADEXAMPLE
+  Domain Security Identifier: S-1-5-21-1689615952-3716327440-3249090444
+  Trust direction: Two-way trust
+  Trust type: Active Directory domain
+  Trust status: Established and verified</screen>
+		</listitem>
+		<listitem>
+			<para>
+				Request a ticket for &IPAA; user to check the Kerberos configuration, and then check that that user can request service tickets.
+			</para>
+			<screen>[root@ipaserver ~]# kinit jsmith</screen>
+			<para>
+				First, request service tickets for services within the &IPA; domain.
+			</para>
+			<screen>[root@ipaserver ]# kvno host/ipaserver.ipaexample.com@IPA.DOMAIN </screen>
+			<para>
+				Then, request service tickets for services within the &AD; domain. 
+			</para>
+			<screen>[root@ipaserver ]# kvno cifs/adserver.adexample.com@AD.DOMAIN </screen>
+			<para>
+				If the &AD; service ticket is succcessfully granted, then there will be a cross-realm TGT listed with all of the other requested tickets. This will have the name <command>krbtgt/</command><emphasis>AD.DOMAIN@IPA.DOMAIN</emphasis>. 
+			</para>
+<screen>[root@ipaserver ]# klist
+Ticket cache: FILE:/tmp/krb5cc_0
+Default principal: jsmith@IPA.DOMAIN
+
+Valid starting     Expires            Service principal
+06/15/12 12:13:04  06/16/12 12:12:55  krbtgt/IPA.DOMAIN@IPA.DOMAIN
+06/15/12 12:13:13  06/16/12 12:12:55  host/ipaserver.ipaexample.com@IPA.DOMAIN
+<userinput>06/15/12 12:13:23  06/16/12 12:12:55  krbtgt/AD.DOMAIN@IPA.DOMAIN</userinput>
+06/15/12 12:14:58  06/15/12 22:14:58  cifs/adserver.adexample.com@AD.DOMAIN</screen>
+			<note><title>NOTE</title>
+				<para>
+					This ticket is requested as &IPAA; user because Kerberos realm mappings are not yet configured to allow &AD; users to use Kerberos authentication to the realm.
+				</para>
+			</note>
+		</listitem>
+		<listitem>
+			<para>
+				Configure realm mapping in the Kerberos configuration. This allows Kerberos authentication for &AD; users.
+			</para>
+			<orderedlist>
+				<listitem>
+					<para>
+						Open the <filename>/etc/krb5.conf</filename> configuration file.
+					</para>
+<screen>[root@ipaserver ]# vim /etc/krb5.conf</screen>
+				</listitem>
+				<listitem>
+					<para>
+						In the <command>[libdefaults]</command> section, enable DNS lookups in the Kerberos realm.
+					</para>
+<screen>[libdefaults]
+....
+dns_lookup_kdc = true</screen>
+				</listitem>
+				<listitem>
+					<para>
+						In the <command>[realms]</command> section, identify the &IPA; realm by name, and then add two <parameter>auth_to_local</parameter> lines to define the Kerberos principal name mapping. One rule should have a value of DEFAULT, for standard Unix usernames, and the other should include a rule which maps different &AD; username formats and the specific &AD; domain. For example, this rule allows usernames in the format <emphasis>first.last@ADDOMAIN</emphasis>, <emphasis>username@ADDOMAIN[.something]</emphasis>, or <emphasis>username@addomain[.something]</emphasis>; the last two expressions allow upper-case or lower-case domain names, since Kerberos is case-sensitive.
+					</para>
+<screen>[realms]
+IDM = {
+....
+auth_to_local = RULE:[1:$1@$0](^.*@ADDOMAIN$)s/@ADDOMAIN/@addomain/
+auth_to_local = DEFAULT
+}</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Restart the KDC service.
+					</para>
+<screen>[root@ipaserver ~]# service krb5kdc restart</screen>
+				</listitem>
+			</orderedlist>
+		</listitem>
+		<listitem>
+			<para>
+				Configure domain mapping in SSSD.
+			</para>
+			<orderedlist>
+				<listitem>
+					<para>
+						Open the <filename>/etc/sssd/sssd.conf</filename>.
+					</para>
+					<screen>[root@ipaserver ]# vim /etc/sssd/sssd.conf</screen>
+				</listitem>
+				<listitem>
+					<para>
+						In the <command>[sssd]</command> section, add <command>pac</command> to the <parameter>services</parameter> list to enable the SSSD service to request and use Kerberos tickets with PAC data.
+					</para>
+<screen>[sssd]
+services = nss, pam, ssh, <userinput>pac</userinput>
+....</screen>
+				</listitem>
+				<listitem>
+					<para>
+						In the &IPA; domain section, add the <parameter>subdomains_provider</parameter> parameter to explicitly enable SSSD to refer from the configured &IPA; domain to any domains trusted by that domain.
+					</para>
+<screen>[domain/ipa.lan]
+cache_credentials = True
+krb5_store_password_if_offline = True
+ipa_domain = example2b.com
+id_provider = ipa
+auth_provider = ipa
+access_provider = ipa
+ipa_hostname = ipa2.example.com
+chpass_provider = ipa
+ipa_server = ipa2.example.com
+ldap_tls_cacert = /etc/ipa/ca.crt
+<userinput>subdomains_provider = ipa</userinput></screen>
+					<para>
+						The trusted &AD; domain is <emphasis>not</emphasis> explicitly defined in the SSSD configuration. The &IPA; domain is automatically created in the SSSD configuration when the client is installed; adding this line makes it possible to use the existing configuration.
+					</para>
+					<para>
+						Subdomains and SSSD are described in more detail in the <ulink url="https://access.redhat.com/knowledge/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/ipa-domain-sssd.html">&IPA; provider configuration examples in the SSSD chapter of the Deployment Guide</ulink>.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Save the changes to the <filename>sssd.conf</filename> file.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Restart SSSD.
+					</para>
+					<screen>[root@ipaserver ]# service sssd restart</screen>
+				</listitem>
+			</orderedlist>
+		</listitem>
+		<listitem>
+			<para>
+				Restart the <command>iptables</command> and <command>ip6tables</command> services on the &IPA; server.
+				</para>
+				<screen>[root@ipaserver ]# service iptables start</screen>
+			</listitem>
+			<listitem>
+				<para>
+					Restart the Windows firewall.
+				</para>
+			</listitem>
+		</orderedlist>
+	</section>
+
+	<section id="trust-diff-dns-domains"><title>Setting up Trust with &IPA; and &AD; in Different DNS Domains</title>
+	<orderedlist>
+	
+			<listitem>
+				<para>
+					Stop the Windows firewall service.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Stop <command>iptables</command> and <command>ip6tables</command> on the &IPA; server.
+				</para>
+				<screen>[root@ipaserver ]# service iptables stop</screen>
+			</listitem>	
+		<listitem>
+			<para>
+				Install the required trust packages, updated Samba4 packages, and LDAP-DNS packages for &IPA; DNS management.
+			</para>
+			<screen>[root@ipaserver ]# yum install ipa-server "*ipa-server-trust-ad" samba4-winbind-clients bind-dyndb-ldap samba4-client</screen>
+			<important><title>IMPORTANT</title>
+				<para>
+					The Samba4 packages conflict with the default Samba3 packages on the &RHEL; system. There may be dependency issues with other applications as the Samba3 packages are removed.
+				</para>
+			</important>
+			<para>
+				The <command>cifs-utils</command> package is removed when Samba3 is removed. This must be re-installed.
+			</para>
+			<screen>[root@ipaserver ]# yum install cifs-utils</screen>
+			<para>
+				It is recommended that you remove the <command>samba4-winbind-krb5-locator</command> package to improve Kerberos performance.
+			</para>
+			<screen>[root@ipaserver ]# yum remove samba4-winbind-krb5-locator</screen>
+		</listitem>
+		<listitem>
+			<para>
+				<emphasis>For a new &IPA; server.</emphasis>
+				Set up the &IPA; server to use its own, integrated DNS services (<option>--setup-dns</option>), its own DNS domain (<option>-n</option>), and the &AD; DNS server as a forwarder (<option>--forwarder</option>). For example:
+			</para>
+			<screen>[root@ipaserver ]# ipa-server-install --setup-dns --forwarder=ad-dns.adserver.example.com -p secret -a secret -r IPAEXAMPLE -n ipaexample.com --hostname ipaserver.ipaexample.com -U</screen>
+			<para>
+				<command>ipa-server-install</command> options are described in <xref linkend="install-command" />.
+			</para>
+			<para>
+				<emphasis>If the &IPA; server was set up without using &AD; as a forwarder.</emphasis> If &IPAA; server was configured without using &AD; as a forwarder, then the &AD; server can be added as a confitional forwarder. This requires the IP address of the &AD; DNS server.
+			</para>
+			<screen>[root@ipaserver ]# ipa dnsconfig-mod --forwarder=255.255.255.255 --forward-policy=first</screen>
+			<para>
+				Using a first policy means that queries are sent to the forwarder first and then to the local <command>named</command> process. Alternatively, this can be set to only, so that only the DNS forwarder is queried, never <command>named</command>.
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				Add the &IPA; server as a conditional forwarder in the &AD; DNS configuration.
+			</para>
+			<orderedlist>
+				<listitem>
+					<para>
+						Open the <guilabel>Administrative Tools</guilabel> menu, and select the <guilabel>DNS</guilabel> item.
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Right-click the <guilabel>Conditional Forwarders</guilabel> item in the left column of the window.
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Select the <guilabel>New Conditional Forwarder...</guilabel> button.
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Enter the DNS domain name of the &IPA; domain and the IP address of the &IPA; DNS server.
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Save the new forwarder.
+							</para>
+						</listitem>
+					</orderedlist>
+					<para>
+						Alternatively, use the <command>dnscmd</command> command-line utility to add the forwarder entry: 
+					</para>
+<screen>> dnscmd 127.0.0.1 /ZoneAdd IPAEXAMPLE.COM /Forwarder 255.255.255.0</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Check the SRV records for both domains from both servers.
+					</para>
+			<para>
+				On the &IPA; server, use the <command>dig SRV</command> command to list the records for the &AD; domain and the &IPA; domain.
+			</para>
+			<screen>
+				[root@ipaserver ~]# dig SRV _ldap._tcp.adexample.com
+;; ANSWER SECTION:
+_ldap._tcp.adexample.com. 600    IN    SRV    0 100 389 adserver.adexample.com.
+;; ADDITIONAL SECTION:
+adserver.adexample.com.    3600    IN    A    192.168.2.161
+;; ADDITIONAL SECTION:
+adserver.adexample.com.    3600    IN    A    192.168.2.161
+
+[root@ipaserver ~]# dig SRV _ldap._tcp.ipaexample.com
+;; ANSWER SECTION:
+_ldap._tcp.ipaexample.com. 86400    IN    SRV    0 100 389 ipaserver.ipaexample.com.
+;; AUTHORITY SECTION:
+ipaexample.com.        86400    IN    NS    ipaserver.ipaexample.com.
+;; ADDITIONAL SECTION:
+ipaserver.ipaexample.com.    1200    IN    A    192.168.2.158</screen>
+			<para>
+				On the &AD; server, open the <command>nslookup</command> tool and check the corresponding SRV records.
+			</para>
+<screen>> nslookup
+> set type=srv
+> _ldap._tcp.adexample.com
+> _ldap._tcp.ipaexample.com
+> quit</screen>
+		</listitem>
+		<listitem>
+			<para>
+				Enable DNS lookups in the Kerberos realm for the Kerberos client.
+			</para>
+			<orderedlist>
+				<listitem>
+					<para>
+						Open the <filename>/etc/krb5.conf</filename> configuration file.
+					</para>
+<screen>[root@ipaserver ]# vim /etc/krb5.conf</screen>
+				</listitem>
+				<listitem>
+					<para>
+						In the <command>[libdefaults]</command> section, add or set the <command>dns_lookup_kdc</command> value to true.
+					</para>
+<screen>[libdefaults]
+....
+dns_lookup_kdc = true</screen>
+				</listitem>
+			</orderedlist>
+		</listitem>
+		<listitem>
+			<para>
+				Configure the &IPA; server to enable trust services. This requires the NetBIOS name <emphasis role="bold">of the &IPA; server</emphasis> and the password of the &IPA; administrator with the <option>-a</option>. Optionally, use the <option>-U</option> argument to run the script non-interactively.
+			</para>
+<screen>[root@ipaserver ]# ipa-adtrust-install --netbios-name=IPAEXAMPLE -a secret -U</screen>
+		</listitem>
+		<listitem>
+			<para>
+				To verify the &IPA; configuration at this point, use the Samba tools to check that the Windows-related services are running and accessible. The <command>smbclient</command> command shows whether the domain is in the Samba registry.
+			</para>
+			<screen>
+[root@ipaserver ~]# smbclient -L ipaserver.ipaexample.com -k
+lp_load_ex: changing to config backend registry
+Domain=[IPAEXAMPLE] OS=[Unix] Server=[Samba 4.0.0rc4]
+    Sharename       Type      Comment
+    ---------       ----      -------
+    IPC$            IPC       IPC Service (Samba 4.0.0rc4)
+Domain=[IPAEXAMPLE] OS=[Unix] Server=[Samba 4.0.0rc4]
+    Server               Comment
+    ---------            -------
+    Workgroup            Master
+    ---------            -------</screen>
+    			<para>
+				The <command>wbinfo</command> command shows whether the &IPA; domain is online.
+			</para>
+<screen>[root@ipaserver ~]# wbinfo --online-status
+BUILTIN : online
+IPAEXAMPLE : online
+			</screen>
+		</listitem>
+		<listitem>
+			<para>
+				<emphasis>If there are existing &IPA; users and groups.</emphasis> For existing &IPA; users, it is required that all users and groups have an &AD;-style security identifier (SID). A new <parameter>ipaNTSecurityIdentifier</parameter> containing a SID can be created automatically for each entry by running a special <command>ipa-sidgen-task</command> operation on the backend LDAP directory.
+			</para>
+			<para>
+				<emphasis role="bold">If there are no existing &IPA; users or groups, then this step can be skipped.</emphasis>
+			</para>
+<screen>[root@ipaserver ]# ldapmodify -x -H ldap://ipaserver.ipaexample.com:389 -D "cn=directory manager" -w <replaceable>Passwd</replaceable> -f
+
+dn: cn=sidgen,cn=ipa-sidgen-task,cn=tasks,cn=config
+changetype: add
+objectClass: top
+objectClass: extensibleObject
+cn: sidgen
+nsslapd-basedn: dc=ipadomain,dc=com
+delay: 0
+
+adding new entry "cn=sidgen,cn=ipa-sidgen-task,cn=tasks,cn=config"</screen>
+			<para>
+				When the task completes successfully, there will be a message in the error logs that the SID generation task (<command>Sidgen task</command>) finished with a status of zero (0).
+			</para>
+<screen>[root@ipaserver ]# grep "sidgen_task_thread" /var/log/dirsrv/slapd-IPALAB-QE/errors
+[20/Jul/2012:18:17:16 +051800] sidgen_task_thread - [file ipa_sidgen_task.c, line 191]: Sidgen task starts ...
+[20/Jul/2012:18:17:16 +051800] sidgen_task_thread - [file ipa_sidgen_task.c, line 196]: Sidgen task finished [0].</screen>
+		</listitem>
+		<listitem>
+			<para>
+				Create a trust agreement for the &AD; domain and the &IPA; domain. This command requires the &AD; domain and the credentials of an administrative user to use to connect to the domain.
+			</para>
+			<screen>ipa trust-add --type=<replaceable>type ad_domain_name</replaceable> --admin <replaceable>ad_admin_username</replaceable> --password</screen>
+			<para>
+				For example:
+			</para>	
+<screen>[root@ipaserver ~]# ipa trust-add --type=ad adexample.com --admin Administrator --password
+Active directory domain administrator's password: 
+------------------------------------------------------
+Added Active Directory trust for realm "adexample.com"
+------------------------------------------------------
+  Realm name: adexample.com
+  Domain NetBIOS name: ADEXAMPLE
+  Domain Security Identifier: S-1-5-21-1689615952-3716327440-3249090444
+  Trust direction: Two-way trust
+  Trust type: Active Directory domain
+  Trust status: Established and verified</screen>
+		</listitem>
+		<listitem>
+			<para>
+				Request a ticket for &IPAA; user to check the Kerberos configuration, and then check that that user can request service tickets.
+			</para>
+			<screen>[root@ipaserver ~]# kinit jsmith</screen>
+			<para>
+				First, request service tickets for services within the &IPA; domain.
+			</para>
+			<screen>[root@ipaserver ]# kvno host/ipaserver.ipaexample.com@IPA.DOMAIN </screen>
+			<para>
+				Then, request service tickets for services within the &AD; domain. 
+			</para>
+			<screen>[root@ipaserver ]# kvno cifs/adserver.adexample.com@AD.DOMAIN </screen>
+			<para>
+				If the &AD; service ticket is succcessfully granted, then there will be a cross-realm TGT listed with all of the other requested tickets. This will have the name <command>krbtgt/</command><emphasis>AD.DOMAIN@IPA.DOMAIN</emphasis>. 
+			</para>
+<screen>[root@ipaserver ]# klist
+Ticket cache: FILE:/tmp/krb5cc_0
+Default principal: jsmith@IPA.DOMAIN
+
+Valid starting     Expires            Service principal
+06/15/12 12:13:04  06/16/12 12:12:55  krbtgt/IPA.DOMAIN@IPA.DOMAIN
+06/15/12 12:13:13  06/16/12 12:12:55  host/ipaserver.ipaexample.com@IPA.DOMAIN
+<userinput>06/15/12 12:13:23  06/16/12 12:12:55  krbtgt/AD.DOMAIN@IPA.DOMAIN</userinput>
+06/15/12 12:14:58  06/15/12 22:14:58  cifs/adserver.adexample.com@AD.DOMAIN</screen>
+			<note><title>NOTE</title>
+				<para>
+					This ticket is requested as &IPAA; user because Kerberos realm mappings are not yet configured to allow &AD; users to use Kerberos authentication to the realm.
+				</para>
+			</note>
+		</listitem>
+		<listitem>
+			<para>
+				Configure realm mapping in the Kerberos configuration. This allows Kerberos authentication for &AD; users.
+			</para>
+			<orderedlist>
+				<listitem>
+					<para>
+						Open the <filename>/etc/krb5.conf</filename> configuration file.
+					</para>
+<screen>[root@ipaserver ]# vim /etc/krb5.conf</screen>
+				</listitem>
+				<listitem>
+					<para>
+						In the <command>[libdefaults]</command> section, enable DNS lookups in the Kerberos realm.
+					</para>
+<screen>[libdefaults]
+....
+dns_lookup_kdc = true</screen>
+				</listitem>
+				<listitem>
+					<para>
+						In the <command>[realms]</command> section, identify the &IPA; realm by name, and then add two <parameter>auth_to_local</parameter> lines to define the Kerberos principal name mapping. One rule should have a value of DEFAULT, for standard Unix usernames, and the other should include a rule which maps different &AD; username formats and the specific &AD; domain. For example, this rule allows usernames in the format <emphasis>first.last@ADDOMAIN</emphasis>, <emphasis>username@ADDOMAIN[.something]</emphasis>, or <emphasis>username@addomain[.something]</emphasis>; the last two expressions allow upper-case or lower-case domain names, since Kerberos is case-sensitive.
+					</para>
+<screen>[realms]
+IDM = {
+....
+auth_to_local = RULE:[1:$1@$0](^.*@ADDOMAIN$)s/@ADDOMAIN/@addomain/
+auth_to_local = DEFAULT
+}</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Restart the KDC service.
+					</para>
+<screen>[root@ipaserver ~]# service krb5kdc restart</screen>
+				</listitem>
+			</orderedlist>
+		</listitem>
+		<listitem>
+			<para>
+				Configure domain mapping in SSSD.
+			</para>
+			<orderedlist>
+				<listitem>
+					<para>
+						Open the <filename>/etc/sssd/sssd.conf</filename>.
+					</para>
+					<screen>[root@ipaserver ]# vim /etc/sssd/sssd.conf</screen>
+				</listitem>
+				<listitem>
+					<para>
+						In the <command>[sssd]</command> section, add <command>pac</command> to the <parameter>services</parameter> list to enable the SSSD service to request and use Kerberos tickets with PAC data.
+					</para>
+<screen>[sssd]
+services = nss, pam, ssh, <userinput>pac</userinput>
+....</screen>
+				</listitem>
+				<listitem>
+					<para>
+						In the &IPA; domain section, add the <parameter>subdomains_provider</parameter> parameter to explicitly enable SSSD to refer from the configured &IPA; domain to any domains trusted by that domain.
+					</para>
+<screen>[domain/ipa.lan]
+cache_credentials = True
+krb5_store_password_if_offline = True
+ipa_domain = example2b.com
+id_provider = ipa
+auth_provider = ipa
+access_provider = ipa
+ipa_hostname = ipa2.example.com
+chpass_provider = ipa
+ipa_server = ipa2.example.com
+ldap_tls_cacert = /etc/ipa/ca.crt
+<userinput>subdomains_provider = ipa</userinput></screen>
+					<para>
+						The trusted &AD; domain is <emphasis>not</emphasis> explicitly defined in the SSSD configuration. The &IPA; domain is automatically created in the SSSD configuration when the client is installed; adding this line makes it possible to use the existing configuration.
+					</para>
+					<para>
+						Subdomains and SSSD are described in more detail in the <ulink url="https://access.redhat.com/knowledge/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/ipa-domain-sssd.html">&IPA; provider configuration examples in the SSSD chapter of the Deployment Guide</ulink>.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Save the changes to the <filename>sssd.conf</filename> file.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Restart SSSD.
+					</para>
+					<screen>[root@ipaserver ]# service sssd restart</screen>
+				</listitem>
+			</orderedlist>
+		</listitem>
+		
+		<listitem>
+			<para>
+				Restart the <command>iptables</command> and <command>ip6tables</command> services on the &IPA; server.
+				</para>
+				<screen>[root@ipaserver ]# service iptables start</screen>
+			</listitem>
+			<listitem>
+				<para>
+					Restart the Windows firewall.
+				</para>
+			</listitem>
+	</orderedlist>
+</section>
+
+	<section id="trust-groups"><title>Creating &IPA; Groups for &AD; Users</title> 
+		<para>
+			User groups are required to set access permissions, host-based access control, sudo rules, and other controls on &IPA; users. These groups are what grant access to &IPA; domain resources, as well as restricting access.
+		</para>
+		<para>
+			However, &AD; users cannot be added directly to &IPA; user groups. This means that &AD;
+			users require special configuration in order to access &IPA; domain resources.
+		</para>
+		<para>
+			As described in <xref linkend="comp-trust-krb" />, &AD; users are added to the &IPA; domain in a kind
+			of daisy chain. They are added to a group on the &AD; side, then that group is added
+			to &IPAA; external group (meaning, a non-POSIX group), and then that external group is 
+			added to a local POSIX group as a member. 
+			The &IPA; POSIX group can then be used for user/role management of &AD; users.
+		</para>
+		<orderedlist>
+			<listitem>
+				<para>
+					Create or select the group in the &AD; domain to use to manage &AD; users in the &IPA; realm. (Multiple groups can be used and added to different groups on the &IPA; side.)
+				</para>
+			</listitem>
+				<listitem>
+					<para>
+						Create an <emphasis>external</emphasis> group in the &IPA; domain for the &AD; users. This correlates to the &AD; group. Using the <option>--external</option> argument indicates that this group will contain members from outside the &IPA; domain. For example:
+					</para>
+<screen>[root@ipaserver ~]# ipa group-add --desc='AD users external map' ad_users_external --external
+-------------------------------
+Added group "ad_users_external"
+-------------------------------
+  Group name: ad_users_external
+  Description: AD users external map</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Create the <emphasis>POSIX</emphasis> group for actually administering the &IPA; policies. 
+					</para>
+<screen>[root@ipaserver ~]# ipa group-add --desc='AD users' ad_users
+----------------------
+Added group "ad_users"
+----------------------
+  Group name: ad_users
+  Description: AD users
+  GID: 129600004</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Add the &AD; group to the &IPA; external group as an external member. The &AD; group is identified by the name <emphasis>DOMAIN\group_name</emphasis>. The group name is then mapped to the &AD; SID for the group. For example:
+					</para>
+<screen>[root@ipaserver ~]# ipa group-add-member ad_users_external --external "AD\Domain Users"
+ [member user]: 
+ [member group]: 
+  Group name: ad_users_external
+  Description: AD users external map
+  External member: S-1-5-21-3655990580-1375374850-1633065477-513 SID_DOM_GROUP (2)
+-------------------------
+Number of members added 1
+-------------------------</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Add the external &IPA; group to the POSIX &IPA; group as a member. For example:
+					</para>
+<screen>[root@ipaserver ~]# ipa group-add-member ad_users --groups ad_users_external
+  Group name: ad_users
+  Description: AD users
+  GID: 129600004
+  Member groups: ad_users_external
+-------------------------
+Number of members added 1
+-------------------------</screen>				
+				</listitem>
+			</orderedlist>
+		</section>
+
+	<section id="trust-ssh"><title>Using SSH from &AD; Machines for &IPA; Resources</title>
+		<para>
+			When a trust is configured, &AD; users can access machines, services, and files on &IPA; hosts using SSH and their &AD; credentials.
+		</para>
+		<para>
+			One critical factor when using SSH is the username. The username must meet several criteria:
+		</para>
+		<itemizedlist>
+			<listitem>
+				<para>
+					The username must have the format <emphasis>ad_user@ad_domain</emphasis>.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					The domain name itself must be lower-case. This is required for Kerberos principal mapping.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					The case of the username must match, exactly, the case of the username in &AD;. <emphasis>jsmith</emphasis> and <emphasis>JSmith</emphasis> are considered different users because of the different cases.
+				</para>
+			</listitem>
+		</itemizedlist>
+		<note><title>NOTE</title>
+			<para>
+				When using PuTTY on the Windows machine, make sure that GSS-API credential delegation is enabled.
+			</para>
+		</note>
+	</section>
+
+	<section id="trust-webapps"><title>Using Trust with Kerberized Web Applications</title>
+		<para>
+			Any existing web application can be configured to use Kerberos authentication, which references the trusted &AD; and &IPA; Kerberos realms.
+		</para>
+		<para>
+			For example, for an Apache server, set the <parameter>KrbAuthRealms</parameter> directive for the application location to the name of the &IPA; domain and set the location for the keytab (<parameter>Krb5Keytab</parameter>). Also set other paramters to enable Kerberos authentication, the service name used for the keytab (HTTP), and the Kerberos methods (which enables password-based authentication for valid users).
+		</para>
+<programlisting language="XML"><![CDATA[<Location "/mywebapp">]]>
+   AuthType Kerberos
+   AuthName "IPA Kerberos authentication"
+   KrbMethodNegotiate on
+   KrbMethodK5Passwd on
+   KrbServiceName HTTP
+   <userinput>KrbAuthRealms IDM_DOMAIN</userinput>
+   <userinput>Krb5Keytab /etc/httpd/conf/ipa.keytab</userinput>
+   KrbSaveCredentials off
+   Require valid-user
+<![CDATA[</Location>]]></programlisting>
+		<para>
+			The Kerberos configuration directives are covered in the <ulink url="http://modauthkerb.sourceforge.net/configure.html">mod_auth_kerb</ulink> module man pages.
+		</para>
+		<para>
+			After changing the Apache application configuration, restart the Apache service:
+		</para>
+<screen>[root@ipaserver ~]# service httpd restart</screen>
+	</section>
 </chapter>
+

@@ -1,120 +1,112 @@
-<?xml version='1.0' encoding='utf-8'?>
-<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
-[
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 ]>
 <preface id="Preface">
-    <title>Preface</title>
-    <para>&PROD; is a &OS;-based way to create a security, identity, and
-    authentication domain. The different security and authentication protocols
-    available to Linux and Unix systems (like Kerberos, NIS, DNS, PAM, and
-    sudo) are complex, unrelated, and difficult to manage coherently,
-    especially when combined with different identity stores.</para>
-    <para>&PROD; provides a layer that unifies all of these disparate services
-    and simplifies the administrative tasks for managing users, systems, and
-    security. &IPA; breaks management down into two categories: 
-    <emphasis>identity</emphasis>and 
-    <emphasis>policy</emphasis>. It centralizes the functions of managing the
-    users and entities within your IT environment (identity) and then provides
-    a framework to define authentication and authorization for a global
-    security framework and user-friendly tools like single sign-on
-    (policy).</para>
-    <section id="audience-redhat" condition="redhat">
-        <title>Audience and Purpose</title>
-        <para>With &PROD;, a &OS; system can easily become the center of an
-        identity/authentication domain and even provide access to the domain
-        for clients of other operating systems. &IPA; is an integrated system,
-        that builds on existing and reliable technologies like LDAP and
-        certificate protocols, with a robust yet straightforward set of tools
-        (including a web-based UI). The key to identity/policy management with
-        &IPA; is simplicity and flexibility:</para>
-        <itemizedlist>
-            <listitem>
-                <para>Centralized identity stores for authentication and single
-                sign-on using both integrated LDAP services (with 389 &DS;)
-                and, optionally, NIS services</para>
-            </listitem>
-            <listitem>
-                <para>Clear and manageable administrative control over system
-                services like PAM, NTP, and sudo</para>
-            </listitem>
-            <listitem>
-                <para>Simplified DNS domains and maintenance</para>
-            </listitem>
-            <listitem>
-                <para>Scalable Kerberos realms and cross-realms which clients
-                can easily join</para>
-            </listitem>
-        </itemizedlist>
-        <para>This guide is written for systems administrators and IT staff who
-        will manage &IPA; domains, user systems, and servers. This assumes a
-        moderate knowledge of Linux-based systems administration and
-        familiarity with important concepts like access control, LDAP, and
-        Kerberos.</para>
-        <para>This guide covers every aspect of using &IPA;, including
-        preparation and installation processes, administrative tasks, and the
-        &IPA; tools. This guide also explains the major concepts behind both
-        identity and policy management, generally, and &IPA; features
-        specifically. Administrative tasks in this guide are categorized as
-        either 
-        <emphasis>Identity</emphasis>or 
-        <emphasis>Policy</emphasis>in the chapter title to help characterize
-        the administrative functions.</para>
-    </section>
-    <section id="audience-fedora" condition="fedora">
-        <title>Audience and Purpose</title>
-        <para>With &PROD;, a &OS; system can easily become the center of an
-        identity/authentication domain and even provide access to the domain
-        for clients of other operating systems. &IPA; is an integrated system,
-        that builds on existing and reliable technologies like LDAP and
-        certificate protocols, with a robust yet straightforward set of tools
-        (including a web-based UI). The key to identity/policy management with
-        &IPA; is simplicity and flexibility:</para>
-        <itemizedlist>
-            <listitem>
-                <para>Centralized identity stores for authentication and single
-                sign-on using both integrated LDAP services (with 389 &DS;)
-                and, optionally, NIS services</para>
-            </listitem>
-            <listitem>
-                <para>Clear and manageable administrative control over system
-                services like PAM, NTP, and sudo</para>
-            </listitem>
-            <listitem>
-                <para>Simplified DNS domains and maintenance</para>
-            </listitem>
-            <listitem>
-                <para>Scalable Kerberos realms and cross-realms which clients
-                can easily join</para>
-            </listitem>
-        </itemizedlist>
-        <para>This guide is written for systems administrators and IT staff who
-        will manage &IPA; domains, user systems, and servers. This assumes a
-        moderate knowledge of Linux-based systems administration and
-        familiarity with important concepts like access control, LDAP, and
-        Kerberos.</para>
-        <para>This guide covers every aspect of using &IPA;, including
-        preparation and installation processes, administrative tasks, and the
-        &IPA; tools. This guide also explains the major concepts behind both
-        identity and policy management, generally, and &IPA; features
-        specifically. Administrative tasks in this guide are categorized as
-        either 
-        <emphasis>Identity</emphasis>or 
-        <emphasis>Policy</emphasis>in the chapter title to help characterize
-        the administrative functions.</para>
-    </section>
-    <section id="audience-five" condition="five">
-        <title>Audience and Purpose</title>
-        <para>This guide is written to cover the basic setup of a &RHEL; 5
-        client to operate within the &IPA; domain.</para>
-        <para>The full administrative information, including configuring other
-        platforms as clients, is covered in the &RHEL; 6 
-        <citetitle>&DPG;</citetitle>.</para>
-    </section>
-    <xi:include href="Conventions.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Feedback.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Revision_History.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<title>Preface</title>
+	<para>
+		&PROD; is a &OS;-based way to create a security, identity, and authentication domain. The different security 
+		and authentication protocols available to Linux and Unix systems (like Kerberos, NIS, DNS, PAM, and sudo) are 
+		complex, unrelated, and difficult to manage coherently, especially when combined with different identity stores.
+	</para>
+	<para>
+		&PROD; provides a layer that unifies all of these disparate services and simplifies the administrative tasks for 
+		managing users, systems, and security. &IPA; breaks management down into two categories: <emphasis>identity</emphasis> and 
+		<emphasis>policy</emphasis>. It centralizes the functions of managing the users and entities within your IT environment (identity) and 
+		then provides a framework to define authentication and authorization for a global security framework and user-friendly 
+		tools like single sign-on (policy).
+	</para>
+
+
+	<section id="audience-redhat" condition="redhat"><title>Audience and Purpose</title>
+		<para>
+			With &PROD;, a &OS; system can easily become the center of an identity/authentication domain and even provide access to the domain for clients of other operating systems.
+			&IPA; is an integrated system, that builds on existing and reliable technologies like LDAP and certificate protocols, with a robust yet 
+			straightforward set of tools (including a web-based UI). The key to identity/policy management with &IPA; is simplicity and flexibility:
+		</para>
+		<itemizedlist>
+			<listitem>
+				<para>
+					Centralized identity stores for authentication and single sign-on using both integrated LDAP services (with 389 &DS;) and, optionally, NIS services
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Clear and manageable administrative control over system services like PAM, NTP, and sudo
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Simplified DNS domains and maintenance
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Scalable Kerberos realms and cross-realms which clients can easily join
+				</para>
+			</listitem>
+		</itemizedlist>
+		<para>
+			This guide is written for systems administrators and IT staff who will manage &IPA; domains, user systems, and servers. This assumes a moderate knowledge of 
+			Linux-based systems administration and familiarity with important concepts like access control, LDAP, and Kerberos. 
+		</para>
+		<para>
+			This guide covers every aspect of 
+			using &IPA;, including preparation and installation processes, administrative tasks, and the &IPA; tools. This guide also explains the major concepts 
+			behind both identity and policy management, generally, and &IPA; features specifically. Administrative tasks in this guide are categorized as either <emphasis>Identity</emphasis> 
+			or <emphasis>Policy</emphasis> in the chapter title to help characterize the administrative functions.
+		</para>
+	</section>
+	<section id="audience-fedora" condition="fedora"><title>Audience and Purpose</title>
+		<para>
+			With &PROD;, a &OS; system can easily become the center of an identity/authentication domain and even provide access to the domain for clients of other operating systems.
+			&IPA; is an integrated system, that builds on existing and reliable technologies like LDAP and certificate protocols, with a robust yet 
+			straightforward set of tools (including a web-based UI). The key to identity/policy management with &IPA; is simplicity and flexibility:
+		</para>
+		<itemizedlist>
+			<listitem>
+				<para>
+					Centralized identity stores for authentication and single sign-on using both integrated LDAP services (with 389 &DS;) and, optionally, NIS services
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Clear and manageable administrative control over system services like PAM, NTP, and sudo
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Simplified DNS domains and maintenance
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Scalable Kerberos realms and cross-realms which clients can easily join
+				</para>
+			</listitem>
+		</itemizedlist>
+		<para>
+			This guide is written for systems administrators and IT staff who will manage &IPA; domains, user systems, and servers. This assumes a moderate knowledge of 
+			Linux-based systems administration and familiarity with important concepts like access control, LDAP, and Kerberos. 
+		</para>
+		<para>
+			This guide covers every aspect of 
+			using &IPA;, including preparation and installation processes, administrative tasks, and the &IPA; tools. This guide also explains the major concepts 
+			behind both identity and policy management, generally, and &IPA; features specifically. Administrative tasks in this guide are categorized as either <emphasis>Identity</emphasis> 
+			or <emphasis>Policy</emphasis> in the chapter title to help characterize the administrative functions.
+		</para>
+	</section>
+	<section id="audience-five" condition="five"><title>Audience and Purpose</title>
+		<para>
+			This guide is written to cover the basic setup of a &RHEL; 5 client to operate within the &IPA; domain.
+		</para>
+		<para>
+			The full administrative information, including configuring other platforms as clients, is covered in the &RHEL; 6 <citetitle>&DPG;</citetitle>.
+		</para>
+	</section>
+
+
+	 <xi:include href="Conventions.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="Feedback.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+	 <xi:include href="Revision_History.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 </preface>
+

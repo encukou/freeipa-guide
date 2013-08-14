@@ -1,759 +1,796 @@
-<?xml version='1.0' encoding='utf-8'?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
-[
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 ]>
 <chapter id="basic-usage">
-    <title>Basic Usage</title>
-    <para>All of the access to &PROD;, both through the web UI and through the
-    command line, is done by a user authenticating to the &IPA; domain. This
-    chapter covers the basics of setting up browsers to handle Kerberos
-    authentication, logging into &PROD;, and troubleshooting some common
-    connection issues.</para>
-    <section id="ipa-ui">
-        <title>Looking at the &IPA; UI</title>
-        <para>The &PROD; web UI is designed for simplicity. This was the
-        primary design goal, and this means that the web UI offers benefits
-        that make using &IPA; simpler and clearer:</para>
-        <itemizedlist>
-            <listitem>
-                <para>It shows instant, visual relationships between entries
-                (such as a user and all the groups, sudo rules, netgroups, and
-                policies which are associated with that user).</para>
-            </listitem>
-            <listitem>
-                <para>All entries are listed immediately without having to run
-                a search. This makes it possible to browse entries. The UI also
-                has a simple search box which quickly filters the list of
-                entries.</para>
-            </listitem>
-            <listitem>
-                <para>The interface is intuitive to use, without having to
-                learn the command-line tools.</para>
-            </listitem>
-            <listitem>
-                <para>The web UI can be accessed from machines outside the
-                &IPA; domain, so the domain can be managed from
-                anywhere.</para>
-                <para>Using the web UI requires a valid Kerberos ticket for the
-                &IPA; domain (by default), meaning that it can only be accessed
-                from a machine within the &IPA; domain. Alternatively, the web
-                UI can be configured to allow password authentication along
-                with Kerberos authentication ( 
-                <xref linkend="Enabling_UsernamePassword_Authentication_in_Your_Browser" />),
-                or a machine outside the &IPA; can be configured to work with
-                Kerberos ( 
-                <xref linkend="Using_a_Browser_on_Another_System" />).</para>
-            </listitem>
-        </itemizedlist>
-        <section id="ui-layout">
-            <title>The UI Layout</title>
-            <para>The web UI has three major functional areas which correspond
-            to each of the major functions of &IPA;: identity management,
-            policy management, and domain configuration.</para>
-            <table id="tab.ui-tasks">
-                <title>Configuration Areas Per Tab</title>
-                <tgroup cols="2">
-                    <thead>
-                        <row>
-                            <entry>Main Menu Tab</entry>
-                            <entry>Configuration Areas</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry>Identity</entry>
-                            <entry>
-                                <itemizedlist>
-                                    <listitem>
-                                        <para>User entries</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>User groups entries</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Host/client entries</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Host group entries</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Netgroups entries</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Domain services entries</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>DNS (if configured)</para>
-                                    </listitem>
-                                </itemizedlist>
-                            </entry>
-                        </row>
-                        <row>
-                            <entry>Policy</entry>
-                            <entry>
-                                <itemizedlist>
-                                    <listitem>
-                                        <para>Host-based access control</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Sudo rules</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Automount</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>User password policies</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Kerberos ticket policy</para>
-                                    </listitem>
-                                </itemizedlist>
-                            </entry>
-                        </row>
-                        <row>
-                            <entry>Access controls within &PROD;</entry>
-                            <entry>
-                                <itemizedlist>
-                                    <listitem>
-                                        <para>Role-based access control
-                                        (permissions based on group
-                                        membership)</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Self permissions</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>Delegations (user access control
-                                        over other users)</para>
-                                    </listitem>
-                                </itemizedlist>
-                            </entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </table>
-            <para>The 
-            <emphasis>main menu</emphasis>at the top of every page has three
-            tabs which correspond to the functional areas listed in 
-            <xref linkend="tab.ui-tasks" />. When a tab is selected, there is a
-            submenu of the different configuration areas. Some configuration
-            areas may have multiple possible entries; for example, role-based
-            access controls define user roles/groups, the areas that access can
-            be granted or denied (privileges), and then the permissions granted
-            to those areas. Each separate configuration entry has its own task
-            area beneath the primary configuration area.</para>
-            <figure id="fig.ui-tabs">
-                <title>The Main Menu</title>
-                <mediaobject>
-                    <imageobject>
-                        <imagedata fileref="images/ui-tabs.png" />
-                    </imageobject>
-                </mediaobject>
-            </figure>
-            <para>All entries for a configuration area are listed together on
-            the main page for that area. This page provides direct links to
-            individual entry pages, as well as basic information (the 
-            <emphasis>attributes</emphasis>) about the entry. (This is usually
-            just the description, but user entries show a lot more
-            information.)</para>
-            <para>The page also has some tasks that can be performed on it. For
-            a list page that shows entries, this can be creating or deleting an
-            entry. For a list page for groups, the tasks are for establishing
-            relationships between entities, either by adding ( 
-            <emphasis>enrolling</emphasis>) or removing an entity from that
-            group. Both individual entries and groups can be searched for
-            through the list page.</para>
-            <figure id="fig.ui-list">
-                <title>List View</title>
-                <mediaobject>
-                    <imageobject>
-                        <imagedata fileref="images/ui-full-list.png" />
-                    </imageobject>
-                </mediaobject>
-            </figure>
-            <para>Each entry page is a form which allows that entry to be
-            edited. This is done by editing text 
-            <emphasis>fields</emphasis>or by selecting items from drop-down
-            menus.</para>
-            <figure id="fig.ui-form">
-                <title>Form/Entry View</title>
-                <mediaobject>
-                    <imageobject>
-                        <imagedata fileref="images/ui-full-form.png" />
-                    </imageobject>
-                </mediaobject>
-            </figure>
-        </section>
-        <section id="page-elements">
-            <title>Page Elements</title>
-            <para>The web UI uses common elements on all pages.</para>
-            <para>The most basic is that all blue text is a link to an entry or
-            to an action.</para>
-            <para>When a task like adding an entry or saving a change is
-            possible, the task link it blue. When it is not possible (such as
-            no items have been selected to be deleted) then the task is grayed
-            out.</para>
-            <figure id="fig.ui-task-links">
-                <title>Active Task Link</title>
-                <mediaobject>
-                    <imageobject>
-                        <imagedata fileref="images/update-link.png" />
-                    </imageobject>
-                </mediaobject>
-            </figure>
-            <para>All list pages display direct links to entry pages. However,
-            some entries are essentially nested. For example, in automount
-            configuration, the primary entry is the location, and then keys,
-            mount points, and maps are associated with that location as
-            children entries. This hierarchy is reflected in breadcrumb
-            navigation near the top of the page, so it is easy to identify
-            where you are in the UI and how this entry relates to any other
-            related entries.</para>
-            <figure id="fig.ui-breadcrumbs">
-                <title>Entry Breadcrumbs</title>
-                <mediaobject>
-                    <imageobject>
-                        <imagedata fileref="images/automount-breadcrumbs.png" />
-                    </imageobject>
-                </mediaobject>
-            </figure>
-            <para>Most entries have a variety of different configuration areas.
-            A simple user entry has account activity settings, personal
-            information, address information, organizational information, and
-            other contact information. Related attributes are grouped together
-            logically in the UI. These entry form areas can be collapsed or
-            expanded using the arrows to control the amount of information
-            displayed on the page.</para>
-            <figure id="fig.ui-arrows">
-                <title>Collapsing and Expanding Form Elements</title>
-                <mediaobject>
-                    <imageobject>
-                        <imagedata fileref="images/collapse-arrows.png" />
-                    </imageobject>
-                </mediaobject>
-            </figure>
-            <para>When entries are created, they are added with only the
-            required attributes. Additional attributes can be added manually.
-            Some attributes have default values added to the entry and simply
-            need to be edited; other attributes may not exist at all in the new
-            entry and need to be added.</para>
-            <figure id="fig.ui-add-attr">
-                <title>Add an Attribute</title>
-                <mediaobject>
-                    <imageobject>
-                        <imagedata fileref="images/user-addcontact.png" />
-                    </imageobject>
-                </mediaobject>
-            </figure>
-            <para>Any changes to any attribute can be undone. A single
-            attribute change can be undone by clicking the dynamic 
-            <guibutton>undo</guibutton>button; all changes can be undone by
-            clicking the 
-            <guilabel>Reset</guilabel>link at the top of the entry details
-            page.</para>
-            <figure id="fig.ui-undo">
-                <title>Undo Edits</title>
-                <mediaobject>
-                    <imageobject>
-                        <imagedata fileref="images/undo-button.png" />
-                    </imageobject>
-                </mediaobject>
-            </figure>
-        </section>
-        <section id="abt-members">
-            <title>Showing and Changing Group Members</title>
-            <para>Members can be added to a group through the group
-            configuration. There are tabs for all the member types which can
-            belong to the group, and an administrator picks all of the marching
-            entries and adds them as members.</para>
-            <para>However, it is also possible for an entity to be added to a
-            group through its own configuration. Each entry has a list of tabs
-            that displays group types that the entry can join. The list of all
-            groups of that type are displayed, and the entity can be added to
-            multiple groups at the same time.</para>
-            <figure id="fig.ui-member-menu">
-                <title>Member Of...</title>
-                <mediaobject>
-                    <imageobject>
-                        <imagedata fileref="images/groups-menu2.png" />
-                    </imageobject>
-                </mediaobject>
-            </figure>
-        </section>
-        <section id="search-results">
-            <title>Looking at Search Results</title>
-            <!-- known issue -->
-            <para>Searches can be performed on attributes that are not
-            displayed in the UI. This means that entries can be returned in a
-            search that do not appear to match the given filter. This is
-            especially common if the search information is very short, which
-            increases the likelihood of a match.</para>
-            <!-- known issue -->
-        </section>
-    </section>
-    <section id="logging-in">
-        <title>Logging into &IPA;</title>
-        <para>Users are authenticated to &IPA; services, including the
-        command-line tools and the web UI, using Kerberos authentication. This
-        means that logging into &PROD; requires running 
-        <command>kinit</command>.</para>
-        <para>Running 
-        <command>kinit</command>issues the user a Kerberos 
-        <emphasis>ticket</emphasis>. This ticket is checked by any &IPA; or
-        Kerberos-aware service, so that a user only needs to log in once to
-        access all domain services. Domain services include the &IPA; web UI,
-        mounted file shares, wikis, or any other application which uses &IPA;
-        as its identity/authentication store.</para>
-        <section id="logging-in-kinit">
-            <title>Logging into &IPA;</title>
-            <para>Logging into &PROD; requires running 
-            <command>kinit</command>on a client within the &IPA; domain.</para>
-            <screen>$ kinit</screen>
-            <para>The 
-            <command>kinit</command>command must be run from a machine which
-            has been configured as a client within the &IPA; domain, so that
-            the client retrieves authenticates with the &IPA; KDC.</para>
-            <para>Simply running 
-            <command>kinit</command>logs into &IPA; as the currently logged-in
-            user account. This user account must also be an &IPA; user for them
-            to authenticate to the &IPA; Kerberos domain successfully. For
-            example, if you are logged into the machine as 
-            <command>jsmith</command>:</para>
-            <screen>$ kinit Password for jsmith@EXAMPLE.COM:</screen>
-            <note>
-                <title>NOTE</title>
-                <para>If SSSD or 
-                <systemitem class="library">pam_krb5</systemitem>is configured
-                on the &IPA; client machine, then when a user logs into the
-                machine, a ticket is created which can be used for machine
-                services which require authentication, such as 
-                <command>sudo</command>.</para>
-            </note>
-        </section>
-        <section id="switching-users">
-            <title>Logging in When an &IPA; User Is Different Than the System
-            User</title>
-            <para>To specify an &IPA; username &mdash; because a person's
-            system username is different then the &IPA; username or to switch
-            &IPA; user accounts &mdash; simply rerun the 
-            <command>kinit</command>command, specifying the new user. For
-            example:</para>
-            <screen>$ kinit 
-            <replaceable>userName</replaceable>Password for 
-            <replaceable>userName</replaceable>@EXAMPLE.COM:</screen>
-            <para>When the server was first set up, an administrative user, 
-            <systemitem>admin</systemitem>, is created to perform normal
-            administrative activities. To authenticate as the admin user, use
-            the name admin when running 
-            <command>kinit</command>:</para>
-            <screen>$ kinit admin</screen>
-            <note>
-                <title>NOTE</title>
-                <para>Only one set of tickets can be stored per logged-in user.
-                The current stored credentials are the ones that will be used
-                when accessing &IPA; services.</para>
-                <para>If you were already connected to the &IPA; web UI as
-                another user, refresh the browser to display the updated
-                details for the new user.</para>
-            </note>
-        </section>
-        <section id="checking-current-creds">
-            <title>Checking the Current Logged in User</title>
-            <para>Use the 
-            <command>klist</command>command to verify the identity and the
-            ticket granting ticket (TGT) from the server:</para>
-            <screen>$ klist Ticket cache: FILE:/tmp/krb5cc_500 Default
-            principal: ipaUser@EXAMPLE.COM Valid starting Expires Service
-            principal 11/10/08 15:35:45 11/11/08 15:35:45
-            krbtgt/EXAMPLE.COM@EXAMPLE.COM Kerberos 4 ticket cache: /tmp/tkt500
-            klist: You have no tickets cached</screen>
-            <para>It's important to know who the authenticated user is because
-            the currently-authenticated user is the only one who can access the
-            &IPA; services. The Kerberos client libraries for 
-            <command>kinit</command>have some limitation, one of them being
-            that the current ticket is overwritten with any new invocation of 
-            <command>kinit</command>. Authenticating as User A and then
-            authenticating as User B overwrites User A's ticket.</para>
-            <para>To allow there to be multiple authenticated users on a
-            machine, set the 
-            <varname>KRB5CCNAME</varname>environment variable. This variable
-            keeps credential caches separate in different shells.</para>
-        </section>
-        <section id="caching-tickets">
-            <title>Caching User Kerberos Tickets</title>
-            <indexterm>
-                <primary>users</primary>
-                <secondary>separate credentials cache</secondary>
-            </indexterm>
-            <indexterm>
-                <primary>logging in</primary>
-                <secondary>separate credentials cache</secondary>
-            </indexterm>
-            <indexterm>
-                <primary>Kerberos</primary>
-                <secondary>separate credentials cache</secondary>
-            </indexterm>
-            <para>Only one set of tickets can be stored per logged-in user. The
-            current stored credentials are the ones that will be used when
-            accessing &IPA; services.</para>
-            <para>For example, if you authenticated as 
-            <command>admin</command>, added a new user, set the password, and
-            then tried to authenticate as that user, the administrator's ticket
-            is lost.</para>
-            <para>To keep separate credential caches in different shells, a
-            special environment variable, 
-            <varname>KRB5CCNAME</varname>, can be used.</para>
-        </section>
-    </section>
-    <section id="using-the-ui">
-        <title>Using the &IPA; Web UI</title>
-        <para>In order to use the web UI, the user must be authenticated with
-        the &IPA; Kerberos domain and have an active Kerberos ticket ( 
-        <xref linkend="logging-in" />). Generally, the web UI can only be
-        accessed from &IPAA; server or client machine and the user must be
-        locally authenticated. There are a couple of ways to work around this,
-        either by configuring Kerberos on a non-domain machine to connect to
-        the Kerberos domain ( 
-        <xref linkend="Using_a_Browser_on_Another_System" />) or by enabling
-        password authentication to the UI ( 
-        <xref linkend="Enabling_UsernamePassword_Authentication_in_Your_Browser" />).</para>
-        <section id="supported-browsers2">
-            <title>Supported Web Browsers</title>
-            <para>The only supported browser to access the &IPA; web UI is
-            Firefox 3.x or 4.x.</para>
-        </section>
-        <section id="opening-the-web-ui">
-            <title>Opening the &IPA; Web UI</title>
-            <para>The browser must be properly configured, as described in 
-            <xref linkend="config-browser" />, to support Kerberos
-            authentication so that the user can connect to the UI.</para>
-            <para>To open the web UI:</para>
-            <orderedlist>
-                <listitem>
-                    <para>Get a valid Kerberos ticket using 
-                    <command>kinit</command>, as in 
-                    <xref linkend="logging-in" />.</para>
-                </listitem>
-                <listitem>
-                    <para>Open the &IPA; URL. The full URL is 
-                    <command>https://</command>
-                    <emphasis>IPAserver-FQDN</emphasis>
-                    <command>/ipa/ui</command>, but this service is also
-                    accessed simply by opening 
-                    <command>https://</command>
-                    <emphasis>IPAserver-FQDN</emphasis>. For example:</para>
-                    <screen>https://server.example.com
-                    https://server.example.com/ipa/ui</screen>
-                </listitem>
-            </orderedlist>
-        </section>
-        <section id="config-browser">
-            <title>Configuring the Browser</title>
-            <para>Firefox can use Kerberos credentials to authenticate to the
-            &IPA; UI, but Kerberos negotiation needs to be configured to use
-            the &IPA; domain. At the first log-in attempt, if Firefox has not
-            been configured to support Kerberos authentication, then an error
-            message appears.</para>
-            <figure id="fig.kerb-error-browser">
-                <title>Kerberos Authentication Error</title>
-                <mediaobject>
-                    <imageobject>
-                        <imagedata fileref="images/browser-kinit-rhel.png" />
-                    </imageobject>
-                </mediaobject>
-            </figure>
-            <para>If you see that error, then the &IPA; web UI can perform the
-            required configuration:</para>
-            <orderedlist>
-                <listitem>
-                    <para>Click the 
-                    <guilabel>follow these directions</guilabel>link.</para>
-                </listitem>
-                <listitem>
-                    <para>Click the link to import the CA certificate for the
-                    &IPA; server.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/configuring-browser1.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>Set the web site and software developer (first and
-                    last) trust bits for the CA certificate.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/Accept_CA_No_Exception.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>Click the 
-                    <guilabel>Configure Firefox</guilabel>button. This
-                    automatically fills out all the 
-                    <command>negotiate</command>settings in the Firefox
-                    configuration to use the &IPA; domain settings.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/configuring-browser2.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                    <para>When the process is complete, a success box pops up
-                    saying that Firefox has been configured for single sign-on.
-                    For there, you are redirected to the &IPA; web UI.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/configuring-browser3.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-            </orderedlist>
-            <para>This can also be done manually:</para>
-            <orderedlist>
-                <listitem>
-                    <para>Open Firefox.</para>
-                </listitem>
-                <listitem>
-                    <para>Type 
-                    <command>about:config</command>in the address bar.</para>
-                </listitem>
-                <listitem>
-                    <para>In the 
-                    <guilabel>Search</guilabel>field, type 
-                    <command>negotiate</command>to filter out the
-                    Kerberos-related parameters.</para>
-                </listitem>
-                <listitem>
-                    <para>On &OS;, enter the domain name for the URI
-                    parameters, including the preceding period (.) and set the 
-                    <command>gsslib</command>parameter to true: 
-                    <programlisting>network.negotiate-auth.trusted-uris
-                    .example.com network.negotiate-auth.using-native-gsslib
-                    true</programlisting></para>
-                </listitem>
-                <listitem>
-                    <para>Open the web UI by going to the fully-qualified
-                    domain name of the &IPA; server such as 
-                    <systemitem>http://ipaserver.example.com</systemitem>. Make
-                    sure that you can open the web UI and that there are no
-                    Kerberos authentication errors.</para>
-                </listitem>
-                <listitem>
-                    <para>Next, download the &IPA; server's CA certificate from
-                    
-                    <systemitem>
-                    http://ipa.example.com/ipa/config/ca.crt</systemitem>.</para>
-                </listitem>
-                <listitem>
-                    <para>Select the first ( 
-                    <guilabel>Trust this CA to identify web sites</guilabel>)
-                    and third ( 
-                    <guilabel>Trust this CA to identify software
-                    developers</guilabel>) check boxes.</para>
-                </listitem>
-            </orderedlist>
-        </section>
-        <section id="Using_a_Browser_on_Another_System">
-            <title>Using a Browser on Another System</title>
-            <para>It is possible to connect to the &PROD; web UI from a system
-            which is 
-            <emphasis>not</emphasis>a member of the &IPA; domain. In this case,
-            it is possible to specify &IPAA;-specific Kerberos configuration
-            file on the external (non-&IPA;) machine before running 
-            <command>kinit</command>, and then the user can authenticate
-            against the &IPA; server domain.</para>
-            <para>This is especially useful there are multiple realms or
-            overlapping domains across your infrastructure.</para>
-            <orderedlist>
-                <listitem>
-                    <para>Copy the 
-                    <filename>/etc/krb5.conf</filename>file from the &IPA;
-                    server.</para>
-                    <para>
-                        <screen># scp /etc/krb5.conf
-                        root@externalmachine.example.com:/etc/krb5_ipa.conf</screen>
-                    </para>
-                    <warning>
-                        <title>WARNING</title>
-                        <para>Do not overwrite the existing 
-                        <filename>krb5.conf</filename>file.</para>
-                    </warning>
-                </listitem>
-                <listitem>
-                    <para>On the external machine, set the terminal session to
-                    use the copied &IPA; Kerberos configuration file: 
-                    <screen>$ export
-                    KRB5_CONFIG=/etc/krb5_ipa.conf</screen></para>
-                </listitem>
-                <listitem>
-                    <para>Configure Firefox on the external machine as in 
-                    <xref linkend="config-browser" />.</para>
-                </listitem>
-            </orderedlist>
-        </section>
-        <section id="Enabling_UsernamePassword_Authentication_in_Your_Browser">
-            <title>Enabling Username/Password Authentication in Your
-            Browser</title>
-            <para>If Kerberos authentication fails, then browser login also
-            fails. That prevents access to the &IPA; web UI. Configuring
-            username/password authentication for the UI allows users to log in
-            even if there are problems with the Kerberos service.</para>
-            <orderedlist>
-                <listitem>
-                    <para>Open the 
-                    <filename>ipa.conf</filename>file used by the Apache web
-                    service.</para>
-                    <screen>vim /etc/httpd/conf.d/ipa.conf</screen>
-                </listitem>
-                <listitem>
-                    <para>In the 
-                    <command>&lt;Location "/ipa"&gt;</command>location
-                    definition, change the 
-                    <parameter>KrbMethodK5Passwd</parameter>attribute from off
-                    to on.</para>
-                    <screen>KrbMethodK5Passwd on</screen>
-                </listitem>
-                <listitem>
-                    <para>Restart the 
-                    <systemitem class="daemon">httpd</systemitem>service: 
-                    <screen># service httpd restart</screen></para>
-                </listitem>
-            </orderedlist>
-            <para>When this is configured, the web UI prompts for &IPAA;
-            username and password if it can't detect any Kerberos
-            credentials.</para>
-            <figure>
-                <title>&IPA; Password Prompt</title>
-                <mediaobject>
-                    <imageobject>
-                        <imagedata fileref="images/password-prompt.png" />
-                    </imageobject>
-                </mediaobject>
-            </figure>
-            <note>
-                <title>NOTE</title>
-                <para>This must be configured on every &IPA; server in the
-                domain.</para>
-                <!--
-                    <para>
-                        This change may not be preserved between &IPA; updates.
-                    </para>
-                    -->
-            </note>
-        </section>
-        <section id="ui-and-proxies">
-            <title>Using the UI with Proxy Servers</title>
-            <indexterm>
-                <primary>port forwarding</primary>
-                <secondary>for the UI</secondary>
-            </indexterm>
-            <indexterm>
-                <primary>web UI</primary>
-                <secondary>port forwarding</secondary>
-            </indexterm>
-            <indexterm>
-                <primary>web UI</primary>
-                <secondary>proxy servers</secondary>
-            </indexterm>
-            <indexterm>
-                <primary>proxy servers</primary>
-                <secondary>for the UI</secondary>
-            </indexterm>
-            <para>Proxy servers can be used to access the web UI without any
-            additional configuration in &IPA;.</para>
-            <para>Port forwarding is not supported with the &IPA; server.
-            However, because it is possible to use proxy servers with &IPA;, an
-            operation similar to port forwarding can be configured using proxy
-            forwarding with OpenSSH and the SOCKS option. This is described in 
-            <ulink url="http://www.meadowy.org/~gotoh/ssh/openssh-socks.html" />.</para>
-        </section>
-        <section id="Troubleshooting-UI">
-            <title>Troubleshooting UI Connection Problems</title>
-            <para>If negotiate authentication is not working, turn on verbose
-            logging for the authentication process to help diagnose the
-            issue:</para>
-            <orderedlist>
-                <listitem>
-                    <para>Close all browser windows.</para>
-                </listitem>
-                <listitem>
-                    <para>In a terminal, set the new log levels for Firefox: 
-                    <screen>export NSPR_LOG_MODULES=negotiateauth:5 export
-                    NSPR_LOG_FILE=/tmp/moz.log</screen></para>
-                    <para>This enables verbose logging and logs all information
-                    to 
-                    <filename>/tmp/moz.log</filename>.</para>
-                </listitem>
-                <listitem>
-                    <para>Restart the browser from the same terminal window and
-                    attempt t .</para>
-                </listitem>
-            </orderedlist>
-            <para>Some of the common error messages and workarounds are in 
-            <xref linkend="tab.ui-troubleshooting" />.</para>
-            <table id="tab.ui-troubleshooting">
-                <title>UI Error Log Messages</title>
-                <tgroup cols="2">
-                    <thead>
-                        <row>
-                            <entry>Error Log Message</entry>
-                            <entry>Description and Fix</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry>
-                                <screen>-1208550944[90039d0]: entering
-                                nsNegotiateAuth::GetNextToken()
-                                -1208550944[90039d0]: gss_init_sec_context()
-                                failed: Miscellaneous failure No credentials
-                                cache found</screen>
-                            </entry>
-                            <entry>There are no Kerberos tickets. Run 
-                            <command>kinit</command>.</entry>
-                        </row>
-                        <row>
-                            <entry>
-                                <screen>-1208994096[8d683d8]: entering
-                                nsAuthGSSAPI::GetNextToken()
-                                -1208994096[8d683d8]: gss_init_sec_context()
-                                failed: Miscellaneous failure Server not found
-                                in Kerberos database</screen>
-                            </entry>
-                            <entry>This can occur when you have successfully
-                            obtained Kerberos tickets but are still unable to
-                            authenticate to the UI. This indicates that there
-                            is a problem with the Kerberos configuration. The
-                            first place to check is the 
-                            <command>[domain_realm]</command>section in the 
-                            <filename>/etc/krb5.conf</filename>file. Make sure
-                            that the &IPA; Kerberos domain entry is correct and
-                            matches the configuration in the Firefox
-                            negotiation parameters. For example: 
-                            <screen>.example.com = EXAMPLE.COM example.com =
-                            EXAMPLE.COM</screen></entry>
-                        </row>
-                        <row>
-                            <entry>Nothing is in the log file.</entry>
-                            <entry>It is possible that you are behind a proxy
-                            which is removing the HTTP headers required for
-                            negotiate authentication. Try to connect to the
-                            server using HTTPS instead, which allows the
-                            request to pass through unmodified. Then check the
-                            log file again.</entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </table>
-        </section>
-    </section>
+	<title>Basic Usage</title>
+	<para>
+		All of the access to &PROD;, both through the web UI and through the command line, is done by a user authenticating 
+		to the &IPA; domain. 
+		This chapter covers the basics of setting up browsers to handle Kerberos authentication, logging into &PROD;, 
+		and troubleshooting some common connection issues.
+	</para>
+
+		<section id="ipa-ui"><title>Looking at the &IPA; UI</title>
+			<para>
+				The &PROD; web UI is designed for simplicity. This was the primary design goal, and this means that the web UI offers benefits that make using &IPA; simpler and clearer:
+			</para>
+			<itemizedlist>
+				<listitem>
+					<para>
+						It shows instant, visual relationships between entries (such as a user and all the groups, sudo rules, netgroups, and policies which are associated with that user). 
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						All entries are listed immediately without having to run a search. This makes it possible to browse entries. The UI also has a simple search box which quickly filters the list of entries.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						The interface is intuitive to use, without having to learn the command-line tools.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						The web UI can be accessed from machines outside the &IPA; domain, so the domain can be managed from anywhere.
+					</para>
+					<para>
+						Using the web UI requires a valid Kerberos ticket for the &IPA; domain (by default), meaning that it can only be accessed from a machine within the &IPA; domain. Alternatively, the web UI can be configured to allow password authentication along with Kerberos authentication (<xref linkend="Enabling_UsernamePassword_Authentication_in_Your_Browser" />), or a machine outside the &IPA; can be configured to work with Kerberos (<xref linkend="Using_a_Browser_on_Another_System" />). 
+					</para>
+				</listitem>
+			</itemizedlist>
+			<section id="ui-layout"><title>The UI Layout</title>
+			<para>
+				The web UI has three major functional areas which correspond to each of the major functions of &IPA;: identity management, policy management, and domain configuration.
+			</para>
+			<table id="tab.ui-tasks"><title>Configuration Areas Per Tab</title>
+				<tgroup cols="2">
+					<thead>
+						<row>
+							<entry>
+								Main Menu Tab
+							</entry>
+							<entry>
+								Configuration Areas
+							</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>
+								Identity
+							</entry>
+							<entry>
+								<itemizedlist>
+									<listitem>
+										<para>
+											User entries
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											User groups entries
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											Host/client entries
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											Host group entries
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											Netgroups entries
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											Domain services entries
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											DNS (if configured)
+										</para>
+									</listitem>
+								</itemizedlist>
+							</entry>
+						</row>
+						
+						<row>
+							<entry>
+								Policy
+							</entry>
+							<entry>
+								<itemizedlist>
+									<listitem>
+										<para>
+											Host-based access control
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											Sudo rules
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											Automount
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											User password policies
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											Kerberos ticket policy
+										</para>
+									</listitem>
+								</itemizedlist>
+							</entry>
+						</row>
+						
+						<row>
+							<entry>
+								Access controls within &PROD;
+							</entry>
+							<entry>
+								<itemizedlist>
+									<listitem>
+										<para>
+											Role-based access control (permissions based on group membership)
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											Self permissions
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											Delegations (user access control over other users)
+										</para>
+									</listitem>
+								</itemizedlist>
+							</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+			<para>
+				The <emphasis>main menu</emphasis> at the top of every page has three tabs which correspond to the functional areas listed in <xref linkend="tab.ui-tasks" />.
+				When a tab is selected, there is a submenu of the different configuration areas. Some configuration areas may have multiple possible entries; for example, 
+				role-based access controls define user roles/groups, the areas that access can be granted or denied (privileges), and then the permissions granted to those areas.
+				Each separate configuration entry has its own task area beneath the primary configuration area. 
+			</para>
+			<figure id="fig.ui-tabs"><title>The Main Menu</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/ui-tabs.png" />
+					</imageobject>
+				</mediaobject>
+			</figure>
+			<para>
+				All entries for a configuration area are listed together on the main page for that area. This page provides direct links to individual entry pages, as well as basic information (the <emphasis>attributes</emphasis>) about the entry. (This is usually just the description, but user entries show a lot more information.)
+			</para>
+			<para>
+				The page also has some tasks that can be performed on it. For a list page that shows entries, this can be creating or deleting an entry. For a list page for groups, 
+				the tasks are for establishing relationships between entities, either by adding (<emphasis>enrolling</emphasis>) or removing an entity from that group. Both individual entries and 
+				groups can be searched for through the list page.
+			</para>
+			<figure id="fig.ui-list"><title>List View</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/ui-full-list.png" />
+					</imageobject>
+				</mediaobject>
+			</figure>
+			<para>
+				Each entry page is a form which allows that entry to be edited. This is done by editing text <emphasis>fields</emphasis> or by selecting items from drop-down menus.
+			</para>
+			<figure id="fig.ui-form"><title>Form/Entry View</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/ui-full-form.png" />
+					</imageobject>
+				</mediaobject>
+			</figure>
+		</section>
+
+		<section id="page-elements"><title>Page Elements</title>
+			
+			<para>
+				The web UI uses common elements on all pages.
+			</para>
+			<para>
+				The most basic is that all blue text is a link to an entry or to an action.
+			</para>
+			<para>
+				When a task like adding an entry or saving a change is possible, the task link it blue. When it is not possible (such as no items have been 
+				selected to be deleted) then the task is grayed out.
+			</para>
+			<figure id="fig.ui-task-links"><title>Active Task Link</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/update-link.png" />
+					</imageobject>
+				</mediaobject>
+			</figure>
+					
+			<para>
+				All list pages display direct links to entry pages. However, some entries are essentially nested. For example, in automount configuration, the primary entry 
+				is the location, and then keys, mount points, and maps are associated with that location as children entries. This hierarchy is reflected in 
+				breadcrumb navigation near the top of the page, so it is easy to identify where you are in the UI and how this entry relates to any other related entries.
+			</para>
+			<figure id="fig.ui-breadcrumbs"><title>Entry Breadcrumbs</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/automount-breadcrumbs.png" />
+					</imageobject>
+				</mediaobject>
+			</figure>
+			<para>
+				Most entries have a variety of different configuration areas. A simple user entry has account activity settings, personal information, address information, 
+				organizational information, and other contact information. Related attributes are grouped together logically in the UI. 
+				These entry form areas can be collapsed or expanded using the arrows to control the amount of information displayed on the page.
+			</para>
+			<figure id="fig.ui-arrows"><title>Collapsing and Expanding Form Elements</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/collapse-arrows.png" />
+					</imageobject>
+				</mediaobject>
+			</figure>
+			<para>
+				When entries are created, they are added with only the required attributes. Additional attributes can be added manually. Some attributes have default values 
+				added to the entry and simply need to be edited; other attributes may not exist at all in the new entry and need to be added.
+			</para>
+			<figure id="fig.ui-add-attr"><title>Add an Attribute</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/user-addcontact.png" />
+					</imageobject>
+				</mediaobject>
+			</figure>
+			<para>
+				Any changes to any attribute can be undone. A single attribute change can be undone by clicking the dynamic <guibutton>undo</guibutton> button; all changes can 
+				be undone by clicking the <guilabel>Reset</guilabel> link at the top of the entry details page.
+			</para>
+			<figure id="fig.ui-undo"><title>Undo Edits</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/undo-button.png" />
+					</imageobject>
+				</mediaobject>
+			</figure>
+		</section>
+
+		<section id="abt-members"><title>Showing and Changing Group Members</title>
+			<para>
+				Members can be added to a group through the group configuration. There are tabs for all the member types which can belong to the group, and an administrator
+				picks all of the marching entries and adds them as members.
+			</para>
+			<para>
+				However, it is also possible for an entity to be added to a group through its own configuration. Each entry has a list of tabs that displays group types that the entry can join.
+				The list of all groups of that type are displayed, and the entity can be added to multiple groups at the same time.
+			</para>
+			<figure id="fig.ui-member-menu"><title>Member Of...</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/groups-menu2.png" />
+					</imageobject>
+				</mediaobject>
+			</figure>
+		</section>
+
+		<section id="search-results"><title>Looking at Search Results</title>
+			<!-- known issue -->
+				<para>
+					Searches can be performed on attributes that are not displayed in the UI. This means that 
+					entries can be returned in a search that do not appear to match the given filter. This is especially 
+					common if the search information is very short, which increases the likelihood of a match.
+				</para>
+			<!-- known issue -->
+		</section>
+	</section>
+
+		<section id="logging-in"><title>Logging into &IPA;</title>
+		<para>
+			Users are authenticated to &IPA; services, including the command-line tools and the web UI, using Kerberos 
+			authentication. This means that logging into &PROD; requires running <command>kinit</command>.
+		</para>
+		<para>
+			Running <command>kinit</command> issues the user a Kerberos <emphasis>ticket</emphasis>. This ticket is checked by any &IPA; or Kerberos-aware service, 
+			so that a user only needs to log in once to access all domain services. Domain services include the &IPA; web UI, mounted file shares, wikis, or any other application which 
+			uses &IPA; as its identity/authentication store.
+		</para>
+		<section id="logging-in-kinit"><title>Logging into &IPA;</title>
+			<para>
+				Logging into &PROD; requires running <command>kinit</command> on a client within the &IPA; domain. 
+			</para>
+<screen>$ kinit</screen>
+			<para>
+				The <command>kinit</command> command must be run from a machine which has been configured as a client within the &IPA; domain, so that the client retrieves authenticates with the &IPA; KDC.
+			</para>
+			<para>
+				Simply running <command>kinit</command> 
+				logs into &IPA; as the currently logged-in user account. This user account must also be an &IPA; user 
+				for them to authenticate to the &IPA; Kerberos domain successfully. For example, if you are logged 
+				into the machine as <command>jsmith</command>:
+			</para>
+<screen>$ kinit
+Password for jsmith@EXAMPLE.COM:</screen>
+				<note><title>NOTE</title>
+					<para>
+						If SSSD or <systemitem class="library">pam_krb5</systemitem> is configured on the &IPA; client machine, then when a user logs into the machine, a ticket is created which can be used for machine services which require authentication, such as <command>sudo</command>.
+					</para>
+				</note>
+		</section>
+
+	<section id="switching-users"><title>Logging in When an &IPA; User Is Different Than the System User</title>
+		
+		<para>
+			To specify an &IPA; username &mdash; because a person's system username is different then the &IPA; username or to switch &IPA; 
+			user accounts &mdash; simply rerun the <command>kinit</command> command, specifying the new user. For example:
+		</para>
+<screen>$ kinit <replaceable>userName</replaceable> 
+Password for <replaceable>userName</replaceable>@EXAMPLE.COM:</screen>
+		<para>
+				When the server was first set up, an administrative user, <systemitem>admin</systemitem>, is created to perform normal administrative activities.
+				To authenticate as the admin user, use the name admin when running <command>kinit</command>:
+			</para>
+<screen>$ kinit admin</screen>
+		<note><title>NOTE</title>
+		 <para>
+			Only one set of tickets can be stored per logged-in user. The current stored credentials are the ones that will be used when accessing &IPA; services.
+		</para>
+			<para>
+				If you were already connected to the &IPA; web UI as another user, refresh the browser to display the updated details for the new user.
+			</para>
+		</note>
+</section>
+
+<section id="checking-current-creds"><title>Checking the Current Logged in User</title>
+	<para>
+			 Use the <command>klist</command> command to verify the identity and the ticket granting ticket (TGT)
+			 from the server:
+		</para>
+		 
+<screen>$ klist
+Ticket cache: FILE:/tmp/krb5cc_500
+Default principal: ipaUser@EXAMPLE.COM
+
+Valid starting     Expires            Service principal
+11/10/08 15:35:45  11/11/08 15:35:45  krbtgt/EXAMPLE.COM@EXAMPLE.COM
+
+Kerberos 4 ticket cache: /tmp/tkt500
+klist: You have no tickets cached
+</screen>
+				<para>
+					It's important to know who the authenticated user is because the currently-authenticated user is the only one who can access
+					the &IPA; services. The Kerberos client libraries for <command>kinit</command> have 
+					some limitation, one of them being that the current ticket is overwritten with any new invocation of <command>kinit</command>. 
+					Authenticating as User A and then authenticating as User B overwrites User A's ticket.
+				</para>
+				<para>
+					To allow there to be multiple authenticated users on a machine, 
+					set the <varname>KRB5CCNAME</varname> environment variable. This variable 
+					keeps credential caches separate in different shells.
+				</para>
+		</section>
+
+		<section id="caching-tickets"><title>Caching User Kerberos Tickets</title>
+			<indexterm>
+				<primary>users</primary>
+				<secondary>separate credentials cache</secondary>
+			</indexterm>
+			<indexterm>
+				<primary>logging in</primary>
+				<secondary>separate credentials cache</secondary>
+			</indexterm>
+			<indexterm>
+				<primary>Kerberos</primary>
+				<secondary>separate credentials cache</secondary>
+			</indexterm>
+			<para>
+				Only one set of tickets can be stored per logged-in user. The current stored credentials are the ones that will be used when accessing &IPA; services.
+			</para>
+			<para>
+				For example, if you authenticated as <command>admin</command>, added a new user, set the password, and 
+				then tried to authenticate as that user, the administrator's ticket is lost. 
+			</para>
+			<para>
+				To keep separate credential caches in different shells, a special environment 
+				variable, <varname>KRB5CCNAME</varname>, can be used.
+			</para>
+
+		</section>
+
+	</section>
+
+	<section id="using-the-ui"><title>Using the &IPA; Web UI</title>
+		<para>
+			In order to use the web UI, the user must be authenticated with the &IPA; Kerberos domain and have an active Kerberos ticket (<xref linkend="logging-in" />).
+			Generally, the web UI can only be accessed from &IPAA; server or client machine and the user must be locally authenticated. There are a couple of ways 
+			to work around this, either by configuring Kerberos on a non-domain machine to connect to the Kerberos domain (<xref linkend="Using_a_Browser_on_Another_System" />) 
+			or by enabling password authentication to the UI (<xref linkend="Enabling_UsernamePassword_Authentication_in_Your_Browser" />).
+		</para>
+
+		<section id="supported-browsers2"><title>Supported Web Browsers</title>
+			<para>
+				The only supported browser to access the &IPA; web UI is Firefox 3.x or 4.x.
+			</para>
+		</section>
+
+
+	<section id="opening-the-web-ui"><title>Opening the &IPA; Web UI</title>
+		<para>
+			The browser must be properly configured, as described in <xref linkend="config-browser" />, to support Kerberos authentication so that the user can connect to the UI.
+		</para>
+		<para>
+			To open the web UI:
+		</para>
+		<orderedlist>
+			<listitem>
+				<para>
+					Get a valid Kerberos ticket using <command>kinit</command>, as in <xref linkend="logging-in" />.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Open the &IPA; URL. The full URL is <command>https://</command><emphasis>IPAserver-FQDN</emphasis><command>/ipa/ui</command>, but this service is also accessed simply by opening <command>https://</command><emphasis>IPAserver-FQDN</emphasis>. For example:
+				</para>
+<screen>https://server.example.com
+https://server.example.com/ipa/ui</screen>
+			</listitem>
+
+		</orderedlist>
+	</section>
+
+
+	<section id="config-browser"><title>Configuring the Browser</title>
+		 <para>
+			 Firefox can use Kerberos credentials to authenticate to the &IPA; UI, but Kerberos negotiation needs
+			to be configured to use the &IPA; domain. At the first log-in attempt, if Firefox has not been configured to support Kerberos authentication, then an error message appears.
+		</para>
+		<figure id="fig.kerb-error-browser"><title>Kerberos Authentication Error</title>
+			<mediaobject>
+				<imageobject>
+					<imagedata fileref="images/browser-kinit-rhel.png" />
+				</imageobject>
+			</mediaobject>
+		</figure>
+		<para>
+			If you see that error, then the &IPA; web UI can perform the required configuration:
+		</para>
+		<orderedlist>
+			<listitem>
+				<para>
+					Click the <guilabel>follow these directions</guilabel> link.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Click the link to import the CA certificate for the &IPA; server.
+				</para>
+				<informalfigure>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="images/configuring-browser1.png" />
+						</imageobject>
+					</mediaobject>
+				</informalfigure>
+			</listitem>
+			<listitem>
+				<para>
+					Set the web site and software developer (first and last) trust bits for the CA certificate.
+				</para>
+				 <informalfigure>
+					 <mediaobject>
+						<imageobject>
+							<imagedata fileref="images/Accept_CA_No_Exception.png" />
+						</imageobject>
+
+					</mediaobject>
+
+				</informalfigure>
+			</listitem>
+			<listitem>
+				<para>
+					Click the <guilabel>Configure Firefox</guilabel> button. This automatically fills out all the <command>negotiate</command> settings in the Firefox configuration to use the &IPA; domain settings. 
+				</para>
+				<informalfigure>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="images/configuring-browser2.png" />
+						</imageobject>
+					</mediaobject>
+				</informalfigure>
+				
+				<para>
+					When the process is complete, a success box pops up saying that Firefox has been configured for single sign-on. For there, you are redirected to the &IPA; web UI.
+				</para>
+				<informalfigure>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="images/configuring-browser3.png" />
+						</imageobject>
+					</mediaobject>
+				</informalfigure>
+			</listitem>
+		</orderedlist>
+			<para>
+				This can also be done manually:
+			</para>
+		 <orderedlist>
+			 <listitem>
+				<para>
+					Open Firefox.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Type <command>about:config</command> in the address bar.
+				</para>
+
+			</listitem>
+			 <listitem>
+				<para>
+					In the <guilabel>Search</guilabel> field, type <command>negotiate</command> to filter out the Kerberos-related parameters.
+				</para>
+
+			</listitem>
+			 <listitem>
+				<para>
+					On &OS;, enter the domain name for the URI parameters, including the preceding period (.) and set the <command>gsslib</command> parameter to true: 
+<programlisting>network.negotiate-auth.trusted-uris  .example.com
+network.negotiate-auth.using-native-gsslib true</programlisting>
+
+				</para>
+			</listitem>
+			 <listitem>
+				<para>
+					Open the web UI by going to the fully-qualified domain name of the &IPA; server such as <systemitem>http://ipaserver.example.com</systemitem>. Make sure that you can open the web UI and that there are no Kerberos authentication errors.
+				</para>
+
+			</listitem>
+
+			 <listitem>
+				<para>
+					Next, download the &IPA; server's CA certificate from <systemitem>http://ipa.example.com/ipa/config/ca.crt</systemitem>.
+				</para>
+
+			</listitem>
+			 <listitem>
+				<para>
+					Select the first (<guilabel>Trust this CA to identify web sites</guilabel>) and third (<guilabel>Trust this CA to identify software developers</guilabel>) check boxes.
+				</para>
+
+			</listitem>
+		</orderedlist>
+	</section>
+		
+	 <section id="Using_a_Browser_on_Another_System">
+		<title>Using a Browser on Another System</title>
+		 <para>
+			 It is possible to connect to the &PROD; web UI from a system which is <emphasis>not</emphasis> 
+			 a member of the &IPA; domain. In this case, it is possible to specify &IPAA;-specific 
+			 Kerberos configuration file on the external (non-&IPA;) machine before running <command>kinit</command>, and 
+			 then the user can authenticate against the &IPA; server domain.
+		 </para>
+		 <para>
+			 This is especially useful there are multiple realms or overlapping domains across your infrastructure.
+		</para>
+		 <orderedlist>
+			 <listitem>
+				<para>
+					Copy the <filename>/etc/krb5.conf</filename> file from the &IPA; server. 
+				</para>
+				 <para>
+					
+<screen># scp /etc/krb5.conf root@externalmachine.example.com:/etc/krb5_ipa.conf </screen>
+
+				</para>
+				<warning><title>WARNING</title>
+					<para>
+						Do not overwrite the existing <filename>krb5.conf</filename> file.
+					</para>
+				</warning>
+			</listitem>
+			 <listitem>
+				<para>
+					On the external machine, set the terminal session to use the copied &IPA; Kerberos configuration file: 
+					<screen>$ export KRB5_CONFIG=/etc/krb5_ipa.conf</screen>
+				</para>
+
+			</listitem>
+			 <listitem>
+				<para>
+					Configure Firefox on the external machine as in <xref linkend="config-browser" />.
+				</para>
+
+			</listitem>
+
+		</orderedlist>
+		
+
+	</section>
+	
+	 <section id="Enabling_UsernamePassword_Authentication_in_Your_Browser">
+		<title>Enabling Username/Password Authentication in Your Browser</title>
+		 <para>
+			 If Kerberos authentication fails, then browser login also fails. That prevents access to 
+			 the &IPA; web UI. Configuring username/password authentication for the UI allows users to log in
+			 even if there are problems with the Kerberos service.
+		</para>
+		<orderedlist>
+			<listitem>
+				<para>
+					Open the <filename>ipa.conf</filename> file used by the Apache web service.
+				</para>
+<screen>vim /etc/httpd/conf.d/ipa.conf</screen>
+			</listitem>
+			 <listitem>
+				<para>
+					In the <command>&lt;Location "/ipa"></command> location definition, change the <parameter>KrbMethodK5Passwd</parameter> attribute from off to on.
+				</para>
+<screen>KrbMethodK5Passwd on</screen>
+			</listitem>
+			 <listitem>
+				<para>
+					Restart the <systemitem class="daemon">httpd</systemitem> service: 
+<screen># service httpd restart</screen>
+
+				</para>
+
+			</listitem>
+
+		</orderedlist>
+		<para>
+			When this is configured, the web UI prompts for &IPAA; username and password if it can't detect any Kerberos credentials.
+		</para>
+		<figure><title>&IPA; Password Prompt</title>
+			<mediaobject>
+				<imageobject>
+					<imagedata fileref="images/password-prompt.png" />
+				</imageobject>
+			</mediaobject>
+		</figure>
+		
+		<note><title>NOTE</title>
+					<para>
+						This must be configured on every &IPA; server in the domain.
+					</para>
+					<!--
+					<para>
+						This change may not be preserved between &IPA; updates.
+					</para>
+					-->
+		</note>
+
+	</section>
+
+	<section id="ui-and-proxies"><title>Using the UI with Proxy Servers</title>
+		<indexterm>
+			<primary>port forwarding</primary>
+			<secondary>for the UI</secondary>
+		</indexterm>
+		<indexterm>
+			<primary>web UI</primary>
+			<secondary>port forwarding</secondary>
+		</indexterm>
+		<indexterm>
+			<primary>web UI</primary>
+			<secondary>proxy servers</secondary>
+		</indexterm>
+		<indexterm>
+			<primary>proxy servers</primary>
+			<secondary>for the UI</secondary>
+		</indexterm>
+		<para>
+			Proxy servers can be used to access the web UI without any additional configuration in &IPA;.
+		</para>
+		<para>
+			Port forwarding is not supported with the &IPA; server. However, because it is possible to use 
+			proxy servers with &IPA;, an operation similar to port forwarding can be configured 
+			using proxy forwarding with OpenSSH and the SOCKS option. This is described in 
+			<ulink url="http://www.meadowy.org/~gotoh/ssh/openssh-socks.html" />.
+		 </para>
+	</section>
+
+
+		 <section id="Troubleshooting-UI">
+			 <title>Troubleshooting UI Connection Problems</title>
+			 <para>
+				If negotiate authentication is not working, turn on verbose logging for the authentication process to help diagnose the issue:
+			</para>
+			 <orderedlist>
+				 <listitem>
+					<para>
+						Close all browser windows.
+					</para>
+
+				</listitem>
+				 <listitem>
+					<para>
+						In a terminal, set the new log levels for Firefox: 
+<screen>export NSPR_LOG_MODULES=negotiateauth:5
+export NSPR_LOG_FILE=/tmp/moz.log
+</screen>
+
+					</para>
+					 <para>
+						 This enables verbose logging and logs all information to <filename>/tmp/moz.log</filename>.
+					 </para>
+				 </listitem>
+				 <listitem>
+					 <para>
+						 Restart the browser from the same terminal window and attempt t .
+					 </para>
+
+
+				</listitem>
+
+			</orderedlist>
+			
+				 <para>
+					Some of the common error messages and workarounds are in <xref linkend="tab.ui-troubleshooting" />. 
+				</para>
+				<table id="tab.ui-troubleshooting"><title>UI Error Log Messages</title>
+					<tgroup cols="2">
+						<thead>
+							<row>
+								<entry>
+									Error Log Message
+								</entry>
+								<entry>
+									Description and Fix
+								</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>
+<screen>-1208550944[90039d0]: entering nsNegotiateAuth::GetNextToken()
+-1208550944[90039d0]: gss_init_sec_context() failed: Miscellaneous failure
+No credentials cache found</screen>
+								</entry>
+								<entry>
+									There are no Kerberos tickets. Run <command>kinit</command>.
+								</entry>
+							</row>
+							<row>
+								<entry>
+<screen>-1208994096[8d683d8]: entering nsAuthGSSAPI::GetNextToken()
+-1208994096[8d683d8]: gss_init_sec_context() failed: Miscellaneous failure
+Server not found in Kerberos database</screen>
+								</entry>
+								<entry>
+									This can occur when you have successfully obtained Kerberos tickets but are still unable to authenticate to the UI. This indicates that there is a problem with the Kerberos configuration. The first place to check is the <command>[domain_realm]</command> section in the <filename>/etc/krb5.conf</filename> file. Make sure that the &IPA; Kerberos domain entry is correct and matches the configuration in the Firefox negotiation parameters. For example:
+<screen>.example.com = EXAMPLE.COM
+example.com = EXAMPLE.COM</screen>
+								</entry>
+							</row>
+							<row>
+								<entry>
+									Nothing is in the log file.
+								</entry>
+								<entry>
+									It is possible that you are behind a proxy which is removing the HTTP headers required for negotiate authentication. Try to connect to the server using HTTPS instead, which allows the request to pass through unmodified. Then check the log file again.
+								</entry>
+							</row>
+
+						</tbody>
+					</tgroup>
+				</table>
+			</section>
+		</section>
+
 </chapter>
+

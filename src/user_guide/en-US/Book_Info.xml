@@ -1,45 +1,44 @@
-<?xml version='1.0' encoding='utf-8'?>
-<!DOCTYPE bookinfo PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-     "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
-[
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE bookinfo PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 ]>
 <bookinfo>
-    <title condition="redhat">Identity Management Guide</title>
-    <title condition="fedora">FreeIPA: Identity/Policy Management</title>
-    <subtitle>Managing Identity and Authorization Policies for Linux-Based
-    Infrastructures</subtitle>
-    <productname condition="redhat">Red Hat Enterprise Linux</productname>
-    <productnumber condition="redhat">6</productnumber>
-    <productname condition="fedora">FreeIPA</productname>
-    <productnumber condition="fedora">3.4</productnumber>
-    <edition>1.0</edition>
-    <pubsnumber>1</pubsnumber>
-    <abstract>
-        <para>Identity and policy management &mdash; for both users and
-        machines &mdash; is a core function for almost any enterprise
-        environment. IPA provides a way to create an identity domain that
-        allows machines to enroll to a domain and immediately access identity
-        information required for single sign-on and authentication services, as
-        well as policy settings that govern authorization and access. This
-        manual covers all aspects of installing, configuring, and managing IPA
-        domains, including both servers and clients. This guide is intended for
-        IT and systems administrators.</para>
-    </abstract>
-    <corpauthor>
-        <inlinemediaobject>
-            <imageobject>
-                <imagedata fileref="Common_Content/images/title_logo.svg"
-                format="SVG" />
-            </imageobject>
-        </inlinemediaobject>
-    </corpauthor>
-    <xi:include href="Common_Content/Legal_Notice.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <authorgroup>
-        <author>
-            <firstname>Ella Deon</firstname>
-            <surname>Lackey</surname>
-            <email>dlackey@redhat.com</email>
-        </author>
-    </authorgroup>
+	<title condition="redhat">Identity Management Guide</title>
+	<title condition="fedora">FreeIPA: Identity/Policy Management</title>
+	 <subtitle>Managing Identity and Authorization Policies for Linux-Based Infrastructures</subtitle>
+
+	 <productname condition="redhat">Red Hat Enterprise Linux</productname>
+	 <productnumber condition="redhat">6</productnumber>
+
+
+	 <productname condition="fedora">FreeIPA</productname>
+	 <productnumber condition="fedora">3.4</productnumber>
+	 <edition>1.0</edition>
+	 <pubsnumber>1</pubsnumber>
+	 <abstract>
+		<para>
+			Identity and policy management &mdash; for both users and machines &mdash; is a core function for almost any enterprise environment. IPA provides a way to 
+			create an identity domain that allows machines to enroll to a domain and immediately access identity information required for single sign-on and authentication 
+			services, as well as policy settings that govern authorization and access.
+			This manual covers all aspects of installing, configuring, and managing IPA domains, including both servers and clients. 
+			This guide is intended for IT and systems administrators.
+		</para>
+
+	</abstract>
+	 <corpauthor>
+		<inlinemediaobject>
+			<imageobject>
+				<imagedata fileref="Common_Content/images/title_logo.svg" format="SVG" />
+			</imageobject>
+
+		</inlinemediaobject>
+
+	</corpauthor>
+	 <xi:include href="Common_Content/Legal_Notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <authorgroup>
+		<author>
+			<firstname>Ella Deon</firstname>
+			<surname>Lackey</surname>
+			<email>dlackey@redhat.com</email>
+		</author>
+	</authorgroup>
 </bookinfo>

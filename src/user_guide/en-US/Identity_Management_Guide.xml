@@ -1,51 +1,35 @@
-<?xml version='1.0' encoding='utf-8'?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
- "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
-[
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 ]>
 <book>
-    <xi:include href="Book_Info.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Preface.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <!--
-    <xi:include href="ReleaseNotes.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    -->
-    <xi:include href="Intro.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Installing.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="InstallingClients.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Usage.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Users.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Hosts.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="NIS.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Trust.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="ActiveDirectory.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="DNS.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Automount.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Passwords.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Kerberos.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Sudo.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Authz.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="SelinuxMap.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Automember.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="AccessControls.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="ServerConfig.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Migrating.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="FAQ.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Certmonger.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="Glossary.xml"
-    xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <index />
+	<xi:include href="Book_Info.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<xi:include href="Preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<!--
+	<xi:include href="ReleaseNotes.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	-->
+	 <xi:include href="Intro.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="Installing.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="InstallingClients.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="Usage.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="Users.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="Hosts.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="NIS.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="Trust.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="ActiveDirectory.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="DNS.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="Automount.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="Passwords.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="Kerberos.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="Sudo.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="Authz.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="SelinuxMap.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="Automember.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="AccessControls.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="ServerConfig.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="Migrating.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="FAQ.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="Certmonger.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="Glossary.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <index />
 </book>
+

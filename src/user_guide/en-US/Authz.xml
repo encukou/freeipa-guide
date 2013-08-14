@@ -1,919 +1,909 @@
-<?xml version='1.0' encoding='utf-8'?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
-[
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 ]>
-<chapter id="configuring-host-access">
-    <title>Policy: Configuring Host-Based Access Control</title>
-    <para>&IPA; can control access to both machines and the services on those
-    machines within the &IPA; domain. The rules define who can access what
-    within the domain, not the level of access (which are defined by system or
-    application settings). These access control rules grant access, with all
-    other users and hosts implicitly denied.</para>
-    <para>This is called 
-    <emphasis>host-based access control</emphasis>because the rule defines what
-    hosts ( 
-    <emphasis>targets</emphasis>) within the domain a user is allowd to access.
-    This access can be further broken down to users and services on those
-    hosts.</para>
-    <note>
-        <title>NOTE</title>
-        <para>Using host-based access control requires SSSD to be installed and
-        configured on the &IPA; client machine.</para>
-    </note>
-    <section id="about-hbac">
-        <title>About Host-Based Access Control</title>
-        <para>Host-based access control rules (which are described in 
-        <xref linkend="configuring-host-access" />) can be applied to
-        individual hosts. However, using host groups allows centralized, and
-        potentially simplified, access control management because an access
-        control rule only needs to be defined once and then it is applied
-        immediately and consistently to all the hosts within the group.</para>
-        <figure id="fig.host-hbac">
-            <title>Host Groups and Host-Based Access Control</title>
-            <mediaobject>
-                <imageobject>
-                    <imagedata fileref="images/host-hbac.png" />
-                </imageobject>
-            </mediaobject>
-        </figure>
-        <note>
-            <title>NOTE</title>
-            <para>While access must be explicitly granted to users and hosts
-            within the &IPA; domain, &IPA; servers are configured by default
-            with an 
-            <command>allow all</command>access control rule which allows access
-            for every host within the domain to every host within the
-            domain.</para>
-            <para>To create an &IPA; server without the default 
-            <command>allow all</command>rule, run 
-            <command>ipa-server-install</command>with the 
-            <option>--no_hbac_allow</option>option.</para>
-        </note>
-        <para>The 
-        <emphasis>rule</emphasis>first defines things that can be accessed, and
-        there are two types of entities:</para>
-        <itemizedlist>
-            <listitem>
-                <para>
-                <emphasis>Hosts</emphasis>, or target hosts, within the &IPA;
-                domain.</para>
-            </listitem>
-            <listitem>
-                <para>
-                <emphasis>Services</emphasis>on the target hosts. Multiple
-                services can be combined into 
-                <emphasis>service groups</emphasis>. The service group can be
-                modified without having to edit the access control rule
-                itself.</para>
-            </listitem>
-        </itemizedlist>
-        <para>The rule also sets 
-        <emphasis>who can have access</emphasis>(the &IPA; domain user).</para>
-        <note>
-            <title>TIP</title>
-            <para>It is possible to use categories for users and target hosts
-            instead of adding each one individually to the access control rule.
-            The only supported category is 
-            <command>all</command>.</para>
-        </note>
-        <para>The entities in host-based access control rules follow the
-        Kerberos principal entries: users, hosts (machines), and services.
-        Users and target hosts can be added directly to host-based access
-        control rules. However, services must be flagged first and then added
-        to the access control rules.</para>
-    </section>
-    <section id="HBAC_Service_Groups">
-        <title>Creating Host-Based Access Control Entries for Services and
-        Service Groups</title>
-        <para>Any PAM service can be identified as to the host-based access
-        control (HBAC) system in &IPA;. The service entries used in host-based
-        access control are separate from adding a service to the &IPA; domain.
-        Adding a service to the domain makes it a recognized resource which is
-        available to other resources. Adding a domain resource to the
-        host-based access control configuration allows administrators to exert
-        defined control over what domain users and what domain clients can
-        access that service.</para>
-        <para>Some common services are already configured as HBAC services, so
-        they can be used in host-based access control rules. Additional
-        services can be added, and services can be added into service groups
-        for simpler management.</para>
-        <section id="adding-hbac-svc">
-            <title>Adding HBAC Services</title>
-            <section id="adding-hbac-svc-ui">
-                <title>Adding HBAC Services in the Web UI</title>
-                <orderedlist>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Policy</guilabel>tab.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Host-Based Access Control</guilabel>subtab,
-                        and then select the 
-                        <guilabel>HBAC Services</guilabel>link.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Add</guilabel>link at the top of the list of
-                        services.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/hbac-services-list.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Enter the service name and a description.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/hbac-service-new.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Add</guilabel>button to save the new
-                        service.</para>
-                    </listitem>
-                    <listitem>
-                        <para>If a service group already exists, then add the
-                        service to the desired group, as described in 
-                        <xref linkend="adding-hbac-svcgrp-ui" />.</para>
-                    </listitem>
-                </orderedlist>
-            </section>
-            <section id="adding-hbac-svc-cmd">
-                <title>Adding Services in the Command Line</title>
-                <para>The service is added to the access control system using
-                the 
-                <command>hbacsvc-add</command>command, specifying the service
-                by the name that PAM uses to evaluate the service.</para>
-                <para>For example, this adds the 
-                <systemitem>tftp</systemitem>service:</para>
-                <screen># ipa hbacsvc-add --desc="TFTP service" tftp
-                ------------------------- Added HBAC service "tftp"
-                -------------------------</screen>
-                <para>If a service group already exists, then the service can
-                be added to the group using the 
-                <command>hbacsvcgroup-add-member</command>command, as in 
-                <xref linkend="adding-hbac-svcgrp-cmd" />.</para>
-            </section>
-        </section>
-        <section id="adding-hbac-svcgrp">
-            <title>Adding Service Groups</title>
-            <para>Once the individual service is added, it can be added to the
-            access control rule. However, if there a large number of services,
-            then it can require frequent updates to the access control rules as
-            services change. &PROD; also allows groups of services to added to
-            access control rules. This makes it much easier to manage access
-            control, because the members of the service group can be changed
-            without having to edit the rule itself.</para>
-            <section id="adding-hbac-svcgrp-ui">
-                <title>Adding Service Groups in the Web UI</title>
-                <orderedlist>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Policy</guilabel>tab.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Host-Based Access Control</guilabel>subtab,
-                        and then select the 
-                        <guilabel>HBAC Service Groups</guilabel>link.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Add</guilabel>link at the top of the list of
-                        service groups.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/hbac-svcgrp-list.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Enter the service group name and a
-                        description.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/hbac-svcgrp-new.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Add and Edit</guilabel>button to go
-                        immediately to the service configuration page.</para>
-                    </listitem>
-                    <listitem>
-                        <para>At the top of the 
-                        <guilabel>HBAC Services</guilabel>tab, click the 
-                        <guilabel>Add</guilabel>link.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/hbac-svcgrp-member1.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Click the checkbox by the names of the services
-                        to add, and click the right arrows button, 
-                        <guibutton>&gt;&gt;</guibutton>, to move the command to
-                        the selection box.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/hbac-svcgrp-member2.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guibutton>Add</guibutton>button to save the group
-                        membership.</para>
-                    </listitem>
-                </orderedlist>
-            </section>
-            <section id="adding-hbac-svcgrp-cmd">
-                <title>Adding Service Groups in the Command Line</title>
-                <para>First create the service group entry, then create the
-                service, and then add that service to the service group as a
-                member. For example:</para>
-                <screen>$ ipa hbacsvcgroup-add --desc="login services" login
-                -------------------------------- Added HBAC service group
-                "login" -------------------------------- Service group name:
-                login Description: login services $ ipa hbacsvc-add
-                --desc="SSHD service" sshd ------------------------- Added HBAC
-                service "sshd" ------------------------- $ ipa
-                hbacsvcgroup-add-member --hbacsvcs=sshd login Service group
-                name: login Description: login services
-                ------------------------- Number of members added 1
-                -------------------------</screen>
-                <note>
-                    <title>NOTE</title>
-                    <para>&IPA; defines two default service groups: 
-                    <systemitem>SUDO</systemitem>for sudo services and 
-                    <systemitem>FTP</systemitem>for services which provide FTP
-                    access.</para>
-                </note>
-            </section>
-        </section>
-    </section>
-    <section id="hbac-rules">
-        <title>Defining Host-Based Access Control Rules</title>
-        <para>Access controls, at a high level, define 
-        <emphasis>who</emphasis>has access to 
-        <emphasis>what</emphasis>. The 
-        <emphasis>who</emphasis>is &IPAA; user, and the 
-        <emphasis>what</emphasis>can be either a host (target host), service,
-        or service group, or a combination of the three.</para>
-        <section id="hbac-rules-ui">
-            <title>Setting Host-Based Access Control Rules in the Web
-            UI</title>
-            <orderedlist>
-                <listitem>
-                    <para>Click the 
-                    <guilabel>Policy</guilabel>tab.</para>
-                </listitem>
-                <listitem>
-                    <para>Click the 
-                    <guilabel>Host-Based Access Control</guilabel>subtab, and
-                    then select the 
-                    <guilabel>HBAC Rules</guilabel>link.</para>
-                </listitem>
-                <listitem>
-                    <para>Click the 
-                    <guilabel>Add</guilabel>link at the top of the list of
-                    host-based access control rules.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/hbac-rules-list.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>Enter the name for the rule.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/hbac-rule-new.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>Click the 
-                    <guilabel>Add and Edit</guilabel>button to go immediately
-                    to set the configuration for the rule.</para>
-                    <para>There are a number of configuration areas for the
-                    rule. The four basic elements are 
-                    <emphasis>who</emphasis>the rule applies to, what hosts
-                    allow access (the target), and, optionally, what services
-                    can be accessed.</para>
-                </listitem>
-                <listitem>
-                    <para>In the 
-                    <guilabel>Who</guilabel>area, select the users or user
-                    groups to which the access control rule is applied.</para>
-                    <para>To apply the rule to all &IPA; users, select the 
-                    <guilabel>Anyone</guilabel>radio button.</para>
-                    <para>To apply the rule to a specific set of users or user
-                    groups:</para>
-                    <orderedlist>
-                        <listitem>
-                            <para>Select the 
-                            <guilabel>Specified Users and
-                            Groups</guilabel>radio button.</para>
-                        </listitem>
-                        <listitem>
-                            <para>Click the 
-                            <guilabel>+ Add</guilabel>link at the right of the
-                            users list.</para>
-                            <informalfigure>
-                                <mediaobject>
-                                    <imageobject>
-                                        <imagedata fileref="images/hbac-rule-user-add.png" />
-                                    </imageobject>
-                                </mediaobject>
-                            </informalfigure>
-                        </listitem>
-                        <listitem>
-                            <para>Click the checkbox by the users to add to the
-                            rule, and click the right arrows button, 
-                            <guibutton>&gt;&gt;</guibutton>, to move the users
-                            to the selection box.</para>
-                            <informalfigure>
-                                <mediaobject>
-                                    <imageobject>
-                                        <imagedata fileref="images/hbac-rule-user.png" />
-                                    </imageobject>
-                                </mediaobject>
-                            </informalfigure>
-                        </listitem>
-                        <listitem>
-                            <para>Click 
-                            <guibutton>Add</guibutton>.</para>
-                        </listitem>
-                    </orderedlist>
-                </listitem>
-                <listitem>
-                    <para>In the 
-                    <guilabel>Accessing</guilabel>area, select the target hosts
-                    which can be accessed through this access control
-                    rule.</para>
-                    <para>To apply the rule to all &IPA; hosts, select the 
-                    <guilabel>Any Host</guilabel>radio button.</para>
-                    <para>To apply the rule to a specific set of hosts or host
-                    groups:</para>
-                    <orderedlist>
-                        <listitem>
-                            <para>Select the 
-                            <guilabel>Specified Hosts and
-                            Groups</guilabel>radio button.</para>
-                        </listitem>
-                        <listitem>
-                            <para>Click the 
-                            <guilabel>+ Add</guilabel>link at the right of the
-                            hosts list.</para>
-                            <informalfigure>
-                                <mediaobject>
-                                    <imageobject>
-                                        <imagedata fileref="images/hbac-rule-target.png" />
-                                    </imageobject>
-                                </mediaobject>
-                            </informalfigure>
-                        </listitem>
-                        <listitem>
-                            <para>Click the checkbox by the hosts to include
-                            with the rule, and click the right arrows button, 
-                            <guibutton>&gt;&gt;</guibutton>, to move the hosts
-                            to the selection box.</para>
-                            <informalfigure>
-                                <mediaobject>
-                                    <imageobject>
-                                        <imagedata fileref="images/hbac-rule-target-add.png" />
-                                    </imageobject>
-                                </mediaobject>
-                            </informalfigure>
-                        </listitem>
-                        <listitem>
-                            <para>Click 
-                            <guibutton>Add</guibutton>.</para>
-                        </listitem>
-                    </orderedlist>
-                </listitem>
-                <listitem>
-                    <para>In the 
-                    <guilabel>Via Service</guilabel>area, select specific
-                    services on the target hosts which the users are allowed to
-                    use to access target machines.</para>
-                    <para>To apply the rule to all &IPA; hosts, select the 
-                    <guilabel>Any Service</guilabel>radio button.</para>
-                    <para>To apply the rule to a specific set of hosts or host
-                    groups:</para>
-                    <orderedlist>
-                        <listitem>
-                            <para>Select the 
-                            <guilabel>Specified Services and
-                            Groups</guilabel>radio button.</para>
-                        </listitem>
-                        <listitem>
-                            <para>Click the 
-                            <guilabel>+ Add</guilabel>link at the right of the
-                            commands list.</para>
-                            <informalfigure>
-                                <mediaobject>
-                                    <imageobject>
-                                        <imagedata fileref="images/hbac-rule-viasrv.png" />
-                                    </imageobject>
-                                </mediaobject>
-                            </informalfigure>
-                        </listitem>
-                        <listitem>
-                            <para>Click the checkbox by the services or groups
-                            to include with the rule, and click the right
-                            arrows button, 
-                            <guibutton>&gt;&gt;</guibutton>, to move the
-                            services to the selection box.</para>
-                            <informalfigure>
-                                <mediaobject>
-                                    <imageobject>
-                                        <imagedata fileref="images/hbac-rule-addservice.png" />
-                                    </imageobject>
-                                </mediaobject>
-                            </informalfigure>
-                        </listitem>
-                        <listitem>
-                            <para>Click 
-                            <guibutton>Add</guibutton>.</para>
-                        </listitem>
-                    </orderedlist>
-                </listitem>
-            </orderedlist>
-        </section>
-        <section id="hbac-rules-cmd">
-            <title>Setting Host-Based Access Control Rules in the Command
-            Line</title>
-            <para>Access control rules are created using the 
-            <command>hbacrule-*</command>commands (listed in 
-            <xref linkend="tab.hbac-commands" />). The first step is to create
-            a container entry; from there, users, hosts, and services can be
-            added to the access control entry.</para>
-            <para>The basic outline of all the access control commands
-            is:</para>
-            <screen>$ ipa hbacrule-add* 
-            <replaceable>options ruleName</replaceable></screen>
-            <note>
-                <title>TIP</title>
-                <para>To set every user or every host as a target, use the
-                category options, such as 
-                <option>--usercat=all</option>.</para>
-            </note>
-            <example id="ex.hbac-all">
-                <title>Granting All Access to One Host</title>
-                <para>One simple rule is to grant every user access to a single
-                server. The first command creates the entry and uses the
-                category options to apply every user.</para>
-                <screen>$ ipa hbacrule-add --usercat=all allGroup
-                -------------------------- Added HBAC rule "allGroup"
-                -------------------------- Rule name: allGroup User category:
-                all Enabled: TRUE</screen>
-                <para>The second rule adds the target host, using the 
-                <command>hbacrule-add-host</command>command:</para>
-                <screen>$ ipa hbacrule-add-host --hosts=server.example.com
-                allGroup Rule name: allGroup User category: all Enabled: TRUE
-                Successful hosts/hostgroups: member host: server.example.com
-                ------------------------- Number of members added 1
-                -------------------------</screen>
-            </example>
-            <example id="ex.hbac-single-service">
-                <title>Adding Control for a Single User to a Service</title>
-                <para>Another access control method is to specify which
-                services users are allowed to use to access the target
-                hosts.</para>
-                <para>First, for the user to have access to every machine,
-                every host must be added as both a host and target. This can be
-                done using the category options:</para>
-                <screen>$ ipa hbacrule-add --hostcat=all sshd-jsmith</screen>
-                <para>Since the access control rule applies to a specific user,
-                the user is added to the rule using the 
-                <command>hbacrule-add-user</command>command:</para>
-                <screen>$ ipa hbacrule-add-user --users=jsmith
-                sshd-jsmith</screen>
-                <para>Then, the service is added to the access control rule.
-                (The service should have already been added to the access
-                control system using the 
-                <command>hbacsvc-add</command>command.) This is the service
-                that the user can use to connect to the machine.</para>
-                <screen>$ ipa hbacrule-add-service --hbacsvcs=sshd
-                sshd-jsmith</screen>
-            </example>
-            <example id="ex.hbac-srvcgroups">
-                <title>Adding a Service Group to the Rule</title>
-                <para>While a single service can be added to a rule, it is also
-                possible to add an entire service group. Like a single service,
-                this uses the 
-                <command>hbacrule-add-service</command>command, only with the 
-                <option>--hbacsvcgroups</option>option that specifies the group
-                name.</para>
-                <screen>$ ipa hbacrule-add-service --hbacsvcgroups=login
-                loginRule</screen>
-            </example>
-            <table id="tab.hbac-commands">
-                <title>Host-Based Access Control Command and Options</title>
-                <tgroup cols="4">
-                    <thead>
-                        <row>
-                            <entry>Command</entry>
-                            <entry>Description</entry>
-                            <entry>Arguments</entry>
-                            <entry>Source or Target Entry</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry>hbacrule-add</entry>
-                            <entry>Adds a new host-based access control
-                            rule.</entry>
-                            <entry>
-                                <itemizedlist>
-                                    <listitem>
-                                        <para>--usercat=all, which applies the
-                                        rule to every user</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>--hostcat=all, which sets every
-                                        host as an allowed target server</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>--servicecat=all, which sets
-                                        every configured service as an allowed
-                                        target service</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>
-                                        <emphasis>ruleName</emphasis>, which is
-                                        the required unique identifier for the
-                                        new rule</para>
-                                    </listitem>
-                                </itemizedlist>
-                            </entry>
-                            <entry></entry>
-                        </row>
-                        <row>
-                            <entry>hbacrule-add-host</entry>
-                            <entry>Adds a target host to the access control
-                            rule. A target host can be accessed 
-                            <emphasis>by</emphasis>other servers and users in
-                            the domain.</entry>
-                            <entry>
-                                <itemizedlist>
-                                    <listitem>
-                                        <para>--hosts, which adds an individual
-                                        server or command-separated list of
-                                        servers as an allowed target
-                                        server</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>--hostgroups, which adds a host
-                                        group to the rule and every host within
-                                        the host group is an allowed target
-                                        server</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>
-                                        <emphasis>ruleName</emphasis>, which is
-                                        the rule to which to add the target
-                                        server</para>
-                                    </listitem>
-                                </itemizedlist>
-                            </entry>
-                            <entry>Target</entry>
-                        </row>
-                        <row>
-                            <entry>hbacrule-add-service</entry>
-                            <entry>Adds a service type to the rule.</entry>
-                            <entry>
-                                <itemizedlist>
-                                    <listitem>
-                                        <para>--hbacsvcs, which adds an
-                                        individual service type or a
-                                        comma-separated list of service type as
-                                        an allowed target service</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>--hbacsvcgroups, which adds a
-                                        service group to the rule and every
-                                        service within the service group is an
-                                        allowed target service</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>
-                                        <emphasis>ruleName</emphasis>, which is
-                                        the rule to which to add the target
-                                        service</para>
-                                    </listitem>
-                                </itemizedlist>
-                            </entry>
-                            <entry>Target</entry>
-                        </row>
-                        <row>
-                            <entry>hbacrule-add-user</entry>
-                            <entry>Adds a user to the access control rule. The
-                            user is then able to access any allowed target host
-                            or service within the domain.</entry>
-                            <entry>
-                                <itemizedlist>
-                                    <listitem>
-                                        <para>--users, which adds an individual
-                                        user or command-separated list of users
-                                        to the rule</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>--groups, which adds a user group
-                                        to the rule and, thus, every user
-                                        within the group</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para>
-                                        <emphasis>ruleName</emphasis>, which is
-                                        the rule to which to add the
-                                        user</para>
-                                    </listitem>
-                                </itemizedlist>
-                            </entry>
-                            <entry>Source</entry>
-                        </row>
-                        <row>
-                            <entry>hbacrule-disable | hbacrule-enable</entry>
-                            <entry>Disables or enables a host-based access
-                            control rule. Rules can be disabled if their
-                            behavior needs to be evaluated (for troubleshooting
-                            or to test a new rule).</entry>
-                            <entry>
-                            <emphasis>ruleName</emphasis>, which is the rule to
-                            disable or enable</entry>
-                            <entry></entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </table>
-        </section>
-    </section>
-    <section id="hbac-testing">
-        <title>Testing Host-Based Access Control Rules</title>
-        <para>Implementing host-based access controls effectively can be tricky
-        because it requires that all of the hosts be properly configured and
-        the access is properly applied to users and services.</para>
-        <para>The 
-        <command>hbactest</command>command can test different host-based access
-        control scenarios to make sure that the rules are working as
-        expected.</para>
-        <note>
-            <title>NOTE</title>
-            <para>The 
-            <command>hbactest</command>command does not work with trusted &AD;
-            users. &AD; user/group associations are determined dynamically, as
-            a user logs in, and those data are not stored in the &IPA; LDAP
-            directory. The 
-            <command>hbactest</command>command, then, is unable to resolve the
-            group memberships to check how access control rules will be
-            applied.</para>
-        </note>
-        <section id="hbac-limits">
-            <title>The Limits of Host-Based Access Control
-            Configuration</title>
-            <para>The access control configuration should always be tested
-            before it is implemented to prevent authorization failures.</para>
-            <para>Host-based access control rules depend on a lot of
-            interactions &mdash; between hosts, services, DNS lookups, and
-            users. If any element is misconfigured, then the rule can behave in
-            unexpected ways.</para>
-            <para>&PROD; includes a testing tool to verify that access control
-            rules are behaving in the expected way by testing the access in a
-            defined scenario. There are several situations where this testing
-            is useful:</para>
-            <itemizedlist>
-                <listitem>
-                    <para>A new rule needs to be tested before it is
-                    implemented.</para>
-                </listitem>
-                <listitem>
-                    <para>There are problems with the existing rules, and the
-                    testing tool can identify what rule is behaving
-                    badly.</para>
-                </listitem>
-                <listitem>
-                    <para>A subset of existing rules can be tested to see how
-                    they are performing.</para>
-                </listitem>
-            </itemizedlist>
-        </section>
-        <section id="hbac-test-examples">
-            <title>Test Scenarios for Host-Based Access Control
-            (CLI-Based)</title>
-            <note>
-                <title>NOTE</title>
-                <para>The 
-                <command>hbactest</command>command does not work with trusted
-                &AD; users. &AD; user/group associations are determined
-                dynamically, as a user logs in, and those data are not stored
-                in the &IPA; LDAP directory. The 
-                <command>hbactest</command>command, then, is unable to resolve
-                the group memberships to check how access control rules will be
-                applied.</para>
-            </note>
-            <para>The 
-            <command>hbactest</command>command tests configured host-based
-            access control rules in very specific situations. A test run
-            defines:</para>
-            <itemizedlist>
-                <listitem>
-                    <para>The user to run the operation as to test the rule
-                    performance for that user ( 
-                    <option>--user</option>).</para>
-                </listitem>
-                <listitem>
-                    <para>Using the login client Y ( 
-                    <option>--service</option>).</para>
-                </listitem>
-                <listitem>
-                    <para>To target host Z ( 
-                    <option>--host</option>).</para>
-                </listitem>
-                <listitem>
-                    <para>The rule to test ( 
-                    <option>--rules</option>); if this is not used, then all
-                    enabled rules are tested.</para>
-                </listitem>
-                <listitem>
-                    <para>
-                    <emphasis>Optional</emphasis>The 
-                    <command>hbactest</command>returns detailed information
-                    about which rules were matched, not matched, or invalid.
-                    This detailed rule output can be disabled using 
-                    <option>--nodetail</option>, so the test simply runs and
-                    returns whether access was granted.</para>
-                </listitem>
-            </itemizedlist>
-            <note>
-                <title>NOTE</title>
-                <para>The 
-                <command>hbactest</command>script does not actually connect to
-                the target host. Instead, it uses the rules within the &IPA;
-                database to simulate how those rules would be applied in a
-                specific situation as if an SSSD client were connecting to the
-                &IPA; server.</para>
-                <para>More briefly, it performs a simulated test run based on
-                the given information and configuration, but it does not
-                actually attempt a service request against the target
-                host.</para>
-            </note>
-            <example id="ex.hbac-test-all">
-                <title>Testing All Active Rules</title>
-                <para>The most basic command checks all active rules. It
-                requires a specific connection scenario, so the user, login
-                service and target host have to be given, and the testing tool
-                checks the connection.</para>
-                <screen>$ ipa hbactest --user=jsmith --host=target.example.com
-                --service=ssh -------------------- Access granted: True
-                -------------------- notmatched: my-second-rule notmatched:
-                my-third-rule matched: myrule matched: allow_all</screen>
-            </example>
-            <example id="ex.hbac-rule-test">
-                <title>Testing a Specific Rule</title>
-                <para>It is possible to check a specific rule (or several
-                rules).</para>
-                <screen>$ ipa hbactest --user=jsmith --host=target.example.com
-                --service=ssh --rules=myrule --------------------- Access
-                granted: True --------------------- notmatched: myrule</screen>
-            </example>
-            <example id="ex.hbac-rule-enabled">
-                <title>Testing Specific Rules Plus All Enabled</title>
-                <para>The 
-                <option>--rules</option>option lists specific rules to test,
-                but it may be useful to test the specified rules against all of
-                the enabled rules in the domain. This can be done by adding the
-                
-                <option>--enabled</option>option, which includes the
-                (unspecified) enabled rules along with the specified
-                rules.</para>
-                <screen>$ ipa hbactest --user=jsmith --host=target.example.com
-                --service=ssh --rules=myrule --enabled --------------------
-                Access granted: True -------------------- matched:
-                my-second-rule notmatched: my-third-rule matched: myrule
-                matched: allow_all</screen>
-                <para>It is possible to run a similar comparison against 
-                <emphasis>disabled</emphasis>rules by using the 
-                <option>--disable</option>option. With the 
-                <option>--rules</option>option, the specified rule plus all of
-                the disabled rules are checked. With the 
-                <option>--disabled</option>option, all disabled rules are
-                checked.</para>
-            </example>
-        </section>
-        <section id="hbac-test-ui">
-            <title>Testing Host-Based Access Control Rules in the UI</title>
-            <para>As 
-            <xref linkend="hbac-limits" />details, misconfiguring a host-based
-            access-control rule can result in unpredictable behavior when users
-            or services attempt to connect to a remote host.</para>
-            <para>Testing host-based access control can help confirm that the
-            rule performs as expected before it is deployed or to troubleshoot
-            a rule once it is already active.</para>
-            <note>
-                <title>NOTE</title>
-                <para>The 
-                <command>hbactest</command>command does not work with trusted
-                &AD; users. &AD; user/group associations are determined
-                dynamically, as a user logs in, and those data are not stored
-                in the &IPA; LDAP directory. The 
-                <command>hbactest</command>command, then, is unable to resolve
-                the group memberships to check how access control rules will be
-                applied.</para>
-            </note>
-            <para>By the nature of host-based access control rules, a test must
-            define and verify a very specific set of criteria, A test run
-            defines:</para>
-            <itemizedlist>
-                <listitem>
-                    <para>The user to run the operation as to test the rule
-                    performance for that user ( 
-                    <guilabel>Who</guilabel>).</para>
-                </listitem>
-                <listitem>
-                    <para>To target host Z ( 
-                    <guilabel>Accessing</guilabel>).</para>
-                </listitem>
-                <listitem>
-                    <para>Using the login client Y ( 
-                    <guilabel>Via Service</guilabel>).</para>
-                </listitem>
-                <listitem>
-                    <para>The rule to test; if this is not used, then all
-                    enabled rules are tested ( 
-                    <guilabel>Rules</guilabel>).</para>
-                </listitem>
-            </itemizedlist>
-            <para>The test environment is defined on the 
-            <guilabel>HBAC TEST</guilabel>page in the 
-            <guilabel>Host Based Access Control</guilabel>tab under 
-            <guilabel>Policy</guilabel>. A series of tabs is set up for each
-            configuration step.</para>
-            <figure id="fig.hbac-test1">
-                <title>The From Tab to Set up an HBAC Test</title>
-                <mediaobject>
-                    <imageobject>
-                        <imagedata fileref="images/hbac-test1.png" />
-                    </imageobject>
-                </mediaobject>
-            </figure>
-            <para>Once the environment is defined, then the test is run simply
-            by clicking a button on the 
-            <guilabel>Run Test</guilabel>page. The results show clearly whether
-            access was granted or denied to the users, and then runs through
-            the rules which matched the given parameters.</para>
-            <figure id="fig.hbac-test2">
-                <title>HBAC Test Results</title>
-                <mediaobject>
-                    <imageobject>
-                        <imagedata fileref="images/hbac-test2.png" />
-                    </imageobject>
-                </mediaobject>
-            </figure>
-            <note>
-                <title>NOTE</title>
-                <para>To change some of the parameters and check for other
-                results, click the 
-                <guibutton>New Test</guibutton>button at the bottom of the test
-                results page. If that button is not selected, the form is not
-                reset, so a new test will not run, even if test settings are
-                changed.</para>
-            </note>
-        </section>
-    </section>
-    <!--
-    <section id="hbac-selinux"><title>Host-Based Access Control Rules and SELinux User Maps</title>
-        <para>
-            Host-based access control rules can be used to supply user and host information to SELinux user maps.
-        </para>
-            <para>
-                If a host-based access control rule is associated with an SELinux user map, the host-based access control rule cannot be deleted until it is removed from the SELinux user map configuration.
-            </para>
-    </section>
+
+	<chapter id="configuring-host-access"><title>Policy: Configuring Host-Based Access Control</title>
+		<para>
+			&IPA; can control access to both machines and the services on those machines within the &IPA; domain. The rules 
+			define who can access what within the domain, not the level of access (which are defined by system or application settings). 
+			These access control rules grant access, with all other users and hosts implicitly denied. 
+		</para>
+		<para>
+			This is called <emphasis>host-based access control</emphasis> because the rule defines what hosts (<emphasis>targets</emphasis>) within the domain a user is allowd to access. This access can be further broken down to users and services on those hosts.
+		</para>
+		<note><title>NOTE</title>
+			<para>
+				Using host-based access control requires SSSD to be installed and configured on the &IPA; client machine.
+			</para>
+		</note>
+
+		<section id="about-hbac"><title>About Host-Based Access Control</title>
+			
+		<para>
+			Host-based access control rules (which are described in <xref linkend="configuring-host-access" />) can be applied to individual hosts. However, using 
+			host groups allows centralized, and potentially simplified, access control management because an access control rule only needs to be defined 
+			once and then it is applied immediately and consistently to all the hosts within the group.
+		</para>
+			 <figure id="fig.host-hbac">
+				<title>Host Groups and Host-Based Access Control</title>
+				 <mediaobject>
+					<imageobject>
+						<imagedata fileref="images/host-hbac.png" />
+					</imageobject>
+				</mediaobject>
+			</figure>
+			
+		<note><title>NOTE</title>
+			<para>
+				While access must be explicitly granted to users and hosts within the &IPA; domain, &IPA; servers are configured by default with 
+				an <command>allow all</command> access control rule which allows access for every host within the domain to every host within the domain. 
+			</para>
+			<para>
+				To create an &IPA; server without the default <command>allow all</command> rule, run <command>ipa-server-install</command> with the 
+				<option>--no_hbac_allow</option> option.
+			</para>
+		</note>
+		<para>
+			The <emphasis>rule</emphasis> first defines things that can be accessed, and there are two types of entities:
+		</para>
+		<itemizedlist>
+			<listitem>
+				<para>
+					<emphasis>Hosts</emphasis>, or target hosts, within the &IPA; domain.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<emphasis>Services</emphasis> on the target hosts. Multiple services can be combined into <emphasis>service groups</emphasis>. The service group can be modified without having to edit the access control rule itself.
+				</para>
+			</listitem>
+		</itemizedlist>
+		<para>
+			The rule also sets <emphasis>who can have access</emphasis> (the &IPA; domain user). 
+		</para>
+		
+		<note><title>TIP</title>
+			<para>
+				It is possible to use categories for users and target hosts instead of adding each one individually to the access control rule. The only supported category is <command>all</command>.
+			</para>
+		</note>
+		<para>
+			The entities in host-based access control rules follow the Kerberos principal entries: users, hosts (machines), and services. Users 
+			and target hosts can be added directly to host-based access control rules. However, services must be flagged first and then added to the access control rules.
+		</para>
+	</section>
+	
+	 <section id="HBAC_Service_Groups">
+		<title>Creating Host-Based Access Control Entries for Services and Service Groups</title>
+		<para>
+			Any PAM service can be identified as to the host-based access control (HBAC) system in &IPA;. The service entries used in host-based access control are separate from adding a service to the &IPA; domain.
+			Adding a service to the domain makes it a recognized resource which is available to other resources. Adding a domain resource to the host-based access control 
+			configuration allows administrators to exert defined control over what domain users and what domain clients can access that service.
+		</para>
+		<para>
+			Some common services are already configured as HBAC services, so they can be used in host-based access control rules. Additional services can be added, and services can be added into
+			service groups for simpler management.
+		</para>
+
+
+
+		<section id="adding-hbac-svc"><title>Adding HBAC Services</title>
+					
+			<section id="adding-hbac-svc-ui"><title>Adding HBAC Services in the Web UI</title>
+				<orderedlist>
+					<listitem>
+						<para>
+							Click the <guilabel>Policy</guilabel> tab.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guilabel>Host-Based Access Control</guilabel> subtab, and then select the <guilabel>HBAC Services</guilabel> link.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guilabel>Add</guilabel> link at the top of the list of services.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/hbac-services-list.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							Enter the service name and a description.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/hbac-service-new.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guilabel>Add</guilabel> button to save the new service. 
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							If a service group already exists, then add the service to the desired group, as described in <xref linkend="adding-hbac-svcgrp-ui" />.
+						</para>
+					</listitem>
+				</orderedlist>
+			</section>
+
+		<section id="adding-hbac-svc-cmd"><title>Adding Services in the Command Line</title>
+		<para>
+			The service is added to the access control system using the <command>hbacsvc-add</command> command, specifying the service by the name that PAM uses to evaluate the service.
+		</para>
+		<para>
+			For example, this adds the <systemitem>tftp</systemitem> service:
+		</para>
+<screen># ipa hbacsvc-add --desc="TFTP service" tftp
+-------------------------
+Added HBAC service "tftp"
+-------------------------</screen>
+			<para>
+				If a service group already exists, then the service can be added to the group using the <command>hbacsvcgroup-add-member</command> command, as in <xref linkend="adding-hbac-svcgrp-cmd" />.
+			</para>
+		</section>
+	</section>
+
+	<section id="adding-hbac-svcgrp"><title>Adding Service Groups</title>
+		<para>
+			Once the individual service is added, it can be added to the access control rule. However, if there a large number of services, then it can require frequent updates 
+			to the access control rules as services change. &PROD; also allows groups of services to added to access control rules. This makes it much easier to 
+			manage access control, because the members of the service group can be changed without having to edit the rule itself.
+		</para>
+		
+		<section id="adding-hbac-svcgrp-ui"><title>Adding Service Groups in the Web UI</title>
+			<orderedlist>
+					<listitem>
+						<para>
+							Click the <guilabel>Policy</guilabel> tab.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guilabel>Host-Based Access Control</guilabel> subtab, and then select the <guilabel>HBAC Service Groups</guilabel> link.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guilabel>Add</guilabel> link at the top of the list of service groups.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/hbac-svcgrp-list.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							Enter the service group name and a description.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/hbac-svcgrp-new.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guilabel>Add and Edit</guilabel> button to go immediately to the service configuration page. 
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							At the top of the <guilabel>HBAC Services</guilabel> tab, click the <guilabel>Add</guilabel> link.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/hbac-svcgrp-member1.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							Click the checkbox by the names of the services to add, and click the right arrows button, <guibutton>>></guibutton>, to move the command 
+							to the selection box.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/hbac-svcgrp-member2.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guibutton>Add</guibutton> button to save the group membership.
+						</para>
+					</listitem>
+				</orderedlist>
+		</section>
+
+		<section id="adding-hbac-svcgrp-cmd"><title>Adding Service Groups in the Command Line</title>
+		<para>
+			First create the service group entry, then create the service, and then add that service to the service group as a member. For example:
+		</para>
+<screen>$ ipa hbacsvcgroup-add --desc="login services" login
+--------------------------------
+Added HBAC service group "login"
+--------------------------------
+  Service group name: login
+  Description: login services
+
+
+$ ipa hbacsvc-add --desc="SSHD service" sshd
+-------------------------
+Added HBAC service "sshd"
+-------------------------
+
+$ ipa hbacsvcgroup-add-member --hbacsvcs=sshd login
+  Service group name: login
+  Description: login services
+-------------------------
+Number of members added 1
+-------------------------</screen>
+				<note><title>NOTE</title>
+					<para>
+						&IPA; defines two default service groups: <systemitem>SUDO</systemitem> for sudo services and <systemitem>FTP</systemitem> for services which provide FTP access.
+					</para>
+				</note>
+			</section>
+		</section>
+	</section>
+	
+	<section id="hbac-rules"><title>Defining Host-Based Access Control Rules</title>
+		<para>
+			Access controls, at a high level, define <emphasis>who</emphasis> has access to <emphasis>what</emphasis>. The <emphasis>who</emphasis> is &IPAA; user, and the <emphasis>what</emphasis> can be either a host (target host), service, or service group, or a combination of the three.
+		</para>
+
+		<section id="hbac-rules-ui"><title>Setting Host-Based Access Control Rules in the Web UI</title>
+			<orderedlist>
+					<listitem>
+						<para>
+							Click the <guilabel>Policy</guilabel> tab.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guilabel>Host-Based Access Control</guilabel> subtab, and then select the <guilabel>HBAC Rules</guilabel> link.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guilabel>Add</guilabel> link at the top of the list of host-based access control rules.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/hbac-rules-list.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							Enter the name for the rule.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/hbac-rule-new.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guilabel>Add and Edit</guilabel> button to go immediately to set the configuration for the rule.
+						</para>
+						<para>
+							There are a number of configuration areas for the rule. The four basic elements are <emphasis>who</emphasis> the rule applies to, 
+							what hosts allow access (the target), and, optionally, what services
+							can be accessed.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							In the <guilabel>Who</guilabel> area, select the users or user groups to which the access control rule is applied.
+						</para>
+						<para>
+							To apply the rule to all &IPA; users, select the <guilabel>Anyone</guilabel> radio button.
+						</para>
+						<para>
+							To apply the rule to a specific set of users or user groups:
+						</para>
+						<orderedlist>
+							<listitem>
+								<para>
+									Select the <guilabel>Specified Users and Groups</guilabel> radio button.
+								</para>
+							</listitem>
+							<listitem>
+								<para>
+									Click the <guilabel>+ Add</guilabel> link at the right of the users list. 
+								</para>
+								<informalfigure>
+									<mediaobject>
+										<imageobject>
+											<imagedata fileref="images/hbac-rule-user-add.png" />
+										</imageobject>
+									</mediaobject>
+								</informalfigure>
+							</listitem>
+							<listitem>
+								<para>
+									Click the checkbox by the users to add to the rule, and click the right arrows button, <guibutton>>></guibutton>, to move the users 
+							to the selection box.
+								</para>
+								<informalfigure>
+									<mediaobject>
+										<imageobject>
+											<imagedata fileref="images/hbac-rule-user.png" />
+										</imageobject>
+									</mediaobject>
+								</informalfigure>
+							</listitem>
+							<listitem>
+								<para>
+									Click <guibutton>Add</guibutton>.
+								</para>
+							</listitem>
+						</orderedlist>
+					</listitem>
+					<listitem>
+						<para>
+							In the <guilabel>Accessing</guilabel> area, select the target hosts which can be accessed through this access control rule.
+						</para>
+						<para>
+							To apply the rule to all &IPA; hosts, select the <guilabel>Any Host</guilabel> radio button.
+						</para>
+						<para>
+							To apply the rule to a specific set of hosts or host groups:
+						</para>
+						<orderedlist>
+							<listitem>
+								<para>
+									Select the <guilabel>Specified Hosts and Groups</guilabel> radio button.
+								</para>
+							</listitem>
+							<listitem>
+								<para>
+									Click the <guilabel>+ Add</guilabel> link at the right of the hosts list.
+								</para>
+								<informalfigure>
+									<mediaobject>
+										<imageobject>
+											<imagedata fileref="images/hbac-rule-target.png" />
+										</imageobject>
+									</mediaobject>
+								</informalfigure>
+							</listitem>
+							<listitem>
+								<para>
+									Click the checkbox by the hosts to include with the rule, and click the right arrows button, <guibutton>>></guibutton>, to move the hosts 
+							to the selection box.
+								</para>
+								<informalfigure>
+									<mediaobject>
+										<imageobject>
+											<imagedata fileref="images/hbac-rule-target-add.png" />
+										</imageobject>
+									</mediaobject>
+								</informalfigure>
+							</listitem>
+							<listitem>
+								<para>
+									Click <guibutton>Add</guibutton>.
+								</para>
+							</listitem>
+						</orderedlist>
+					</listitem>
+					<listitem>
+						<para>
+							In the <guilabel>Via Service</guilabel> area, select specific services on the target hosts which the users are allowed to use to access target machines.
+						</para>
+						<para>
+							To apply the rule to all &IPA; hosts, select the <guilabel>Any Service</guilabel> radio button.
+						</para>
+						<para>
+							To apply the rule to a specific set of hosts or host groups:
+						</para>
+						<orderedlist>
+							<listitem>
+								<para>
+									Select the <guilabel>Specified Services and Groups</guilabel> radio button.
+								</para>
+							</listitem>
+							<listitem>
+								<para>
+									Click the <guilabel>+ Add</guilabel> link at the right of the commands list.
+								</para>
+								<informalfigure>
+									<mediaobject>
+										<imageobject>
+											<imagedata fileref="images/hbac-rule-viasrv.png" />
+										</imageobject>
+									</mediaobject>
+								</informalfigure>
+							</listitem>
+							<listitem>
+								<para>
+									Click the checkbox by the services or groups to include with the rule, and click the right arrows button, <guibutton>>></guibutton>, to move the services 
+							to the selection box.
+								</para>
+								<informalfigure>
+									<mediaobject>
+										<imageobject>
+											<imagedata fileref="images/hbac-rule-addservice.png" />
+										</imageobject>
+									</mediaobject>
+								</informalfigure>
+							</listitem>
+							<listitem>
+								<para>
+									Click <guibutton>Add</guibutton>.
+								</para>
+							</listitem>
+						</orderedlist>
+					</listitem>
+					
+				</orderedlist>
+		</section>
+
+		<section id="hbac-rules-cmd"><title>Setting Host-Based Access Control Rules in the Command Line</title>
+		<para>
+			Access control rules are created using the <command>hbacrule-*</command> commands (listed in <xref linkend="tab.hbac-commands" />). The first step is to create a container entry; from there, users, hosts, and services can be added to the access control entry. 
+		</para>
+		<para>
+			The basic outline of all the access control commands is:
+		</para>
+<screen>$ ipa hbacrule-add* <replaceable>options ruleName</replaceable></screen>
+		<note><title>TIP</title>
+			<para>
+				To set every user or every host as a target, use the category options, such as <option>--usercat=all</option>.
+			</para>
+		</note>
+		<example id="ex.hbac-all"><title>Granting All Access to One Host</title>
+			<para>
+				One simple rule is to grant every user access to a single server. The first command creates the entry and uses the category options to apply every user.
+			</para>
+<screen>$ ipa hbacrule-add --usercat=all allGroup
+--------------------------
+Added HBAC rule "allGroup"
+--------------------------
+  Rule name: allGroup
+  User category: all
+  Enabled: TRUE</screen>
+			<para>
+				The second rule adds the target host, using the <command>hbacrule-add-host</command> command:
+			</para>
+<screen>$ ipa hbacrule-add-host --hosts=server.example.com allGroup
+  Rule name: allGroup
+  User category: all
+  Enabled: TRUE
+  Successful hosts/hostgroups:
+    member host: server.example.com
+-------------------------
+Number of members added 1
+-------------------------
+			</screen>
+		</example>
+		<example id="ex.hbac-single-service"><title>Adding Control for a Single User to a Service</title>
+			<para>
+				Another access control method is to specify which services users are allowed to use to access the target hosts. 
+			</para>
+			<para>
+				First, for the user to have access to every machine, every host must be added as both a host and target. This can be done using the category options:
+			</para>
+<screen>$ ipa hbacrule-add --hostcat=all sshd-jsmith</screen>
+			<para>
+				Since the access control rule applies to a specific user, the user is added to the rule using the <command>hbacrule-add-user</command> command:
+			</para>
+<screen>$ ipa hbacrule-add-user --users=jsmith sshd-jsmith</screen>
+			<para>
+				Then, the service is added to the access control rule. (The service should have already been added to the access control system using the <command>hbacsvc-add</command> command.) This is the service that the user can use to connect to the machine.
+			</para>
+<screen>$ ipa hbacrule-add-service --hbacsvcs=sshd sshd-jsmith</screen>
+		</example>
+		<example id="ex.hbac-srvcgroups"><title>Adding a Service Group to the Rule</title>
+			<para>
+				While a single service can be added to a rule, it is also possible to add an entire service group. Like a single service, this uses the 
+				<command>hbacrule-add-service</command> command, only with the <option>--hbacsvcgroups</option> option that specifies the group name.
+			</para>
+<screen>$ ipa hbacrule-add-service --hbacsvcgroups=login loginRule</screen>
+		</example>
+		<table id="tab.hbac-commands"><title>Host-Based Access Control Command and Options</title>
+			<tgroup cols="4">
+				<thead>
+					<row>
+						<entry>
+							Command
+						</entry>
+						<entry>
+							Description
+						</entry>
+						<entry>
+							Arguments
+						</entry>
+						<entry>
+							Source or Target Entry
+						</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>
+							hbacrule-add
+						</entry>
+						<entry>
+							Adds a new host-based access control rule.
+						</entry>
+						<entry>
+							<itemizedlist>
+								<listitem>
+									<para>
+										--usercat=all, which applies the rule to every user
+									</para>
+								</listitem>
+								<listitem>
+									<para>
+										--hostcat=all, which sets every host as an allowed target server
+									</para>
+								</listitem>
+								<listitem>
+									<para>
+										--servicecat=all, which sets every configured service as an allowed target service
+									</para>										
+								</listitem>
+								
+								<listitem>
+									<para>
+										<emphasis>ruleName</emphasis>, which is the required unique identifier for the new rule
+									</para>
+								</listitem>
+							</itemizedlist>
+						</entry>
+						<entry>
+						</entry>
+					</row>
+					<row>
+						<entry>
+							hbacrule-add-host
+						</entry>
+						<entry>
+							Adds a target host to the access control rule. A target host can be accessed <emphasis>by</emphasis> other servers and users in the domain.
+						</entry>
+						<entry>
+							
+							<itemizedlist>
+								<listitem>
+									<para>
+										--hosts, which adds an individual server or command-separated list of servers as an allowed target server
+									</para>
+								</listitem>
+								<listitem>
+									<para>
+										--hostgroups, which adds a host group to the rule and every host within the host group is an allowed target server
+									</para>										
+								</listitem>
+								
+								<listitem>
+									<para>
+										<emphasis>ruleName</emphasis>, which is the rule to which to add the target server
+									</para>
+								</listitem>
+							</itemizedlist>
+						</entry>
+						<entry>
+							Target 
+						</entry>
+					</row>
+					<row>
+						<entry>
+							hbacrule-add-service
+						</entry>
+						<entry>
+							Adds a service type to the rule. 
+						</entry>
+						<entry>
+							<itemizedlist>
+								<listitem>
+									<para>
+										--hbacsvcs, which adds an individual service type or a comma-separated list of service type as an allowed target service
+									</para>
+								</listitem>
+								<listitem>
+									<para>
+										--hbacsvcgroups, which adds a service group to the rule and every service within the service group is an allowed target service
+									</para>										
+								</listitem>
+								
+								<listitem>
+									<para>
+										<emphasis>ruleName</emphasis>, which is the rule to which to add the target service
+									</para>
+								</listitem>
+							</itemizedlist>
+						</entry>
+						<entry>
+							Target 
+						</entry>
+					</row>
+					<row>
+						<entry>
+							hbacrule-add-user
+						</entry>
+						<entry>
+							Adds a user to the access control rule. The user is then able to access any allowed target host or service within the domain.
+						</entry>
+						<entry>
+							<itemizedlist>
+								<listitem>
+									<para>
+										--users, which adds an individual user or command-separated list of users to the rule
+									</para>
+								</listitem>
+								<listitem>
+									<para>
+										--groups, which adds a user group to the rule and, thus, every user within the group
+									</para>										
+								</listitem>
+								
+								<listitem>
+									<para>
+										<emphasis>ruleName</emphasis>, which is the rule to which to add the user
+									</para>
+								</listitem>
+							</itemizedlist>
+						</entry>
+						<entry>
+							Source 
+						</entry>
+					</row>
+					
+					<row>
+						<entry>
+							hbacrule-disable | hbacrule-enable
+						</entry>
+						<entry>
+							Disables or enables a host-based access control rule. Rules can be disabled if their behavior needs to be evaluated (for troubleshooting or to test a new rule).
+						</entry>
+						<entry>
+							<emphasis>ruleName</emphasis>, which is the rule to disable or enable
+						</entry>
+						<entry>
+						</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+	</section>
+</section>
+	
+	<section id="hbac-testing"><title>Testing Host-Based Access Control Rules</title>
+		<para>
+			Implementing host-based access controls effectively can be tricky because it requires that all of the hosts be properly configured 
+			and the access is properly applied to users and services.
+		</para>
+		<para>
+			The <command>hbactest</command> command can test different host-based access control scenarios to make sure that the rules are working as expected.
+		</para>
+		<note><title>NOTE</title>
+			<para>
+				The <command>hbactest</command> command does not work with trusted &AD; users. &AD; user/group associations are determined dynamically, as a user logs in, and those data are not stored in the &IPA; LDAP directory. The <command>hbactest</command> command, then, is unable to resolve the group memberships to check how access control rules will be applied.
+			</para>
+		</note>
+		<section id="hbac-limits"><title>The Limits of Host-Based Access Control Configuration</title>
+		
+		<para>
+			The access control configuration should always be tested before it is implemented to prevent authorization failures.
+		</para>
+					<para>
+				Host-based access control rules depend on a lot of interactions &mdash; between hosts, services, DNS lookups, and users. If any element is 
+				misconfigured, then the rule can behave in unexpected ways.
+			</para>
+			<para>
+				&PROD; includes a testing tool to verify that access control rules are behaving in the expected way by testing the access in a defined scenario. 
+				There are several situations where this testing is useful:
+			</para>
+			<itemizedlist>
+				<listitem>
+					<para>
+						A new rule needs to be tested before it is implemented.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						There are problems with the existing rules, and the testing tool can identify what rule is behaving badly.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						A subset of existing rules can be tested to see how they are performing.
+					</para>
+				</listitem>
+			</itemizedlist>
+		</section>
+		<section id="hbac-test-examples"><title>Test Scenarios for Host-Based Access Control (CLI-Based)</title>
+
+		<note><title>NOTE</title>
+			<para>
+				The <command>hbactest</command> command does not work with trusted &AD; users. &AD; user/group associations are determined dynamically, as a user logs in, and those data are not stored in the &IPA; LDAP directory. The <command>hbactest</command> command, then, is unable to resolve the group memberships to check how access control rules will be applied.
+			</para>
+		</note>
+			<para>
+				The <command>hbactest</command> command tests configured host-based access control rules in very specific situations. A test run defines:
+			</para>
+			<itemizedlist>
+				<listitem>
+					<para>
+						The user to run the operation as to test the rule performance for that user (<option>--user</option>).
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Using the login client Y (<option>--service</option>).
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						To target host Z (<option>--host</option>).
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						The rule to test (<option>--rules</option>); if this is not used, then all enabled rules are tested.
+					</para>
+				</listitem>
+				
+				<listitem>
+					<para>
+						<emphasis>Optional</emphasis> The <command>hbactest</command> returns detailed information about which rules were matched, not matched, or invalid. This detailed rule output can be disabled using <option>--nodetail</option>, so the test simply runs and returns whether access was granted.
+					</para>
+				</listitem>
+			</itemizedlist>
+			<note><title>NOTE</title>
+				<para>
+					The <command>hbactest</command> script does not actually connect to the target host. Instead, it uses the rules within the &IPA; database to simulate how those rules would be applied in a specific situation as if an SSSD client were connecting to the &IPA; server. 
+				</para>
+				<para>
+					More briefly, it performs a simulated test run based on the given information and configuration, but it does not actually attempt a service request against the target host.
+				</para>
+			</note>
+			<example id="ex.hbac-test-all"><title>Testing All Active Rules</title>
+				<para>
+					The most basic command checks all active rules. It requires a specific connection scenario, so the user, login service and target host have to be given, and the testing tool checks the connection.
+				</para>
+<screen>$ ipa  hbactest --user=jsmith --host=target.example.com --service=ssh
+--------------------
+Access granted: True
+--------------------
+  notmatched: my-second-rule
+  notmatched: my-third-rule
+  matched: myrule
+  matched: allow_all</screen>
+			</example>
+			<example id="ex.hbac-rule-test"><title>Testing a Specific Rule</title>
+				<para>
+					It is possible to check a specific rule (or several rules).
+				</para>
+<screen>$ ipa hbactest --user=jsmith --host=target.example.com --service=ssh --rules=myrule
+---------------------
+Access granted: True
+---------------------
+   notmatched: myrule</screen>
+			</example>
+			<example id="ex.hbac-rule-enabled"><title>Testing Specific Rules Plus All Enabled</title>
+				<para>
+					The <option>--rules</option> option lists specific rules to test, but it may be useful to test the specified rules against all of the enabled rules in the domain. This can be done by adding the <option>--enabled</option> option, which includes the (unspecified) enabled rules along with the specified rules.
+				</para>
+<screen>$ ipa hbactest --user=jsmith --host=target.example.com --service=ssh --rules=myrule --enabled
+--------------------
+Access granted: True
+--------------------
+  matched: my-second-rule
+  notmatched: my-third-rule
+  matched: myrule
+  matched: allow_all</screen>
+				<para>
+					It is possible to run a similar comparison against <emphasis>disabled</emphasis> rules by using the <option>--disable</option> option. With the <option>--rules</option> option, the specified rule plus all of the disabled rules are checked. With the <option>--disabled</option> option, all disabled rules are checked.
+				</para>
+			</example>
+		</section>
+		<section id="hbac-test-ui"><title>Testing Host-Based Access Control Rules in the UI</title>
+			<para>
+				As <xref linkend="hbac-limits" /> details, misconfiguring a host-based access-control rule can result in unpredictable behavior when users or services attempt to connect to a remote host. 
+			</para>
+			<para>
+				Testing host-based access control can help confirm that the rule performs as expected before it is deployed or to troubleshoot a rule once it is already active.
+			</para>
+			
+		<note><title>NOTE</title>
+			<para>
+				The <command>hbactest</command> command does not work with trusted &AD; users. &AD; user/group associations are determined dynamically, as a user logs in, and those data are not stored in the &IPA; LDAP directory. The <command>hbactest</command> command, then, is unable to resolve the group memberships to check how access control rules will be applied.
+			</para>
+		</note>
+			<para>
+				By the nature of host-based access control rules, a test must define and verify 
+				a very specific set of criteria,
+				A test run defines:
+			</para>
+			<itemizedlist>
+				<listitem>
+					<para>
+						The user to run the operation as to test the rule performance for that user (<guilabel>Who</guilabel>).
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						To target host Z (<guilabel>Accessing</guilabel>).
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Using the login client Y (<guilabel>Via Service</guilabel>).
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						The rule to test; if this is not used, then all enabled rules are tested (<guilabel>Rules</guilabel>).
+					</para>
+				</listitem>
+			</itemizedlist>
+			<para>
+				The test environment is defined on the <guilabel>HBAC TEST</guilabel> page in the <guilabel>Host Based Access Control</guilabel> tab under <guilabel>Policy</guilabel>. A series of tabs is set up 
+				for each configuration step.
+			</para>
+			<figure id="fig.hbac-test1"><title>The From Tab to Set up an HBAC Test</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/hbac-test1.png" />
+					</imageobject>
+				</mediaobject>
+			</figure>
+			<para>
+				Once the environment is defined, then the test is run simply by clicking a button on the <guilabel>Run Test</guilabel> page. The results show clearly whether access was granted or denied to the users, and then runs through the rules which matched the given parameters.
+			</para>
+			<figure id="fig.hbac-test2"><title>HBAC Test Results</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="images/hbac-test2.png" />
+					</imageobject>
+				</mediaobject>
+			</figure>
+			<note><title>NOTE</title>
+				<para>
+					To change some of the parameters and check for other results, click the <guibutton>New Test</guibutton> button at the bottom of the test results page. If that button is not selected, the form is not reset, so a new test will not run, even if test settings are changed.
+				</para>
+			</note>
+		</section>
+	</section>
+<!--
+	<section id="hbac-selinux"><title>Host-Based Access Control Rules and SELinux User Maps</title>
+		<para>
+			Host-based access control rules can be used to supply user and host information to SELinux user maps.
+		</para>
+			<para>
+				If a host-based access control rule is associated with an SELinux user map, the host-based access control rule cannot be deleted until it is removed from the SELinux user map configuration.
+			</para>
+	</section>
 -->
 </chapter>
+

@@ -1,453 +1,465 @@
-<?xml version='1.0' encoding='utf-8'?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
-[
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 ]>
 <chapter id="configuring-rhel5">
-    <title>Configuring &RHEL; &RVER; Servers for &IPA; Domain Services</title>
-    <section id="Setting_up_sudo_Rules-Client_Configuration_for_sudo_Rules">
-        <title>Client Configuration for sudo Rules</title>
-        <para condition="five">This example specifically configures a &OS; 5
-        client for sudo rules. The configuration file in step 
-        <xref linkend="step.nslcd5" />is different, depending on the
-        platform.</para>
-        <orderedlist>
-            <listitem>
-                <para>Configure 
-                <command>sudo</command>to look to LDAP for the 
-                <filename>sudoers</filename>file. 
-                <programlisting>vim /etc/nsswitch.conf sudoers: files ldap
-                sudoers_debug: 1</programlisting></para>
-                <para>Leaving the 
-                <option>files</option>option in place allows 
-                <command>sudo</command>to check its local configuration before
-                checking the LDAP-based &IPA; configuration.</para>
-                <note>
-                    <title>TIP</title>
-                    <para>Adding the 
-                    <parameter>sudoers_debug</parameter>parameter helps with
-                    troubleshooting. Valid values for this parameter are 0, 1,
-                    and 2. The 
-                    <command>sudo</command>documentation at 
-                    <ulink url="http://www.gratisoft.us/sudo/readme_ldap.html">
-                    http://www.gratisoft.us/sudo/readme_ldap.html</ulink>has
-                    more information on debugging the process.</para>
-                </note>
-            </listitem>
-            <listitem>
-                <para>Configure SSSD to look for NIS netgroups.</para>
-                <orderedlist>
-                    <listitem>
-                        <para>Add the following line immediately after the 
-                        <parameter>ipa_server</parameter>entry in the 
-                        <filename>/etc/sssd/sssd.conf</filename>file: 
-                        <programlisting>
-                        ldap_netgroup_search_base&nbsp;=&nbsp;cn=ng,cn=compat,dc=example,dc=com</programlisting></para>
-                    </listitem>
-                    <listitem>
-                        <para>Restart the SSSD daemon: 
-                        <screen># service sssd restart</screen></para>
-                    </listitem>
-                </orderedlist>
-            </listitem>
-            <listitem id="step.nslcd" condition="redhat">
-                <para>Edit the NSS/LDAP configuration file and add the
-                following 
-                <command>sudo</command>-related lines to the 
-                <filename>/etc/nslcd.conf</filename>file: 
-                <programlisting>binddn
-                uid=sudo,cn=sysaccounts,cn=etc,dc=example,dc=com bindpw 
-                <replaceable>sudo_password</replaceable>ssl start_tls
-                tls_cacertfile /etc/ipa/ca.crt tls_checkpeer yes bind_timelimit
-                5 timelimit 15 uri ldap://ipaserver.example.com
-                ldap://backup.example.com:3890 sudoers_base
-                ou=SUDOers,dc=example,dc=com</programlisting></para>
-                <para>Multiple LDAP servers can be configured in a
-                space-separated list, and other options (like SSL and
-                non-standard ports) can be used with the LDAP URL. The 
-                <command>sudo</command>LDAP configuration is covered in the 
-                <command>sudo</command>manpages, 
-                <ulink url="http://www.sudo.ws/sudo/man/1.8.2/sudoers.ldap.man.html" />.</para>
-                <important>
-                    <title>IMPORTANT</title>
-                    <para>The 
-                    <parameter>uri</parameter>directive must give the
-                    fully-qualified domain name of the LDAP server, not an IP
-                    address. Otherwise, 
-                    <command>sudo</command>fails to connect to the LDAP
-                    server.</para>
-                </important>
-                <note>
-                    <title>NOTE</title>
-                    <para>The 
-                    <filename>/etc/nslcd.conf</filename>file is created by the 
-                    <package>nss-pam-ldapd</package>package. However, if 
-                    <package>nss-pam-ldapd</package>is not installed, then the 
-                    <filename>/etc/nslcd.conf</filename>file can be created
-                    manually and the 
-                    <command>sudo</command>configuration works fine.</para>
-                </note>
-            </listitem>
-            <listitem id="step.nslcd5" condition="five">
-                <para>Edit the NSS/LDAP configuration file and add the
-                following 
-                <command>sudo</command>-related lines to the 
-                <filename>/etc/nss_ldap.conf</filename>file: 
-                <programlisting>sudoers_base ou=SUDOers,dc=example,dc=com
-                binddn uid=sudo,cn=sysaccounts,cn=etc,dc=example,dc=com bindpw 
-                <replaceable>sudo_password</replaceable>ssl start_tls
-                tls_cacertfile /etc/ipa/ca.crt tls_checkpeer yes bind_timelimit
-                5 timelimit 15 uri ldap://ipaserver.example.com
-                ldap://backup.example.com:3890</programlisting></para>
-                <para>Multiple LDAP servers can be configured in a
-                space-separated list, and other options (like SSL and
-                non-standard ports) can be used with the LDAP URL. The 
-                <command>sudo</command>LDAP configuration is covered in the 
-                <command>sudo</command>manpages, 
-                <ulink url="http://www.sudo.ws/sudo/man/1.8.2/sudoers.ldap.man.html" />.</para>
-                <important>
-                    <title>IMPORTANT</title>
-                    <para>The 
-                    <parameter>uri</parameter>directive must give the
-                    fully-qualified domain name of the LDAP server, not an IP
-                    address. Otherwise, 
-                    <command>sudo</command>fails to connect to the LDAP
-                    server.</para>
-                </important>
-            </listitem>
-            <listitem id="step.nslcdf" condition="fedora">
-                <para>Edit the NSS/LDAP configuration file and add the
-                following 
-                <command>sudo</command>-related lines to the 
-                <filename>/etc/nslcd.conf</filename>file: 
-                <programlisting>binddn
-                uid=sudo,cn=sysaccounts,cn=etc,dc=example,dc=com bindpw 
-                <replaceable>sudo_password</replaceable>ssl start_tls
-                tls_cacertfile /etc/ipa/ca.crt tls_checkpeer yes bind_timelimit
-                5 timelimit 15 uri ldap://ipaserver.example.com
-                ldap://backup.example.com:3890 sudoers_base
-                ou=SUDOers,dc=example,dc=com</programlisting></para>
-                <para>Multiple LDAP servers can be configured in a
-                space-separated list, and other options (like SSL and
-                non-standard ports) can be used with the LDAP URL. The 
-                <command>sudo</command>LDAP configuration is covered in the 
-                <command>sudo</command>manpages, 
-                <ulink url="http://www.sudo.ws/sudo/man/1.8.2/sudoers.ldap.man.html" />.</para>
-                <important>
-                    <title>IMPORTANT</title>
-                    <para>The 
-                    <parameter>uri</parameter>directive must give the
-                    fully-qualified domain name of the LDAP server, not an IP
-                    address. Otherwise, 
-                    <command>sudo</command>fails to connect to the LDAP
-                    server.</para>
-                </important>
-            </listitem>
-            <listitem condition="five">
-                <para>Create a symlink between the 
-                <command>nss_ldap</command>module configuration file and the
-                system LDAP configuration file: 
-                <screen># ln -s /etc/nss_ldap.conf
-                /etc/ldap.conf</screen></para>
-            </listitem>
-            <listitem>
-                <para>Set a name for the NIS domain in the 
-                <command>sudo</command>configuration. 
-                <command>sudo</command>uses NIS netgroups, so the NIS domain
-                name must be set in the system configuration for 
-                <command>sudo</command>to be able to find the host groups used
-                in the &IPA; 
-                <command>sudo</command>configuration: 
-                <screen># nisdomainname example.com</screen></para>
-                <important>
-                    <title>IMPORTANT</title>
-                    <para>Even though 
-                    <command>sudo</command>uses NIS-style netgroups, 
-                    <emphasis role="bold">it is not necessary to have a NIS
-                    server installed</emphasis>. Netgroups require that a NIS
-                    domain be named in their configuration, so 
-                    <command>sudo</command>requires that a NIS domain be named
-                    for netgroups. However, that NIS domain does not actually
-                    need to exist.</para>
-                </important>
-            </listitem>
-        </orderedlist>
-    </section>
-    <section id="Configuring_Automount-Configuring_autofs_on_Linux">
-        <title>Configuring autofs</title>
-        <orderedlist>
-            <listitem>
-                <para>Edit the 
-                <filename>/etc/sysconfig/autofs</filename>file to specify the
-                schema attributes that autofs searches for:</para>
-                <programlisting># # Other common LDAP naming #
-                MAP_OBJECT_CLASS="automountMap" ENTRY_OBJECT_CLASS="automount"
-                MAP_ATTRIBUTE="automountMapName" ENTRY_ATTRIBUTE="automountKey"
-                VALUE_ATTRIBUTE="automountInformation"</programlisting>
-            </listitem>
-            <listitem>
-                <para>Specify the LDAP configuration. There are two ways to do
-                this. The simplest is to let the automount service discover the
-                LDAP server and locations on its own:</para>
-                <programlisting>
-                LDAP_URI="ldap:///dc=example,dc=com"</programlisting>
-                <para>Alternatively, explicitly set which LDAP server to use
-                and the base DN for LDAP searches:</para>
-                <programlisting>LDAP_URI="ldap://ipa.example.com"
-                SEARCH_BASE="cn= 
-                <replaceable>
-                location</replaceable>,cn=automount,dc=example,dc=com"</programlisting>
-                <note>
-                    <para>The default value for 
-                    <emphasis>location</emphasis>is 
-                    <literal>default</literal>. If additional locations are
-                    added, then the client can be pointed to use those
-                    locations, instead.</para>
-                </note>
-            </listitem>
-            <listitem>
-                <para>Edit the 
-                <filename>/etc/autofs_ldap_auth.conf</filename>file so that
-                autofs allows client authentication with the &IPA; LDAP server.
-                Change 
-                <parameter>authrequired</parameter>to yes and set the principal
-                to the Kerberos host principal:</para>
-                <programlisting language="XML">
-                    <![CDATA[<autofs_ldap_sasl_conf
+	<title>Configuring &RHEL; &RVER; Servers for &IPA; Domain Services</title>
+
+		 <section id="Setting_up_sudo_Rules-Client_Configuration_for_sudo_Rules">
+			 <title>Client Configuration for sudo Rules</title>
+			 <para condition="five">
+				 This example specifically configures a &OS; 5 client for sudo rules. The configuration file in step <xref linkend="step.nslcd5" /> is different, depending on the platform.
+			 </para>
+			 <orderedlist>
+				 <listitem>
+					<para>
+						Configure <command>sudo</command> to look to LDAP for the <filename>sudoers</filename> file. 
+<programlisting>vim /etc/nsswitch.conf
+
+sudoers:  files ldap
+sudoers_debug: 1</programlisting>
+
+					</para>
+					 <para>
+						Leaving the <option>files</option> option in place allows <command>sudo</command> to check its local configuration before checking the LDAP-based &IPA; configuration. 
+					</para>
+
+							<note><title>TIP</title>
+							 <para>
+								Adding the <parameter>sudoers_debug</parameter> parameter helps with troubleshooting. Valid values for this parameter are 0, 1, and 2. The <command>sudo</command> documentation at <ulink url="http://www.gratisoft.us/sudo/readme_ldap.html">http://www.gratisoft.us/sudo/readme_ldap.html</ulink> has more information on debugging the process.
+							</para>
+							</note>
+				</listitem>
+				 <listitem>
+					<para>
+						Configure SSSD to look for NIS netgroups.
+					</para>
+					 <orderedlist>
+						<listitem>
+							<para>
+								Add the following line immediately after the <parameter>ipa_server</parameter> entry in the <filename>/etc/sssd/sssd.conf</filename> file: 
+<programlisting>ldap_netgroup_search_base&nbsp;=&nbsp;cn=ng,cn=compat,dc=example,dc=com</programlisting>
+
+							</para>
+
+						</listitem>
+						 <listitem>
+							<para>
+								Restart the SSSD daemon: 
+<screen># service sssd restart</screen>
+
+							</para>
+
+						</listitem>
+
+					</orderedlist>
+
+				</listitem>
+				 <listitem id="step.nslcd" condition="redhat">
+					<para>
+						Edit the NSS/LDAP configuration file and add the following <command>sudo</command>-related lines to the <filename>/etc/nslcd.conf</filename> file:
+<programlisting>binddn uid=sudo,cn=sysaccounts,cn=etc,dc=example,dc=com
+bindpw <replaceable>sudo_password</replaceable>
+
+ssl start_tls
+tls_cacertfile /etc/ipa/ca.crt
+tls_checkpeer yes
+
+bind_timelimit 5
+timelimit 15
+
+uri ldap://ipaserver.example.com ldap://backup.example.com:3890
+sudoers_base ou=SUDOers,dc=example,dc=com</programlisting>
+							</para>
+							<para>
+								Multiple LDAP servers can be configured in a space-separated list, and other options (like SSL and non-standard ports) can be used with the LDAP URL. 
+								The <command>sudo</command> LDAP configuration is covered in the <command>sudo</command> manpages, <ulink url="http://www.sudo.ws/sudo/man/1.8.2/sudoers.ldap.man.html" />.
+							</para>
+							<important><title>IMPORTANT</title>
+								<para>
+									The <parameter>uri</parameter> directive must give the fully-qualified domain name of the LDAP server, not an IP address. Otherwise, <command>sudo</command> fails to connect to the LDAP server.
+								</para>
+							</important>
+							<note><title>NOTE</title>
+								<para>
+									The <filename>/etc/nslcd.conf</filename> file is created by the <package>nss-pam-ldapd</package> package. However, if 
+									<package>nss-pam-ldapd</package> is not installed, then the <filename>/etc/nslcd.conf</filename> file can be created manually and 
+									the <command>sudo</command> configuration works fine.
+								</para>
+							</note>
+						</listitem>
+				 <listitem id="step.nslcd5" condition="five">
+					<para>
+						Edit the NSS/LDAP configuration file and add the following <command>sudo</command>-related lines to the <filename>/etc/nss_ldap.conf</filename> file:
+<programlisting>sudoers_base ou=SUDOers,dc=example,dc=com
+binddn uid=sudo,cn=sysaccounts,cn=etc,dc=example,dc=com
+bindpw <replaceable>sudo_password</replaceable>
+ssl start_tls
+tls_cacertfile /etc/ipa/ca.crt
+tls_checkpeer yes
+bind_timelimit 5
+timelimit 15
+uri ldap://ipaserver.example.com ldap://backup.example.com:3890
+</programlisting>
+							</para>
+							<para>
+								Multiple LDAP servers can be configured in a space-separated list, and other options (like SSL and non-standard ports) can be used with the LDAP URL. 
+								The <command>sudo</command> LDAP configuration is covered in the <command>sudo</command> manpages, <ulink url="http://www.sudo.ws/sudo/man/1.8.2/sudoers.ldap.man.html" />.
+							</para>
+							<important><title>IMPORTANT</title>
+								<para>
+									The <parameter>uri</parameter> directive must give the fully-qualified domain name of the LDAP server, not an IP address. Otherwise, <command>sudo</command> fails to connect to the LDAP server.
+								</para>
+							</important>
+						</listitem>
+				<listitem id="step.nslcdf" condition="fedora">
+					<para>
+						Edit the NSS/LDAP configuration file and add the following <command>sudo</command>-related lines to the <filename>/etc/nslcd.conf</filename> file:
+<programlisting>binddn uid=sudo,cn=sysaccounts,cn=etc,dc=example,dc=com
+bindpw <replaceable>sudo_password</replaceable>
+
+ssl start_tls
+tls_cacertfile /etc/ipa/ca.crt
+tls_checkpeer yes
+
+bind_timelimit 5
+timelimit 15
+
+uri ldap://ipaserver.example.com ldap://backup.example.com:3890
+sudoers_base ou=SUDOers,dc=example,dc=com</programlisting>
+							</para>
+							<para>
+								Multiple LDAP servers can be configured in a space-separated list, and other options (like SSL and non-standard ports) can be used with the LDAP URL. 
+								The <command>sudo</command> LDAP configuration is covered in the <command>sudo</command> manpages, <ulink url="http://www.sudo.ws/sudo/man/1.8.2/sudoers.ldap.man.html" />.
+							</para>
+							<important><title>IMPORTANT</title>
+								<para>
+									The <parameter>uri</parameter> directive must give the fully-qualified domain name of the LDAP server, not an IP address. Otherwise, <command>sudo</command> fails to connect to the LDAP server.
+								</para>
+							</important>
+						</listitem>
+						 <listitem condition="five">
+							<para>
+								Create a symlink between the <command>nss_ldap</command> module configuration file and the system LDAP configuration file:
+<screen># ln -s /etc/nss_ldap.conf /etc/ldap.conf</screen>
+
+							</para>
+				</listitem>
+				 <listitem>
+					<para>
+						Set a name for the NIS domain in the <command>sudo</command> configuration. <command>sudo</command> uses NIS netgroups, so the NIS domain name must be set in the system configuration for <command>sudo</command> to be able to find the host groups used in the &IPA; <command>sudo</command> configuration:
+<screen># nisdomainname example.com</screen>
+
+					</para>
+					<important><title>IMPORTANT</title>
+						<para>
+							Even though <command>sudo</command> uses NIS-style netgroups, <emphasis role="bold">it is not necessary to have a NIS server installed</emphasis>.
+							Netgroups require that a NIS domain be named in their configuration, so <command>sudo</command> requires that a NIS domain be named for netgroups.
+							However, that NIS domain does not actually need to exist.
+						</para>
+					</important>
+				</listitem>
+
+			</orderedlist>
+		</section>
+		
+		 <section id="Configuring_Automount-Configuring_autofs_on_Linux">
+			<title>Configuring autofs</title>
+			<orderedlist>
+				 <listitem>
+					<para>
+						Edit the <filename>/etc/sysconfig/autofs</filename> file to specify the schema attributes that autofs searches for:
+					</para>
+					 
+<programlisting>#
+# Other common LDAP naming
+#
+MAP_OBJECT_CLASS="automountMap"
+ENTRY_OBJECT_CLASS="automount"
+MAP_ATTRIBUTE="automountMapName"
+ENTRY_ATTRIBUTE="automountKey"
+VALUE_ATTRIBUTE="automountInformation"
+</programlisting>
+
+				</listitem>
+				 <listitem>
+					<para>
+						Specify the LDAP configuration. There are two ways to do this. The simplest is to let the automount service discover the LDAP server and locations on its own:
+					</para>
+<programlisting>LDAP_URI="ldap:///dc=example,dc=com"
+</programlisting>
+					<para>
+						Alternatively, explicitly set which LDAP server to use and the base DN for LDAP searches:
+					</para>
+					 
+<programlisting>LDAP_URI="ldap://ipa.example.com"
+SEARCH_BASE="cn=<replaceable>location</replaceable>,cn=automount,dc=example,dc=com"
+</programlisting>
+					 <note>
+						<para>
+							The default value for <emphasis>location</emphasis> is <literal>default</literal>. If additional locations are added, then the client can be pointed to use those locations, instead.
+						</para>
+
+					</note>
+
+				</listitem>
+				<listitem>
+					<para>
+						Edit the <filename>/etc/autofs_ldap_auth.conf</filename> file so that autofs allows client authentication with the &IPA; LDAP server. Change <parameter>authrequired</parameter> to 
+						yes and set the principal to the Kerberos host principal:
+					</para>
+<programlisting language="XML"><![CDATA[<autofs_ldap_sasl_conf
      usetls="no"
      tlsrequired="no"
      authrequired="yes"
      authtype="GSSAPI"
      clientprinc="host/server.example.com@EXAMPLE COM" 
-     />]]>
+     />]]></programlisting>
+				     <para>
+					     If necessary, run <command>klist -k</command> to get the exact host principal information.
+				     </para>
+				</listitem>
+				<listitem>
+					<para>
+						Check the <filename>/etc/nssswitch.conf</filename> file, so that LDAP is listed as a source for automount configuration:
+					</para>
+<screen>automount: files <userinput>ldap</userinput></screen>
+				</listitem>
+				 <listitem>
+					<para>
+						Restart autofs:
+					</para>
+<screen># service autofs restart</screen>
+				</listitem>
+				<listitem>
+				 <para>
+					Test the configuration by listing a user's <filename>/home</filename> directory:
+				</para>
+<screen># ls /home/<replaceable>userName</replaceable></screen>
+				 <para>
+					If this does not mount the remote file system, check the <filename>/var/log/messages</filename> file for errors. If necessary, increase the debug level in the <filename>/etc/sysconfig/autofs</filename> file by setting the <parameter>LOGGING</parameter> parameter to <literal>debug</literal>.
+				</para>
+
+			</listitem>
+		</orderedlist>
+		<note><title>TIP</title>
+			<para>
+				If there are problems with automount, then cross-reference the automount attempts with the &DSF; access logs for the &IPA; instance, which will show the attempted access, user, and search base. 
+			</para>
+			<para>
+				It is also simple to run automount in the foreground with debug logging on.
+<screen>automount -f -d</screen>
+				This prints the debug log information directly, without having to cross-check the LDAP access log with automount's log.
+			</para>
+		</note>	
+
+		</section>
+
+	<section id="nfs"><title>Setting up NFS</title>		
+		<section id="krb-nfs-server"><title>Setting up a Kerberized NFS Server</title>
+			<!-- 
+			http://bre.klaki.net/blog/2011/08/26/
+			https://help.ubuntu.com/community/SettingUpNFSHowTo
+			-->
+			<orderedlist>				
+				<listitem>
+					<para>
+						If the NFS host machine has not been added as a client to the &IPA; domain, then create the host entry.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Create the NFS service entry in the &IPA; domain.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Generate an NFS service keytab for the NFS server. If this command is run on the NFS server, then save the keys directly to the host keytab. For example:
+					</para>
+<screen condition="five"># ipa-getkeytab -s server.example.com -p nfs/nfs-server.example.com -k /etc/krb5.keytab -e des-cbc-crc</screen>
+<screen condition="redhat"># ipa-getkeytab -s server.example.com -p nfs/nfs-server.example.com -k /etc/krb5.keytab</screen>
+					<note condition="five"><title>NOTE</title>
+						<para>
+							Only DES keys are supported on &RHEL; 5.
+						</para>
+					</note>
+					<para>
+						If this command is run on a different machine:
+					</para>
+					<orderedlist>
+						<listitem>
+							<para>
+								Save the keytab to a temporary file. For example:
+							</para>
+<screen>... -k /tmp/nfs.keytab</screen>
+						</listitem>
+						<listitem>
+							<para>
+								Copy the keytabs over to the NFS machine.
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Set the file permissions to 0700.
+							</para>
+						</listitem>
+						<listitem>
+					<para>
+						On the NFS host machine, add the service key to the keytab file.
+					</para>
+<screen>#  (  echo rkt /tmp/nfs.keytab; echo wkt /etc/krb5.keytab) |ktutil</screen>
+				</listitem>
+			</orderedlist>
+				</listitem>
+				<listitem>
+					<para>
+						Install the NFS packages. For example:
+					</para>
+<screen># yum install nfs-utils</screen>
+				</listitem>
+				<listitem condition="five">
+					<para>
+						Edit the <filename>krb5.conf</filename> file to allow weak crypto. This is required for every NFS client if <emphasis>any</emphasis> client in the domain will use older encryption options like DES.
+					</para>
+<screen># vim /etc/krb5.conf
+
+allow_weak_crypto = true</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Edit the NFS server configuration to use NFSv4 security by uncommenting the <command>SECURE_NFS</command> line.
+					</para>
+<screen># vim /etc/sysconfig/nfs
+
+SECURE_NFS="yes"</screen>
+				</listitem>
+				<listitem>
+					<para>
+						If the NFS server and client are in different DNS domains, then configure the NFS domain.
+					</para>
+<screen># vim /etc/idmapd.conf
+
+Domain = example.com</screen>
+				</listitem>
+				 <listitem>
+					<para>
+						Edit the <filename>/etc/exports</filename> file and add the Kerberos information:
+					</para>
+					 <para>
+						
+<programlisting>/export  *(rw,sec=sys:krb5:krb5i:krb5p)
 </programlisting>
-                <para>If necessary, run 
-                <command>klist -k</command>to get the exact host principal
-                information.</para>
-            </listitem>
-            <listitem>
-                <para>Check the 
-                <filename>/etc/nssswitch.conf</filename>file, so that LDAP is
-                listed as a source for automount configuration:</para>
-                <screen>automount: files 
-                <userinput>ldap</userinput></screen>
-            </listitem>
-            <listitem>
-                <para>Restart autofs:</para>
-                <screen># service autofs restart</screen>
-            </listitem>
-            <listitem>
-                <para>Test the configuration by listing a user's 
-                <filename>/home</filename>directory:</para>
-                <screen># ls /home/ 
-                <replaceable>userName</replaceable></screen>
-                <para>If this does not mount the remote file system, check the 
-                <filename>/var/log/messages</filename>file for errors. If
-                necessary, increase the debug level in the 
-                <filename>/etc/sysconfig/autofs</filename>file by setting the 
-                <parameter>LOGGING</parameter>parameter to 
-                <literal>debug</literal>.</para>
-            </listitem>
-        </orderedlist>
-        <note>
-            <title>TIP</title>
-            <para>If there are problems with automount, then cross-reference
-            the automount attempts with the &DSF; access logs for the &IPA;
-            instance, which will show the attempted access, user, and search
-            base.</para>
-            <para>It is also simple to run automount in the foreground with
-            debug logging on. 
-            <screen>automount -f -d</screen>This prints the debug log
-            information directly, without having to cross-check the LDAP access
-            log with automount's log.</para>
-        </note>
-    </section>
-    <section id="nfs">
-        <title>Setting up NFS</title>
-        <section id="krb-nfs-server">
-            <title>Setting up a Kerberized NFS Server</title>
-            <!-- 
-            http://bre.klaki.net/blog/2011/08/26/
-            https://help.ubuntu.com/community/SettingUpNFSHowTo
-            -->
-            <orderedlist>
-                <listitem>
-                    <para>If the NFS host machine has not been added as a
-                    client to the &IPA; domain, then create the host
-                    entry.</para>
-                </listitem>
-                <listitem>
-                    <para>Create the NFS service entry in the &IPA;
-                    domain.</para>
-                </listitem>
-                <listitem>
-                    <para>Generate an NFS service keytab for the NFS server. If
-                    this command is run on the NFS server, then save the keys
-                    directly to the host keytab. For example:</para>
-                    <screen condition="five"># ipa-getkeytab -s
-                    server.example.com -p nfs/nfs-server.example.com -k
-                    /etc/krb5.keytab -e des-cbc-crc</screen>
-                    <screen condition="redhat"># ipa-getkeytab -s
-                    server.example.com -p nfs/nfs-server.example.com -k
-                    /etc/krb5.keytab</screen>
-                    <note condition="five">
-                        <title>NOTE</title>
-                        <para>Only DES keys are supported on &RHEL; 5.</para>
-                    </note>
-                    <para>If this command is run on a different machine:</para>
-                    <orderedlist>
-                        <listitem>
-                            <para>Save the keytab to a temporary file. For
-                            example:</para>
-                            <screen>... -k /tmp/nfs.keytab</screen>
-                        </listitem>
-                        <listitem>
-                            <para>Copy the keytabs over to the NFS
-                            machine.</para>
-                        </listitem>
-                        <listitem>
-                            <para>Set the file permissions to 0700.</para>
-                        </listitem>
-                        <listitem>
-                            <para>On the NFS host machine, add the service key
-                            to the keytab file.</para>
-                            <screen># ( echo rkt /tmp/nfs.keytab; echo wkt
-                            /etc/krb5.keytab) |ktutil</screen>
-                        </listitem>
-                    </orderedlist>
-                </listitem>
-                <listitem>
-                    <para>Install the NFS packages. For example:</para>
-                    <screen># yum install nfs-utils</screen>
-                </listitem>
-                <listitem condition="five">
-                    <para>Edit the 
-                    <filename>krb5.conf</filename>file to allow weak crypto.
-                    This is required for every NFS client if 
-                    <emphasis>any</emphasis>client in the domain will use older
-                    encryption options like DES.</para>
-                    <screen># vim /etc/krb5.conf allow_weak_crypto =
-                    true</screen>
-                </listitem>
-                <listitem>
-                    <para>Edit the NFS server configuration to use NFSv4
-                    security by uncommenting the 
-                    <command>SECURE_NFS</command>line.</para>
-                    <screen># vim /etc/sysconfig/nfs SECURE_NFS="yes"</screen>
-                </listitem>
-                <listitem>
-                    <para>If the NFS server and client are in different DNS
-                    domains, then configure the NFS domain.</para>
-                    <screen># vim /etc/idmapd.conf Domain =
-                    example.com</screen>
-                </listitem>
-                <listitem>
-                    <para>Edit the 
-                    <filename>/etc/exports</filename>file and add the Kerberos
-                    information:</para>
-                    <para>
-                        <programlisting>/export
-                        *(rw,sec=sys:krb5:krb5i:krb5p)</programlisting>
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>Restart the NFS server.</para>
-                    <screen># service nfs restart</screen>
-                </listitem>
-                <listitem>
-                    <para>Configure the NFS server as an NFS client, following
-                    the directions in 
-                    <xref linkend="krb-nfs-client" />.</para>
-                </listitem>
-            </orderedlist>
-        </section>
-        <section id="krb-nfs-client">
-            <title>Setting up a Kerberized NFS Client</title>
-            <orderedlist>
-                <listitem>
-                    <para>If the NFS client is not enrolled as a client in the
-                    &IPA; domain, then set up the required host entries.</para>
-                    <orderedlist>
-                        <listitem>
-                            <para>Create the host entry.</para>
-                        </listitem>
-                        <listitem>
-                            <para>Generate host keytab for the NFS client. If
-                            this command is run on the NFS clien, then save the
-                            keys directly to the host keytab. For
-                            example:</para>
-                            <screen condition="five"># ipa-getkeytab -p
-                            host/nfs-client-server.example.com@EXAMPLE.COM -k
-                            /etc/krb5.keytab -e des-cbc-crc</screen>
-                            <screen condition="redhat"># ipa-getkeytab -k
-                            /etc/krb5.keytab -p
-                            host/nfs-client-server.example.com@EXAMPLE.COM</screen>
-                            <note condition="five">
-                                <title>NOTE</title>
-                                <para>Only DES keys are supported on &RHEL;
-                                5.</para>
-                            </note>
-                            <para>If this command is run on a different
-                            machine:</para>
-                            <orderedlist>
-                                <listitem>
-                                    <para>Save the keytab to a temporary file.
-                                    For example:</para>
-                                    <screen>... -k /tmp/nfs.keytab</screen>
-                                </listitem>
-                                <listitem>
-                                    <para>Copy the keytabs over to the NFS
-                                    machine.</para>
-                                </listitem>
-                                <listitem>
-                                    <para>Set the file permissions to
-                                    0700.</para>
-                                </listitem>
-                                <listitem>
-                                    <para>On the NFS host machine, add the
-                                    service key to the keytab file.</para>
-                                    <screen># ( echo rkt
-                                    /root/nfs-client.keytab; echo wkt
-                                    /etc/krb5.keytab) |ktutil</screen>
-                                </listitem>
-                            </orderedlist>
-                        </listitem>
-                    </orderedlist>
-                </listitem>
-                <listitem condition="five">
-                    <para>Edit the 
-                    <filename>krb5.conf</filename>file to allow weak crypto.
-                    This is required for every client if 
-                    <emphasis>any</emphasis>client in the domain will use older
-                    encryption options like DES.</para>
-                    <screen># vim /etc/krb5.conf allow_weak_crypto =
-                    true</screen>
-                </listitem>
-                <listitem>
-                    <para>Edit the NFS common configuration to enable
-                    client-side secure NFS, by uncommenting the 
-                    <command>SECURE_NFS</command>line.</para>
-                    <screen># vim /etc/sysconfig/nfs SECURE_NFS="yes"</screen>
-                </listitem>
-                <listitem>
-                    <para>If the NFS server and client are in different DNS
-                    domains, then configure the NFS domain. The 
-                    <filename>idmapd.conf</filename>must be the same on the NFS
-                    client as it is on the NFS server.</para>
-                    <screen># vim /etc/idmapd.conf Domain =
-                    example.com</screen>
-                </listitem>
-                <listitem>
-                    <para>Start the GSS daemon.</para>
-                    <screen># service rpc.gssd start</screen>
-                </listitem>
-                <listitem>
-                    <para>Mount the directory.</para>
-                    <screen># echo "$NFSSERVER:/this /mnt/this nfs4
-                    sec=krb5i,rw,proto=tcp,port=2049" &gt;&gt;/etc/fstab #
-                    mount -av</screen>
-                </listitem>
-            </orderedlist>
-        </section>
-    </section>
+
+					</para>
+
+				</listitem>
+				<listitem>
+					<para>
+						Restart the NFS server.
+					</para>
+<screen># service nfs restart</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Configure the NFS server as an NFS client, following the directions in <xref linkend="krb-nfs-client" />.
+					</para>
+				</listitem>
+			</orderedlist>
+
+		</section>
+		<section id="krb-nfs-client"><title>Setting up a Kerberized NFS Client</title>
+			<orderedlist>
+				<listitem>
+					<para>
+						If the NFS client is not enrolled as a client in the &IPA; domain, then set up the required host entries.
+					</para>
+					<orderedlist>
+						<listitem>
+							<para>
+								Create the host entry.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Generate host keytab for the NFS client. If this command is run on the NFS clien, then save the keys directly to the host keytab. For example:
+						</para>
+<screen condition="five"># ipa-getkeytab -p host/nfs-client-server.example.com@EXAMPLE.COM -k /etc/krb5.keytab -e des-cbc-crc</screen>
+<screen condition="redhat"># ipa-getkeytab -k /etc/krb5.keytab -p host/nfs-client-server.example.com@EXAMPLE.COM</screen>
+					<note condition="five"><title>NOTE</title>
+						<para>
+							Only DES keys are supported on &RHEL; 5.
+						</para>
+					</note>
+						<para>
+							If this command is run on a different machine:
+						</para>
+						<orderedlist>
+							<listitem>
+								<para>
+									Save the keytab to a temporary file. For example:
+								</para>
+<screen>... -k /tmp/nfs.keytab</screen>
+							</listitem>
+							<listitem>
+								<para>
+									Copy the keytabs over to the NFS machine.
+								</para>
+							</listitem>
+							<listitem>
+								<para>
+									Set the file permissions to 0700.
+								</para>
+							</listitem>
+							<listitem>
+								<para>
+									On the NFS host machine, add the service key to the keytab file.
+								</para>
+<screen># ( echo rkt /root/nfs-client.keytab; echo wkt /etc/krb5.keytab) |ktutil</screen>
+						</listitem>
+					</orderedlist>
+						</listitem>
+					</orderedlist>
+				</listitem>
+				<listitem condition="five">
+					<para>
+						Edit the <filename>krb5.conf</filename> file to allow weak crypto. This is required for every client if <emphasis>any</emphasis> client in the domain will use older encryption options like DES.
+					</para>
+<screen># vim /etc/krb5.conf
+
+allow_weak_crypto = true</screen>
+				</listitem>
+				
+				<listitem>
+					<para>
+						Edit the NFS common configuration to enable client-side secure NFS, by uncommenting the <command>SECURE_NFS</command> line.
+					</para>
+<screen># vim /etc/sysconfig/nfs
+
+SECURE_NFS="yes"</screen>
+				</listitem>
+				<listitem>
+					<para>
+						If the NFS server and client are in different DNS domains, then configure the NFS domain. The <filename>idmapd.conf</filename> must be the same on the NFS client as it is on the NFS server.
+					</para>
+<screen># vim /etc/idmapd.conf
+
+Domain = example.com</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Start the GSS daemon.
+					</para>
+<screen># service rpc.gssd start</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Mount the directory.
+					</para>
+<screen># echo "$NFSSERVER:/this /mnt/this nfs4 sec=krb5i,rw,proto=tcp,port=2049"  >>/etc/fstab
+# mount -av</screen>
+				</listitem>
+			</orderedlist>
+						
+		</section>
+	</section>
+
 </chapter>

@@ -1,390 +1,368 @@
-<?xml version='1.0' encoding='utf-8'?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
-[
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 ]>
-<chapter id="automember">
-    <title>Policy: Defining Automatic Group Membership for Users and
-    Hosts</title>
-    <para>Most of the policies and configuration within the &PROD; domain are
-    based on 
-    <emphasis>groups</emphasis>. Settings from sudo rules to automount to
-    access control are defined for groups, and then those settings are applied
-    to group members.</para>
-    <para>Managing group membership is an important factor in managing users
-    and hosts. Creating 
-    <emphasis>automember groups</emphasis>defines rules to add users and hosts
-    to specified groups automatically, as soon as a new entry is added.</para>
-    <section id="about-automember">
-        <title>About Automembership</title>
-        <para>One of the most critical tasks for managing policies, identities,
-        and security is managing group membership in &PROD;. Groups are the
-        core of most policy configuration.</para>
-        <para>By default, hosts do not belong to any group when they are
-        created; users are added to the catchall 
-        <command>ipausers</command>group. Even if custom groups are configured
-        and all policy configuration is in place, users and hosts cannot take
-        advantage of those policies until they are joined to groups. Of course,
-        this can be done manually, but it is both more efficient and more
-        consistent if group membership can be assigned automatically.</para>
-        <para>This is done with 
-        <emphasis>automembership groups</emphasis>.</para>
-        <para>Automembership is essentially an automatic, global entry filter
-        that organizes entries, at least in part, based on specific criteria.
-        An automember rule, then, is the way that that filter is
-        specified.</para>
-        <para>For example, there can be a lot of different, repeatable ways
-        that to categorize identities within the IT and organizational
-        environment:</para>
-        <itemizedlist>
-            <listitem>
-                <para>Adding all hosts or all users to a single global
-                group.</para>
-            </listitem>
-            <listitem>
-                <para>Adding employees to specific groups based on their
-                employee type, ID number, manager, or physical location.</para>
-            </listitem>
-            <listitem>
-                <para>Dividing hosts based on their IP address or
-                subnet.</para>
-            </listitem>
-        </itemizedlist>
-        <para>Automembers provide a way to pre-sort those entries. That makes
-        it easier to configure the actual behavior that you want to configure
-        &mdash; like granting different sudo rules to different user types or
-        machines on different subnets or have different automount settings for
-        different users.</para>
-        <!-- bug 768084 will change this later -->
-        <note>
-            <title>NOTE</title>
-            <para>Automembership only applies to 
-            <emphasis>new</emphasis>users or groups. Changing the configuration
-            on an existing user or group does not affect group membership,
-            either by adding or removing the user/host in the group.</para>
-        </note>
-        <!-- end bug -->
-        <para>Automembership is a flag or a target set on an existing user
-        group or host group. An 
-        <emphasis>automembership rule</emphasis>is created as a policy. This is
-        a sister entry to the actual group entry and it signals that the given
-        group is used for automatic group membership.</para>
-        <para>Once the rule is created &mdash; once the group is identified as
-        being a target &mdash; then the next step is to define 
-        <emphasis>automember conditions</emphasis>. Conditions are regular
-        expression filters that are used to identify group members. Conditions
-        can be inclusive or exclusive, meaning that matching entries can be
-        added or ignored based on those conditions.</para>
-        <para>There can be multiple conditions in a single rule. A user or host
-        entry can match multiple rules and be added to multiple groups.</para>
-        <para>Automembership is a way of imposing reliable order on user and
-        host group entries as they are created.</para>
-        <para>The key to using automember groups effectively is to plan your
-        overall &PROD; structure &mdash; the access control policies, sudo
-        rules, host/service management rules, host groups, and user
-        groups.</para>
-        <para>Once the structure is in place, then several things are
-        clear:</para>
-        <itemizedlist>
-            <listitem>
-                <para>What groups will be used in the &PROD;</para>
-            </listitem>
-            <listitem>
-                <para>What specific groups different types of users and hosts
-                need to belong to to perform their designated functions</para>
-            </listitem>
-            <listitem>
-                <para>What delineating attributes can be used to filter users
-                and hosts into the appropriate groups</para>
-            </listitem>
-        </itemizedlist>
-    </section>
-    <section id="creating-automembers">
-        <title>Defining Automembership Rules (Basic Procedure)</title>
-        <section id="automembers-ui">
-            <title>From the Web UI</title>
-            <orderedlist>
-                <listitem>
-                    <para>Create the user group ( 
-                    <xref linkend="Configuring_IPA_Groups-Creating_IPA_Groups" />)
-                    or host group ( 
-                    <xref linkend="creating-host-groups-ui" />).</para>
-                </listitem>
-                <listitem>
-                    <para>Open the 
-                    <guilabel>Policy</guilabel>tab, and select the 
-                    <guilabel>Automembers</guilabel>subtab.</para>
-                </listitem>
-                <listitem>
-                    <para>In the top of the 
-                    <guilabel>Automembers</guilabel>area, select the type of
-                    autogroup to create, either 
-                    <guilabel>USER GROUP RULES</guilabel>or 
-                    <guilabel>HOST GROUP RULES</guilabel>.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/automember-list.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>In the drop-down menu, select the group for which to
-                    create the automember rule.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/automember-add.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>Click the 
-                    <guibutton>Add and Edit</guibutton>button.</para>
-                </listitem>
-                <listitem>
-                    <para>In the edit page for the rule, click the 
-                    <guilabel>+ Add</guilabel>by the type of condition to
-                    create to identify entries.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/automember-add-condition2.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>Select the attribute to use as the basis for the
-                    search and then set the regular expression to use to match
-                    the attribute value.</para>
-                    <para>Conditions can look for entries either to 
-                    <emphasis>include</emphasis>in the group or to explicitly 
-                    <emphasis>exclude</emphasis>from the group. The format of a
-                    condition is a Perl-compatible regular expression (PCRE).
-                    For more information on PCRE patterns, see 
-                    <ulink url="http://regexkit.sourceforge.net/Documentation/pcre/pcresyntax.html">
-                    the pcresyntax(3) man page</ulink>.</para>
-                    <note>
-                        <title>NOTE</title>
-                        <para>Exclude conditions are evaluated first and take
-                        precedence over include conditions.</para>
-                    </note>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/automember-add-condition.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>Click 
-                    <guibutton>Add and Add Another</guibutton>to add another
-                    condition. A single rule can have multiple include and
-                    exclude conditions. When all conditions have been
-                    configured, click the 
-                    <guilabel>Add</guilabel>button to save the last condition
-                    and close the dialog window.</para>
-                </listitem>
-            </orderedlist>
-        </section>
-        <section id="automembers-cli">
-            <title>From the CLI</title>
-            <para>There are two commands used to define an automember
-            policy:</para>
-            <itemizedlist>
-                <listitem>
-                    <para>A command to flag the group as an automember group, 
-                    <command>automember-add</command></para>
-                </listitem>
-                <listitem>
-                    <para>A command to add regular expression conditions to
-                    identify group members, 
-                    <command>automember-add-condition</command></para>
-                </listitem>
-            </itemizedlist>
-            <para>For example:</para>
-            <orderedlist>
-                <listitem>
-                    <para>Create the user group ( 
-                    <xref linkend="new-group-cmd" />) or host group ( 
-                    <xref linkend="creating-host-groups-cmd" />).</para>
-                </listitem>
-                <listitem>
-                    <para>Create the automember policy entry for the group. Use
-                    the 
-                    <option>--type</option>to identify whether the target group
-                    is a user group ( 
-                    <command>group</command>) or a host group ( 
-                    <command>hostgroup</command>). This command has the
-                    format:</para>
-                    <screen>ipa automember-add --type=group|hostgroup 
-                    <replaceable>groupName</replaceable></screen>
-                    <para>For example:</para>
-                    <screen>[jsmith@server ~]$ ipa automember-add --type=group
-                    exampleGroup</screen>
-                </listitem>
-                <listitem>
-                    <para>Create the conditions for the rule. To set multiple
-                    patterns, either give a comma-separated list of patterns in
-                    the 
-                    <option>--inclusive-regex|--exclusive-regex</option>options
-                    or run the command multiple times.</para>
-                    <para>This command has the format:</para>
-                    <screen>ipa automember-add-condition --type=group|hostgroup
-                    --key= 
-                    <replaceable>attribute</replaceable>--inclusive-regex= 
-                    <replaceable>regex</replaceable>| --exclusive-regex= 
-                    <replaceable>regex</replaceable>
-                    <replaceable>groupName</replaceable></screen>
-                    <para>As with the automember rule, the condition must
-                    specify the type of group ( 
-                    <option>--type</option>) and the name of the target group (
-                    
-                    <emphasis>groupName</emphasis>).</para>
-                    <para>The condition must also specify the attribute (the
-                    key) and any patterns for the attribute value. The 
-                    <option>--key</option>is the attribute name that is the
-                    focus of the condition. Then, there is a regular expression
-                    pattern to identify matching values; matching entries can
-                    either be included ( 
-                    <option>--inclusive-regex</option>) or excluded ( 
-                    <option>--exclusive-regex</option>) from the group.
-                    Exclusion rules take precedence.</para>
-                    <para>For example, to include all employees with Barbara
-                    Jensen as a manager, but excluding the temporary
-                    employees:</para>
-                    <screen>[jsmith@server ~]$ ipa automember-add-condition
-                    --type=group --key=manager --inclusive-regex=^uid=bjensen$
-                    exampleGroup [jsmith@server ~]$ ipa
-                    automember-add-condition --type=group --key=employeetype
-                    --exclusive-regex=^temp exampleGroup</screen>
-                    <note>
-                        <title>TIP</title>
-                        <para>The regular expression can match any port of the
-                        string. Using a caret (^) means that it must match at
-                        the beginning, and using a dollar sign ($) means that
-                        it must match at the end. Wrapping the pattern in ^ and
-                        $ means that it must be an exact match.</para>
-                    </note>
-                    <para>For more information on Perl-compatible regular
-                    expression (PCRE) patterns, see 
-                    <ulink url="http://regexkit.sourceforge.net/Documentation/pcre/pcresyntax.html">
-                    the pcresyntax(3) man page</ulink>.</para>
-                </listitem>
-            </orderedlist>
-            <para>To remove a condition for a rule, pass the full condition
-            information, both the key and the regular expression:</para>
-            <screen>[jsmith@server ~]$ ipa automember-remove-condition
-            --key=fqdn --type=hostgroup
-            --inclusive-regex=^web[1-9]+\.example\.com webservers</screen>
-            <para>To remove the entire rule, simply run the 
-            <command>automember-del</command>command.</para>
-        </section>
-    </section>
-    <section id="using-automembers-examples">
-        <title>Examples of Using Automember Groups</title>
-        <note>
-            <title>NOTE</title>
-            <para>These examples are shown using the CLI; the same
-            configuration can be performed in the web UI.</para>
-        </note>
-        <formalpara>
-            <title>A Note on Creating Default Groups</title>
-            <para>One common environment requirement is to have some sort of
-            default group that users or hosts are added to. There are a couple
-            of different ways to approach that.</para>
-        </formalpara>
-        <itemizedlist>
-            <listitem>
-                <para>All entries can be added to a single, global group
-                regardless of what other groups they are also added to.</para>
-            </listitem>
-            <listitem>
-                <para>Entries can be added to specific automember groups. If
-                the new entry does not match any autogroup, then it is added to
-                a default or fallback group.</para>
-            </listitem>
-        </itemizedlist>
-        <para>These strategies are mutually exclusive. If an entry matches a
-        global group, then it does match an automember group and would,
-        therefore, not be added to the fallback group.</para>
-        <section id="automember-allhosts">
-            <title>Setting an All Users/Hosts Rule</title>
-            <para>To add all users or all hosts to a single group, use an
-            inclusive regular expression for some attribute (such as 
-            <parameter>cn</parameter>or 
-            <parameter>fqdn</parameter>) which all entries will contain.</para>
-            <para>A regular expression to match all entries is simply 
-            <command>.*</command>. For example, to add all hosts to the same
-            host group:</para>
-            <screen>[jsmith@server ~]$ ipa automember-add-condition
-            --type=hostgroup allhosts --inclusive-regex=.* --key=fqdn
-            -------------------------------- Added condition(s) to "allhosts"
-            -------------------------------- Automember Rule: allhosts
-            Inclusive Regex: fqdn=.* ---------------------------- Number of
-            conditions added 1 ----------------------------</screen>
-            <para>Every host added after that is automatically added to the 
-            <command>allhosts</command>group:</para>
-            <screen>[jsmith@server ~]$ ipa host-add test.example.com
-            ----------------------------- Added host "test.example.com"
-            ----------------------------- Host name: test.example.com Principal
-            name: host/test.example.com@EXAMPLE.COM Password: False Keytab:
-            False Managed by: test.example.com [jsmith@server ~]$ ipa
-            hostgroup-show allhosts Host-group: allhosts Description: Default
-            hostgroup Member hosts: test.example.com</screen>
-            <para>For more information on PCRE patterns, see 
-            <ulink url="http://regexkit.sourceforge.net/Documentation/pcre/pcresyntax.html">
-            the pcresyntax(3) man page</ulink>.</para>
-        </section>
-        <section id="creating-default-automembers">
-            <title>Defining Default Automembership Groups</title>
-            <para>There is a special command to set a default group, 
-            <command>automember-default-group-set</command>. This sets the
-            group name ( 
-            <option>--default-group</option>) and group type( 
-            <option>--type</option>), similar to an automember rule, but there
-            is no condition to match. By definition, default group members are
-            unmatched entries.</para>
-            <para>For example:</para>
-            <screen>[jsmith@server ~]$ ipa automember-default-group-set
-            --default-group=ipaclients --type=hostgroup [jsmith@server ~]$ ipa
-            automember-default-group-set --default-group=ipausers
-            --type=group</screen>
-            <para>A default group rule can be removed using the 
-            <command>automember-default-group-remove</command>command. Since
-            there is only one default group for a group type, it is only
-            necessary to give the group type, not the group name:</para>
-            <screen>[jsmith@server ~]$ ipa automember-default-group-remove
-            --type=hostgroup</screen>
-        </section>
-        <section id="automember-winsync">
-            <title>Using Automembership Groups with Windows Users</title>
-            <para>When a user is created in &IPA;, that user is automatically
-            added as a member to the 
-            <command>ipausers</command>group (which is the default group for
-            all new users, apart from any automember group). However, when a
-            Windows user is synced over from &AD;, that user is not
-            automatically added to the 
-            <command>ipausers</command>group.</para>
-            <para>New Windows users can be added to the 
-            <command>ipausers</command>group, as with users created in &PROD;,
-            by using an automember group. Every Windows user is added with the 
-            <command>ntUser</command>object class; that object class can be
-            used as an inclusive filter to identify new Windows users to add to
-            the automember group.</para>
-            <para>First, define the 
-            <command>ipausers</command>group as an automember group:</para>
-            <screen>[jsmith@server ~]$ ipa automember-add --type=group
-            ipausers</screen>
-            <para>Then, use the 
-            <command>ntUser</command>object class as a condition to add
-            users:</para>
-            <screen>[jsmith@server ~]$ ipa automember-add-condition ipausers
-            --key=objectclass --type=group --inclusive-regex=ntUser</screen>
-        </section>
-    </section>
+
+<chapter id="automember"><title>Policy: Defining Automatic Group Membership for Users and Hosts</title>
+	<para>
+		Most of the policies and configuration within the &PROD; domain are based on <emphasis>groups</emphasis>. Settings from sudo rules to automount to access control are defined for groups, and then those settings are applied to group members.
+	</para>
+	<para>
+		Managing group membership is an important factor in managing users and hosts. 
+		Creating <emphasis>automember groups</emphasis> defines rules to add users and hosts
+		to specified groups automatically, as soon as a new entry is added.
+       </para>
+       <section id="about-automember"><title>About Automembership</title>
+	       <para>
+		       One of the most critical tasks for managing policies, identities, and security is
+		       managing group membership in &PROD;. Groups are the core of most policy configuration.
+	       </para>
+	       <para>
+		       By default, hosts do not belong to any group when they are created; users are added to 
+		       the catchall <command>ipausers</command> group.
+		       Even if custom groups are configured and all policy configuration is in place, users and hosts 
+		       cannot take advantage of those policies until they are joined to groups. Of course, this can be 
+		       done manually, but it is both more efficient and more consistent if group 
+		       membership can be assigned automatically.
+	       </para>
+	       <para>
+		       This is done with <emphasis>automembership groups</emphasis>.
+	       </para>
+		<para>
+			Automembership is essentially an automatic, global entry filter that organizes entries, 
+			at least in part, based on specific criteria. An automember rule, then, is the way that 
+			that filter is specified. 
+		</para>
+		<para>
+			For example, there can be a lot of different, repeatable ways that to categorize 
+			identities within the IT and organizational environment:
+		</para>
+		<itemizedlist>
+			<listitem>
+				<para>
+					Adding all hosts or all users to a single global group.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Adding employees to specific groups based on their employee type, ID number, manager, or physical location.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Dividing hosts based on their IP address or subnet.
+				</para>
+			</listitem>
+		</itemizedlist>
+		<para>
+			Automembers provide a way to pre-sort those entries. That makes it easier to configure 
+			the actual behavior that you want to configure &mdash; like granting different sudo rules 
+			to different user types or machines on different subnets or have different automount 
+			settings for different users.
+		</para>
+		<!-- bug 768084 will change this later -->
+		<note><title>NOTE</title>
+			<para>
+				Automembership only applies to <emphasis>new</emphasis> users or groups. 
+				Changing the configuration on an existing user or group does not 
+				affect group membership, either by adding or removing the user/host in the group.
+			</para>
+		</note>
+		<!-- end bug -->
+		<para>
+			Automembership is a flag or a target set on an existing user group or host group. An 
+			<emphasis>automembership rule</emphasis> is created as a policy. This is a sister
+			entry to the actual group entry and it signals that the given group is used for 
+			automatic group membership. 
+		</para>
+		<para>
+			Once the rule is created &mdash; once the group is identified as being a target &mdash; 
+			then the next step is to define <emphasis>automember conditions</emphasis>. Conditions 
+			are regular expression filters that are used to identify group members. Conditions can 
+			be inclusive or exclusive, meaning that matching entries can be added or ignored 
+			based on those conditions. 
+		</para>
+		<para>
+			There can be multiple conditions in a single rule. A user or host entry can 
+			match multiple rules and be added to multiple groups.
+		</para>
+		<para>
+			Automembership is a way of imposing reliable order on user and host group entries 
+			as they are created.
+		</para>
+		<para>
+			The key to using automember groups effectively is to plan your overall &PROD; structure
+			&mdash; the access control policies, sudo rules, host/service management rules, host 
+			groups, and user groups. 
+		</para>
+		<para>
+			Once the structure is in place, then several things are clear:
+		</para>
+		<itemizedlist>
+			<listitem>
+				<para>
+					What groups will be used in the &PROD;
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					What specific groups different types of users and hosts need to belong to to perform their designated functions
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					What delineating attributes can be used to filter users and hosts into the appropriate groups
+				</para>
+			</listitem>
+		</itemizedlist>
+	</section>
+	<section id="creating-automembers"><title>Defining Automembership Rules (Basic Procedure)</title>
+		<section id="automembers-ui"><title>From the Web UI</title>
+			<orderedlist>
+				<listitem>
+					<para>
+						Create the user group (<xref linkend="Configuring_IPA_Groups-Creating_IPA_Groups" />) or host group (<xref linkend="creating-host-groups-ui" />).
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Open the <guilabel>Policy</guilabel> tab, and select the <guilabel>Automembers</guilabel> subtab.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						In the top of the <guilabel>Automembers</guilabel> area, select the type of autogroup to create, either <guilabel>USER GROUP RULES</guilabel> or <guilabel>HOST GROUP RULES</guilabel>.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/automember-list.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+				</listitem>
+				<listitem>
+					<para>
+						In the drop-down menu, select the group for which to create the automember rule.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/automember-add.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+				</listitem>
+				<listitem>
+					<para>
+						Click the <guibutton>Add and Edit</guibutton> button.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						In the edit page for the rule, click the <guilabel>+ Add</guilabel> by the type of condition to create to identify entries.
+					</para>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/automember-add-condition2.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+				</listitem>
+				<listitem>
+					<para>
+						Select the attribute to use as the basis for the search and then set the regular expression to use to match the attribute value.
+					</para>
+					<para>
+						Conditions can look for entries either to <emphasis>include</emphasis> in the group or to explicitly <emphasis>exclude</emphasis> from the group. The format of a condition is a Perl-compatible regular expression (PCRE). For more information on PCRE patterns, see <ulink url="http://regexkit.sourceforge.net/Documentation/pcre/pcresyntax.html">the pcresyntax(3) man page</ulink>.
+					</para>
+					<note><title>NOTE</title>
+						<para>
+							Exclude conditions are evaluated first and take precedence over include conditions.
+						</para>
+					</note>
+					<informalfigure>
+						<mediaobject>
+							<imageobject>
+								<imagedata fileref="images/automember-add-condition.png" />
+							</imageobject>
+						</mediaobject>
+					</informalfigure>
+				</listitem>
+				<listitem>
+					<para>
+						Click <guibutton>Add and Add Another</guibutton> to add another condition. A single rule can have multiple include and exclude conditions. When all conditions have been configured, click the <guilabel>Add</guilabel> button to save the last condition and close the dialog window.
+					</para>
+				</listitem>
+			</orderedlist>
+		</section>
+		<section id="automembers-cli"><title>From the CLI</title>
+			<para>
+				There are two commands used to define an automember policy:
+			</para>
+			<itemizedlist>
+				<listitem>
+					<para>
+						A command to flag the group as an automember group, <command>automember-add</command>
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						A command to add regular expression conditions to identify group members, <command>automember-add-condition</command>
+					</para>
+				</listitem>
+			</itemizedlist>
+			<para>
+				For example:
+			</para>
+			<orderedlist>
+				<listitem>
+					<para>
+						Create the user group (<xref linkend="new-group-cmd" />) or host group (<xref linkend="creating-host-groups-cmd" />).
+					</para>
+				</listitem>
+				
+				<listitem>
+					<para>
+						Create the automember policy entry for the group. Use the <option>--type</option> to identify whether the target group is a user group (<command>group</command>) or a host group (<command>hostgroup</command>). This command has the format:
+					</para>
+<screen>ipa automember-add --type=group|hostgroup <replaceable>groupName</replaceable></screen>
+					<para>
+						For example:
+					</para>
+<screen>[jsmith@server ~]$ ipa automember-add --type=group exampleGroup</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Create the conditions for the rule. To set multiple patterns, either give a comma-separated list of patterns in the <option>--inclusive-regex|--exclusive-regex</option> options or run the command multiple times.
+					</para>
+					<para>
+						This command has the format:
+					</para>
+<screen>ipa automember-add-condition --type=group|hostgroup --key=<replaceable>attribute</replaceable> --inclusive-regex=<replaceable>regex</replaceable> | --exclusive-regex=<replaceable>regex</replaceable> <replaceable>groupName</replaceable></screen>
+							<para>
+								As with the automember rule, the condition must specify the type of group (<option>--type</option>) and the name of the target group (<emphasis>groupName</emphasis>).
+							</para>
+							<para>
+								The condition must also specify the attribute (the key) and any patterns for the attribute value. The <option>--key</option> is the attribute name that is the focus of the condition. Then, there is a regular expression pattern to identify matching values; matching entries can either be included (<option>--inclusive-regex</option>) or excluded (<option>--exclusive-regex</option>) from the group. Exclusion rules take precedence. 
+							</para>
+							<para>
+								For example, to include all employees with Barbara Jensen as a manager, but excluding the temporary employees:
+							</para>
+<screen>[jsmith@server ~]$ ipa automember-add-condition --type=group --key=manager --inclusive-regex=^uid=bjensen$ exampleGroup
+[jsmith@server ~]$ ipa automember-add-condition --type=group --key=employeetype --exclusive-regex=^temp exampleGroup</screen>
+					<note><title>TIP</title>
+						<para>
+							The regular expression can match any port of the string. Using a caret (^) means that it must match at the beginning, and using a dollar sign ($) means that it must match at the end. Wrapping the pattern in ^ and $ means that it must be an exact match.
+						</para>
+					</note>
+							<para>
+								For more information on Perl-compatible regular expression (PCRE) patterns, see <ulink url="http://regexkit.sourceforge.net/Documentation/pcre/pcresyntax.html">the pcresyntax(3) man page</ulink>.
+							</para>
+				</listitem>
+			</orderedlist>
+			<para>
+				To remove a condition for a rule, pass the full condition information, both the key and the regular expression:
+			</para>
+<screen>[jsmith@server ~]$ ipa automember-remove-condition --key=fqdn --type=hostgroup --inclusive-regex=^web[1-9]+\.example\.com webservers</screen>
+			<para>
+				To remove the entire rule, simply run the <command>automember-del</command> command.
+			</para>
+		</section>
+	</section>
+	<section id="using-automembers-examples"><title>Examples of Using Automember Groups</title>
+		<note><title>NOTE</title>
+			<para>
+				These examples are shown using the CLI; the same configuration can be performed in the web UI.
+			</para>
+		</note>
+		<formalpara><title>A Note on Creating Default Groups</title>
+			<para>
+				One common environment requirement is to have some sort of default group that users or hosts are added to. There are a couple of different ways to approach that. 
+			</para>
+		</formalpara>
+		<itemizedlist>
+			<listitem>
+				<para>
+					All entries can be added to a single, global group regardless of what other groups they are also added to. 
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Entries can be added to specific automember groups. If the new entry does not match any autogroup, then it is added to a default or fallback group.
+				</para>
+			</listitem>
+		</itemizedlist>
+		<para>
+			These strategies are mutually exclusive. If an entry matches a global group, then it 
+			does match an automember group and would, therefore, not be added to the fallback group.
+		</para>
+		<section id="automember-allhosts"><title>Setting an All Users/Hosts Rule</title>
+			<para>
+				To add all users or all hosts to a single group, use an inclusive regular expression for some attribute (such as <parameter>cn</parameter> or <parameter>fqdn</parameter>) which all entries will contain.
+			</para>
+			<para>
+				A regular expression to match all entries is simply <command>.*</command>. For example, to add all hosts to the same host group:
+			</para>
+<screen>[jsmith@server ~]$ ipa automember-add-condition --type=hostgroup allhosts --inclusive-regex=.* --key=fqdn
+--------------------------------
+Added condition(s) to "allhosts"
+--------------------------------
+  Automember Rule: allhosts
+  Inclusive Regex: fqdn=.*
+----------------------------
+Number of conditions added 1
+----------------------------</screen>
+			<para>
+				Every host added after that is automatically added to the <command>allhosts</command> group:
+			</para>
+<screen>[jsmith@server ~]$ ipa host-add test.example.com
+-----------------------------
+Added host "test.example.com"
+-----------------------------
+  Host name: test.example.com
+  Principal name: host/test.example.com@EXAMPLE.COM
+  Password: False
+  Keytab: False
+  Managed by: test.example.com
+
+[jsmith@server ~]$ ipa hostgroup-show allhosts
+  Host-group: allhosts
+  Description: Default hostgroup
+  Member hosts: test.example.com</screen>
+			<para>
+			For more information on PCRE patterns, see <ulink url="http://regexkit.sourceforge.net/Documentation/pcre/pcresyntax.html">the pcresyntax(3) man page</ulink>.
+			</para>
+		</section>
+		<section id="creating-default-automembers"><title>Defining Default Automembership Groups</title>
+			<para>
+				There is a special command to set a default group, <command>automember-default-group-set</command>. This sets the group name (<option>--default-group</option>) and group type(<option>--type</option>), similar to an automember rule, but there is no condition to match. By definition, default group members are unmatched entries.
+			</para>
+			<para>
+				For example:
+			</para>
+<screen>[jsmith@server ~]$ ipa automember-default-group-set --default-group=ipaclients --type=hostgroup
+[jsmith@server ~]$ ipa automember-default-group-set --default-group=ipausers --type=group</screen>
+			<para>
+				A default group rule can be removed using the <command>automember-default-group-remove</command> command. Since there is only one default group for a group type, it is only necessary to give the group type, not the group name:
+			</para>
+<screen>[jsmith@server ~]$ ipa automember-default-group-remove --type=hostgroup</screen>
+		</section>
+		<section id="automember-winsync"><title>Using Automembership Groups with Windows Users</title>
+			<para>
+				When a user is created in &IPA;, that user is automatically added as a member to the <command>ipausers</command> group (which is the default group for all new users, apart from any automember group). However, when a Windows user is synced over from &AD;, that user is not automatically added to the <command>ipausers</command> group.
+			</para>
+			<para>
+				New Windows users can be added to the <command>ipausers</command> group, as with users created in &PROD;, by using an automember group. Every Windows user is added with the <command>ntUser</command> object class; that object class can be used as an inclusive filter to identify new Windows users to add to the automember group.
+			</para>
+			<para>
+				First, define the <command>ipausers</command> group as an automember group:
+			</para>
+<screen>[jsmith@server ~]$ ipa automember-add --type=group ipausers</screen>
+			<para>
+				Then, use the <command>ntUser</command> object class as a condition to add users:
+			</para>
+<screen>[jsmith@server ~]$ ipa automember-add-condition ipausers --key=objectclass --type=group --inclusive-regex=ntUser</screen>
+		</section>
+	</section>
 </chapter>

@@ -1,135 +1,148 @@
-<?xml version='1.0' encoding='utf-8'?>
-<!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
-[
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 ]>
 <section id="doc-history">
-    <title>Document Change History</title>
-    <para>
-        <revhistory>
-            <revision condition="redhat">
-                <revnumber>6.4-1</revnumber>
-                <date>March 1, 2013</date>
-                <author>
-                    <firstname>Ella Deon</firstname>
-                    <surname>Lackey</surname>
-                    <email>dlackey@redhat.com</email>
-                </author>
-                <revdescription>
-                    <simplelist>
-                        <member>Adding trusts.</member>
-                    </simplelist>
-                </revdescription>
-            </revision>
-            <revision condition="redhat">
-                <revnumber>6.3-1</revnumber>
-                <date>October 18, 2012</date>
-                <author>
-                    <firstname>Ella Deon</firstname>
-                    <surname>Lackey</surname>
-                    <email>dlackey@redhat.com</email>
-                </author>
-                <revdescription>
-                    <simplelist>
-                        <member>Commenting out sudo configuration
-                        example.</member>
-                        <member>Removing group sync information from winsync
-                        chapter.</member>
-                        <member>Commenting out CRL generation section.</member>
-                    </simplelist>
-                </revdescription>
-            </revision>
-            <revision condition="redhat">
-                <revnumber>6.2-8</revnumber>
-                <date>December 16, 2011</date>
-                <author>
-                    <firstname>Ella Deon</firstname>
-                    <surname>Lackey</surname>
-                    <email>dlackey@redhat.com</email>
-                </author>
-                <revdescription>
-                    <simplelist>
-                        <member>Fixing sudoers_debug example in sudo client
-                        configuration procedure, Bugzilla #768792.</member>
-                        <member>Fixing migration command example, Bugzilla
-                        #766089.</member>
-                    </simplelist>
-                </revdescription>
-            </revision>
-            <revision condition="five">
-                <revnumber>5.8-0</revnumber>
-                <date>December 15, 2011</date>
-                <author>
-                    <firstname>Ella Deon</firstname>
-                    <surname>Lackey</surname>
-                    <email>dlackey@redhat.com</email>
-                </author>
-                <revdescription>
-                    <simplelist>
-                        <member>Release for beta of Red Hat Enterprise Linux
-                        5.8.</member>
-                    </simplelist>
-                </revdescription>
-            </revision>
-            <revision condition="redhat">
-                <revnumber>6.2-7</revnumber>
-                <date>December 6, 2011</date>
-                <author>
-                    <firstname>Ella Deon</firstname>
-                    <surname>Lackey</surname>
-                    <email>dlackey@redhat.com</email>
-                </author>
-                <revdescription>
-                    <simplelist>
-                        <member>Release for GA of Red Hat Enterprise Linux
-                        6.2.</member>
-                    </simplelist>
-                </revdescription>
-            </revision>
-            <revision condition="fedora">
-                <revnumber>2.1.0-2</revnumber>
-                <date>July 22, 2011</date>
-                <author>
-                    <firstname>Ella Deon</firstname>
-                    <surname>Lackey</surname>
-                    <email>dlackey@redhat.com</email>
-                </author>
-                <revdescription>
-                    <simplelist>
-                        <member>Completing first round of content revisions on
-                        the chapters for server installation, client
-                        installation, DNS, basic usage, managing clients, and
-                        the preface.</member>
-                        <member>Beginning content revisions on the chapters for
-                        users, Kerberos, automount, and managing
-                        servers.</member>
-                        <member>Bare initial draft of a tools
-                        appendix.</member>
-                        <member>Bugzilla work: 646226, 646240, 646257, 646267,
-                        68173, 693843, 701465, 709385, 714603, 715015</member>
-                        <member>FreeIPA.org tickets: 1183, 1359, 1449, 1058,
-                        1335, 1107, 1355, 1430, 803, 991, 615, 969, 594,
-                        593</member>
-                        <member>freeipa-guide trac tickets: 18, 19, 16,
-                        17</member>
-                    </simplelist>
-                </revdescription>
-            </revision>
-            <revision condition="fedora">
-                <revnumber>2.1.0-1</revnumber>
-                <date>May 10, 2011</date>
-                <author>
-                    <firstname>Ella Deon</firstname>
-                    <surname>Lackey</surname>
-                    <email>dlackey@redhat.com</email>
-                </author>
-                <revdescription>
-                    <simplelist>
-                        <member>Beginning draft for the Fedora docs
-                        project.</member>
-                    </simplelist>
-                </revdescription>
-            </revision>
-        </revhistory>
-    </para>
+	<title>Document Change History</title>
+	 
+	 <para>
+
+		 <revhistory>
+			 <revision condition="redhat">
+				<revnumber>6.4-1</revnumber>
+				 <date>March 1, 2013</date>
+				 <author>
+					<firstname>Ella Deon</firstname>
+					 <surname>Lackey</surname>
+					 <email>dlackey@redhat.com</email>
+
+				</author>
+				 <revdescription>
+					<simplelist>
+				<member>Adding trusts.</member>
+					</simplelist>
+
+				</revdescription>
+
+			</revision>
+			 <revision condition="redhat">
+				<revnumber>6.3-1</revnumber>
+				 <date>October 18, 2012</date>
+				 <author>
+					<firstname>Ella Deon</firstname>
+					 <surname>Lackey</surname>
+					 <email>dlackey@redhat.com</email>
+
+				</author>
+				 <revdescription>
+					<simplelist>
+				<member>Commenting out sudo configuration example.</member>
+				<member>Removing group sync information from winsync chapter.</member>
+				<member>Commenting out CRL generation section.</member>
+					</simplelist>
+
+				</revdescription>
+
+			</revision>
+			<revision condition="redhat">
+				<revnumber>6.2-8</revnumber>
+				 <date>December 16, 2011</date>
+				 <author>
+					<firstname>Ella Deon</firstname>
+					 <surname>Lackey</surname>
+					 <email>dlackey@redhat.com</email>
+
+				</author>
+				 <revdescription>
+					<simplelist>
+				<member>Fixing sudoers_debug example in sudo client configuration procedure, Bugzilla #768792.</member>
+				<member>Fixing migration command example, Bugzilla #766089.</member>
+					</simplelist>
+
+				</revdescription>
+
+			</revision>
+			<revision condition="five">
+				<revnumber>5.8-0</revnumber>
+				 <date>December 15, 2011</date>
+				 <author>
+					<firstname>Ella Deon</firstname>
+					 <surname>Lackey</surname>
+					 <email>dlackey@redhat.com</email>
+
+				</author>
+				 <revdescription>
+					<simplelist>
+				<member>Release for beta of Red Hat Enterprise Linux 5.8.</member>
+					</simplelist>
+
+				</revdescription>
+
+			</revision>
+			<revision condition="redhat">
+				<revnumber>6.2-7</revnumber>
+				 <date>December 6, 2011</date>
+				 <author>
+					<firstname>Ella Deon</firstname>
+					 <surname>Lackey</surname>
+					 <email>dlackey@redhat.com</email>
+
+				</author>
+				 <revdescription>
+					<simplelist>
+				<member>Release for GA of Red Hat Enterprise Linux 6.2.</member>
+					</simplelist>
+
+				</revdescription>
+
+			</revision>
+
+			 <revision condition="fedora">
+				<revnumber>2.1.0-2</revnumber>
+				 <date>July 22, 2011</date>
+				 <author>
+					<firstname>Ella Deon</firstname>
+					 <surname>Lackey</surname>
+					 <email>dlackey@redhat.com</email>
+
+				</author>
+				 <revdescription>
+					<simplelist>
+						<member>Completing first round of content revisions on the chapters for server installation, client installation, DNS, basic usage, managing clients, and the preface.</member>
+						<member>Beginning content revisions on the chapters for users, Kerberos, automount, and managing servers.</member>
+						<member>Bare initial draft of a tools appendix.</member>
+						<member>Bugzilla work: 646226, 646240, 646257, 646267, 68173, 693843, 701465, 709385, 714603, 715015
+						</member>
+						<member>FreeIPA.org tickets: 1183, 1359, 1449, 1058, 1335, 1107, 1355, 1430, 803, 991, 615, 969, 594, 593
+						</member>
+						<member>freeipa-guide trac tickets: 18, 19, 16, 17
+						</member>
+
+					</simplelist>
+
+				</revdescription>
+
+			</revision>
+			 <revision condition="fedora">
+				<revnumber>2.1.0-1</revnumber>
+				 <date>May 10, 2011</date>
+				 <author>
+					<firstname>Ella Deon</firstname>
+					 <surname>Lackey</surname>
+					 <email>dlackey@redhat.com</email>
+
+				</author>
+				 <revdescription>
+					<simplelist>
+						<member>Beginning draft for the Fedora docs project.</member>
+
+					</simplelist>
+
+				</revdescription>
+
+			</revision>
+
+		</revhistory>
+
+	</para>
 </section>
+

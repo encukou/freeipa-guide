@@ -1,942 +1,930 @@
-<?xml version='1.0' encoding='utf-8'?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-    "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd"
-[
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 ]>
 <chapter id="automount">
-    <title>Policy: Using Automount</title>
-    <para>Automount is a way of making directories on different servers
-    available, automatically, when requested by a user. This works
-    exceptionally well within an &IPA; domain since it allows directories on
-    clients within the domain to be shared easily. This is especially important
-    with user home directories ( 
-    <xref linkend="home-directories" />).</para>
-    <para>In &IPA;, automount works with the internal LDAP directory and, if it
-    is configured, DNS services.</para>
-    <section id="about-automount">
-        <title>About Automount and &IPA;</title>
-        <para>Automount is a way to manage, organize, and access directories
-        across multiple systems. Automount automatically mounts a directory
-        whenever that resource is requested. Automount also provides a coherent
-        structure to the way that these directories are organized. Every single
-        directory, or 
-        <emphasis>mount point</emphasis>is called a 
-        <emphasis>key</emphasis>. Multiple keys that are grouped together are a
-        
-        <emphasis>map</emphasis>, and maps are associated according to their
-        physical or conceptual 
-        <emphasis>location</emphasis>.</para>
-        <para>The base configuration file for autofs is the 
-        <filename>auto.master</filename>file in the 
-        <filename>/etc/</filename>directory. There can be multiple 
-        <filename>auto.master</filename>configuration files in separate server
-        locations, if necessary.</para>
-        <para>When 
-        <command>autofs</command>is configured on a server and that server is a
-        client in &IPAA; domain, then all of the configuration information for
-        automount is stored in the &IPA; directory. Rather than being stored in
-        separate text files, the autofs configuration &mdash; maps, locations,
-        and keys &mdash; are stored as LDAP entries. For example, the default
-        map file, 
-        <filename>auto.master</filename>, is stored as:</para>
-        <screen>dn:
-        automountmapname=auto.master,cn=default,cn=automount,dc=example,dc=com
-        objectClass: automountMap objectClass: top automountMapName:
-        auto.master</screen>
-        <important>
-            <title>IMPORTANT</title>
-            <para>&PROD; does not set up or configure autofs. That must be done
-            separately. &PROD; works with an existing autofs deployment.</para>
-        </important>
-        <para>Each new location is added as a container entry under 
-        <command>cn=automount,dc=example,dc=com</command>, and each map and
-        each key are stored beneath that location.</para>
-        <para>As with other &IPA; domain services, automount works with &IPA;
-        natively. The automount configuration can be managed by &IPA;
-        tools:</para>
-        <itemizedlist>
-            <listitem>
-                <para>
-                <emphasis>Locations</emphasis>, using 
-                <command>ipa automountlocation*</command>commands</para>
-            </listitem>
-            <listitem>
-                <para>Both direct and indirect 
-                <emphasis>maps</emphasis>, using 
-                <command>ipa automountmap*</command>commands</para>
-            </listitem>
-            <listitem>
-                <para>
-                <emphasis>Keys</emphasis>, using 
-                <command>ipa automountkey*</command>commands</para>
-            </listitem>
-        </itemizedlist>
-        <para>For automount to work within the &IPA; domain, the NFS server
-        must be configured as &IPAA; client. Configuring NFS itself is covered
-        in the 
-        <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Storage_Administration_Guide/ch-nfs.html">
-        &RHEL; Storage Administration Guide</ulink>.</para>
-        <!-- figure out why this is here and make it better
-         <para>
-            The following is an example of a suitable entry in the <filename>/etc/exports</filename> file:
-        </para>
-         
+	<title>Policy: Using Automount</title>
+	<para>
+		Automount is a way of making directories on different servers available, automatically, when requested by a user. This works exceptionally well within an &IPA; domain since it allows 
+		directories on clients within the domain to be shared easily. This is especially important with user home directories (<xref linkend="home-directories" />).
+	</para>
+	<para>
+		In &IPA;, automount works with the internal LDAP directory and, if it is configured, DNS services.
+	</para>
+
+
+	<section id="about-automount"><title>About Automount and &IPA;</title>
+		<para>
+			Automount is a way to manage, organize, and access directories across multiple systems. Automount automatically mounts a directory whenever that resource is requested. 
+			Automount also provides a coherent structure to the way that these directories are organized. Every single directory, or <emphasis>mount point</emphasis> 
+			is called a <emphasis>key</emphasis>. Multiple keys that are grouped together are a <emphasis>map</emphasis>, and maps are associated according to their 
+			physical or conceptual <emphasis>location</emphasis>.
+		</para>
+		<para>
+			The base configuration file for autofs is the <filename>auto.master</filename> file in the <filename>/etc/</filename> directory. There can be multiple 
+		       <filename>auto.master</filename> configuration files in separate server locations, if necessary.
+		</para>
+					
+		
+		<para>
+			When <command>autofs</command> is configured on a server and that server is a client in &IPAA; domain, then all of the configuration information for automount is 
+			stored in the &IPA; directory. Rather than being stored in separate text files, the autofs configuration &mdash; maps, locations, and keys &mdash; are stored as 
+			LDAP entries. For example, the default map file, <filename>auto.master</filename>, is stored as:
+		</para>
+<screen>dn: automountmapname=auto.master,cn=default,cn=automount,dc=example,dc=com
+objectClass: automountMap
+objectClass: top
+automountMapName: auto.master</screen>
+		<important><title>IMPORTANT</title>
+			<para>
+				&PROD; does not set up or configure autofs. That must be done separately. &PROD; works with an existing autofs deployment.
+			</para>
+		</important>
+		<para>
+			Each new location is added as a container entry under <command>cn=automount,dc=example,dc=com</command>, and each map and each key are stored beneath that location.
+		</para>	
+		<para>
+			As with other &IPA; domain services, automount works with &IPA; natively. The automount configuration can be managed by &IPA; tools:
+		</para>
+		<itemizedlist>
+			<listitem>
+				<para>
+					<emphasis>Locations</emphasis>, using <command>ipa automountlocation*</command> commands
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Both direct and indirect <emphasis>maps</emphasis>, using <command>ipa automountmap*</command> commands
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<emphasis>Keys</emphasis>, using <command>ipa automountkey*</command> commands
+				</para>
+			</listitem>
+		</itemizedlist>
+					<para>
+						For automount to work within the &IPA; domain, the NFS server must be configured as &IPAA; client. Configuring NFS itself is covered in the 
+						<ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Storage_Administration_Guide/ch-nfs.html">&RHEL; Storage Administration Guide</ulink>.
+					</para>
+					<!-- figure out why this is here and make it better
+		 <para>
+			The following is an example of a suitable entry in the <filename>/etc/exports</filename> file:
+		</para>
+		 
 <programlisting>/home 192.168.1.0/16 (rw,fsid=0,insecure,no_subtree_check,sync,anonuid=65534,anongid=65534)
 </programlisting>
 -->
-    </section>
-    <section id="configuring-automount">
-        <title>Configuring Automount</title>
-        <important>
-            <title>IMPORTANT</title>
-            <para>&PROD; does not set up or configure autofs. That must be done
-            separately, as described in these procedures. &PROD; works with an
-            existing autofs deployment.</para>
-        </important>
-        <note>
-            <title>TIP</title>
-            <para>Test that the 
-            <filename>/home</filename>directory can be mounted from the command
-            line successfully before changing the automount configuration.
-            Making sure that NFS is already working properly makes it easier to
-            troubleshoot any potential &IPA; automount configuration errors
-            later.</para>
-        </note>
-        <section id="Configuring_Automount-Configuring_autofs_on_Linux">
-            <title>Configuring autofs on &OS;</title>
-            <orderedlist>
-                <listitem>
-                    <para>Edit the 
-                    <filename>/etc/sysconfig/autofs</filename>file to specify
-                    the schema attributes that autofs searches for:</para>
-                    <programlisting># # Other common LDAP naming #
-                    MAP_OBJECT_CLASS="automountMap"
-                    ENTRY_OBJECT_CLASS="automount"
-                    MAP_ATTRIBUTE="automountMapName"
-                    ENTRY_ATTRIBUTE="automountKey"
-                    VALUE_ATTRIBUTE="automountInformation"</programlisting>
-                </listitem>
-                <listitem>
-                    <para>Specify the LDAP configuration. There are two ways to
-                    do this. The simplest is to let the automount service
-                    discover the LDAP server and locations on its own:</para>
-                    <programlisting>
-                    LDAP_URI="ldap:///dc=example,dc=com"</programlisting>
-                    <para>Alternatively, explicitly set which LDAP server to
-                    use and the base DN for LDAP searches:</para>
-                    <programlisting>LDAP_URI="ldap://ipa.example.com"
-                    SEARCH_BASE="cn= 
-                    <replaceable>
-                    location</replaceable>,cn=automount,dc=example,dc=com"</programlisting>
-                    <note>
-                        <para>The default value for 
-                        <emphasis>location</emphasis>is 
-                        <literal>default</literal>. If additional locations are
-                        added ( 
-                        <xref linkend="adding-locations" />), then the client
-                        can be pointed to use those locations, instead.</para>
-                    </note>
-                </listitem>
-                <listitem>
-                    <para>Edit the 
-                    <filename>/etc/autofs_ldap_auth.conf</filename>file so that
-                    autofs allows client authentication with the &IPA; LDAP
-                    server. 
-                    <itemizedlist>
-                        <listitem>
-                            <para>Change 
-                            <parameter>authrequired</parameter>to yes.</para>
-                        </listitem>
-                        <listitem>
-                            <para>Set the principal to the Kerberos host
-                            principal for the NFS client server, 
-                            <emphasis>host/fqdn@REALM</emphasis>. The principal
-                            name is used to connect to the &IPA; directory as
-                            part of GSS client authentication.</para>
-                        </listitem>
-                    </itemizedlist></para>
-                    <programlisting language="XML">
-                        <![CDATA[<autofs_ldap_sasl_conf
+	</section>
+
+	<section id="configuring-automount"><title>Configuring Automount</title>
+		
+		<important><title>IMPORTANT</title>
+			<para>
+				&PROD; does not set up or configure autofs. That must be done separately, as described in these procedures. &PROD; works with an existing autofs deployment.
+			</para>
+		</important>
+		<note><title>TIP</title>
+			<para> 
+				Test that the <filename>/home</filename> directory can be mounted from the command line successfully before changing the automount configuration. Making sure that NFS is already working properly makes it easier to troubleshoot any potential &IPA; automount configuration errors later.
+			</para>
+		</note>
+		
+		 <section id="Configuring_Automount-Configuring_autofs_on_Linux">
+			<title>Configuring autofs on &OS;</title>
+			<orderedlist>
+				 <listitem>
+					<para>
+						Edit the <filename>/etc/sysconfig/autofs</filename> file to specify the schema attributes that autofs searches for:
+					</para>
+					 
+<programlisting>#
+# Other common LDAP naming
+#
+MAP_OBJECT_CLASS="automountMap"
+ENTRY_OBJECT_CLASS="automount"
+MAP_ATTRIBUTE="automountMapName"
+ENTRY_ATTRIBUTE="automountKey"
+VALUE_ATTRIBUTE="automountInformation"
+</programlisting>
+
+				</listitem>
+				 <listitem>
+					<para>
+						Specify the LDAP configuration. There are two ways to do this. The simplest is to let the automount service discover the LDAP server and locations on its own:
+					</para>
+<programlisting>LDAP_URI="ldap:///dc=example,dc=com"
+</programlisting>
+					<para>
+						Alternatively, explicitly set which LDAP server to use and the base DN for LDAP searches:
+					</para>
+					 
+<programlisting>LDAP_URI="ldap://ipa.example.com"
+SEARCH_BASE="cn=<replaceable>location</replaceable>,cn=automount,dc=example,dc=com"
+</programlisting>
+					 <note>
+						<para>
+							The default value for <emphasis>location</emphasis> is <literal>default</literal>. If additional locations are added (<xref linkend="adding-locations" />), then the client can be pointed to use those locations, instead.
+						</para>
+
+					</note>
+
+				</listitem>
+				<listitem>
+					<para>
+						Edit the <filename>/etc/autofs_ldap_auth.conf</filename> file so that autofs allows client authentication with the &IPA; LDAP server. 
+						<itemizedlist>
+							<listitem>
+								<para>
+									Change <parameter>authrequired</parameter> to yes.
+								</para>
+							</listitem>
+							<listitem>
+								<para>
+									Set the principal to the Kerberos host principal for the NFS client server, <emphasis>host/fqdn@REALM</emphasis>. The principal name is used to connect to the &IPA; directory as part of GSS client authentication.
+								</para>
+							</listitem>
+						</itemizedlist>
+					</para>
+<programlisting language="XML"><![CDATA[<autofs_ldap_sasl_conf
      usetls="no"
      tlsrequired="no"
      authrequired="yes"
      authtype="GSSAPI"
      clientprinc="host/server.example.com@EXAMPLE.COM" 
-     />]]>
+     />]]></programlisting>
+				     <para>
+					     If necessary, run <command>klist -k</command> to get the exact host principal information.
+				     </para>
+				</listitem>
+				<listitem>
+					<para>
+						Check the <filename>/etc/nssswitch.conf</filename> file, so that LDAP is listed as a source for automount configuration:
+					</para>
+<screen>automount: files <userinput>ldap</userinput></screen>
+				</listitem>
+				 <listitem>
+					<para>
+						Restart autofs:
+					</para>
+<screen># service autofs restart</screen>
+				</listitem>
+				<listitem>
+				 <para>
+					Test the configuration by listing a user's <filename>/home</filename> directory:
+				</para>
+<screen># ls /home/<replaceable>userName</replaceable></screen>
+				 <para>
+					If this does not mount the remote file system, check the <filename>/var/log/messages</filename> file for errors. If necessary, increase the debug level in the <filename>/etc/sysconfig/autofs</filename> file by setting the <parameter>LOGGING</parameter> parameter to <literal>debug</literal>.
+				</para>
+
+			</listitem>
+		</orderedlist>
+		<note><title>TIP</title>
+			<para>
+				If there are problems with automount, then cross-reference the automount attempts with the &DSF; access logs for the &IPA; instance, which will show the attempted access, user, and search base. 
+			</para>
+			<para>
+				It is also simple to run automount in the foreground with debug logging on.
+<screen>automount -f -d</screen>
+				This prints the debug log information directly, without having to cross-check the LDAP access log with automount's log.
+			</para>
+		</note>	
+
+		</section>
+		
+		 <section id="Configuring_Automount-Solaris_automount" condition="fedora">
+			 <title>Configuring Automount on Solaris</title>
+			 
+		<note><title>NOTE</title>
+			 <para>
+				Solaris uses a different schema for autofs configuration than the schema used by &PROD;. &PROD; uses the 2307bis-style automount schema which is defined for &DSF; (and used in &IPA;'s internal &DS; instance).
+			</para>
+		</note>
+			 <orderedlist>
+				<listitem>
+					<para>
+						If the NFS server is running on &OS;, specify on the Solaris machine that NFSv3 is the maximum supported version. Edit the <filename>/etc/default/nfs</filename> file and set the following parameter:
+					</para>
+					 
+<programlisting>NFS_CLIENT_VERSMAX=3
 </programlisting>
-                    <para>If necessary, run 
-                    <command>klist -k</command>to get the exact host principal
-                    information.</para>
-                </listitem>
-                <listitem>
-                    <para>Check the 
-                    <filename>/etc/nssswitch.conf</filename>file, so that LDAP
-                    is listed as a source for automount configuration:</para>
-                    <screen>automount: files 
-                    <userinput>ldap</userinput></screen>
-                </listitem>
-                <listitem>
-                    <para>Restart autofs:</para>
-                    <screen># service autofs restart</screen>
-                </listitem>
-                <listitem>
-                    <para>Test the configuration by listing a user's 
-                    <filename>/home</filename>directory:</para>
-                    <screen># ls /home/ 
-                    <replaceable>userName</replaceable></screen>
-                    <para>If this does not mount the remote file system, check
-                    the 
-                    <filename>/var/log/messages</filename>file for errors. If
-                    necessary, increase the debug level in the 
-                    <filename>/etc/sysconfig/autofs</filename>file by setting
-                    the 
-                    <parameter>LOGGING</parameter>parameter to 
-                    <literal>debug</literal>.</para>
-                </listitem>
-            </orderedlist>
-            <note>
-                <title>TIP</title>
-                <para>If there are problems with automount, then
-                cross-reference the automount attempts with the &DSF; access
-                logs for the &IPA; instance, which will show the attempted
-                access, user, and search base.</para>
-                <para>It is also simple to run automount in the foreground with
-                debug logging on. 
-                <screen>automount -f -d</screen>This prints the debug log
-                information directly, without having to cross-check the LDAP
-                access log with automount's log.</para>
-            </note>
-        </section>
-        <section id="Configuring_Automount-Solaris_automount"
-        condition="fedora">
-            <title>Configuring Automount on Solaris</title>
-            <note>
-                <title>NOTE</title>
-                <para>Solaris uses a different schema for autofs configuration
-                than the schema used by &PROD;. &PROD; uses the 2307bis-style
-                automount schema which is defined for &DSF; (and used in
-                &IPA;'s internal &DS; instance).</para>
-            </note>
-            <orderedlist>
-                <listitem>
-                    <para>If the NFS server is running on &OS;, specify on the
-                    Solaris machine that NFSv3 is the maximum supported
-                    version. Edit the 
-                    <filename>/etc/default/nfs</filename>file and set the
-                    following parameter:</para>
-                    <programlisting>NFS_CLIENT_VERSMAX=3</programlisting>
-                </listitem>
-                <listitem>
-                    <para>Use the 
-                    <command>ldapclient</command>command to configure the host
-                    to use LDAP:</para>
-                    <programlisting>ldapclient -v manual -a
-                    authenticationMethod=none -a
-                    defaultSearchBase=dc=example,dc=com -a
-                    defaultServerList=ipa.example.com -a
-                    serviceSearchDescriptor=passwd:cn=users,cn=accounts,dc=example,dc=com
-                    -a
-                    serviceSearchDescriptor=group:cn=groups,cn=compat,dc=example,dc=com
-                    -a
-                    serviceSearchDescriptor=auto_master:automountMapName=auto.master,cn=
-                    
-                    <replaceable>
-                    location</replaceable>,cn=automount,dc=example,dc=com?one
-                    -a
-                    serviceSearchDescriptor=auto_home:automountMapName=auto_home,cn=
-                    
-                    <replaceable>
-                    location</replaceable>,cn=automount,dc=example,dc=com?one
-                    -a objectClassMap=shadow:shadowAccount=posixAccount -a
-                    searchTimelimit=15 -a bindTimeLimit=5</programlisting>
-                </listitem>
-                <listitem>
-                    <para>Enable 
-                    <command>automount</command>:</para>
-                    <screen># svcadm enable
-                    svc:/system/filesystem/autofs</screen>
-                </listitem>
-                <listitem>
-                    <para>Test the configuration.</para>
-                    <orderedlist>
-                        <listitem>
-                            <para>Check the LDAP configuration: 
-                            <screen># ldapclient -l auto_master dn:
-                            automountkey=/home,automountmapname=auto.master,cn=
-                            
-                            <replaceable>
-                            location</replaceable>,cn=automount,dc=example,dc=com
-                            objectClass: automount objectClass: top
-                            automountKey: /home automountInformation:
-                            auto.home</screen></para>
-                        </listitem>
-                        <listitem>
-                            <para>List a user's 
-                            <filename>/home</filename>directory:</para>
-                            <para>
-                                <screen># ls /home/ 
-                                <replaceable>userName</replaceable></screen>
-                            </para>
-                        </listitem>
-                    </orderedlist>
-                </listitem>
-            </orderedlist>
-        </section>
-    </section>
-    <section id="kerb-nfs">
-        <title>Setting up a Kerberized NFS Server</title>
-        <para>&PROD; can be used to set up a Kerberized NFS server.</para>
-        <note>
-            <title>NOTE</title>
-            <para>The NFS server does not need to be running on &OS;.</para>
-        </note>
-        <section id="krb-nfs-server">
-            <title>Setting up a Kerberized NFS Server</title>
-            <orderedlist>
-                <listitem>
-                    <para>Obtain a Kerberos ticket before running &IPA;
-                    tools.</para>
-                    <screen>[jsmith@server ~]$ kinit admin</screen>
-                </listitem>
-                <listitem>
-                    <para>If the NFS host machine has not been added as a
-                    client to the &IPA; domain, then create the host entry. See
-                    
-                    <xref linkend="adding-host-entry" />.</para>
-                </listitem>
-                <listitem>
-                    <para>Create the NFS service entry in the &IPA; domain. For
-                    example:</para>
-                    <screen>[jsmith@server ~]$ ipa service-add
-                    nfs/nfs-server.example.com</screen>
-                    <para>For more information, see 
-                    <xref linkend="adding-service-entry" />.</para>
-                </listitem>
-                <listitem>
-                    <para>Generate an NFS service keytab for the NFS server
-                    using the 
-                    <command>ipa-getkeytab</command>command.</para>
-                    <para>The NFS server may be on a &OS; machine in the &IPA;
-                    domain or a different Unix machine. For a &OS; machine, the
-                    
-                    <command>ipa-getkeytab</command>command can be run on the
-                    NFS server machine. Otherwise, the 
-                    <command>ipa-getkeytab</command>command should be run on a
-                    &OS; machine in the &IPA; domain and then copied over to
-                    the NFS server.</para>
-                    <para>If 
-                    <command>ipa-getkeytab</command>command is run on the NFS
-                    server, then save the keys directly to the host keytab. For
-                    example:</para>
-                    <screen condition="five">[jsmith@server ~]$ ipa-getkeytab
-                    -s server.example.com -p nfs/nfs-server.example.com -k
-                    /etc/krb5.keytab -e des-cbc-crc</screen>
-                    <screen condition="redhat">[jsmith@server ~]$ ipa-getkeytab
-                    -s server.example.com -p nfs/nfs-server.example.com -k
-                    /etc/krb5.keytab</screen>
-                    <para>For a &OS; machine, that's all you need to do.</para>
-                    <note>
-                        <title>NOTE</title>
-                        <para>Only DES keys are supported on &RHEL; 5.</para>
-                    </note>
-                    <para>When generating keys to copy over to another system,
-                    then generate the key but do not save it in the host
-                    keytab. The key must be added separately to the keytab
-                    after it is copied to the NFS server:</para>
-                    <orderedlist>
-                        <listitem>
-                            <para>Save the keytab to a temporary file. For
-                            example:</para>
-                            <screen>[jsmith@server ~]$ ipa-getkeytab -s
-                            server.example.com -p nfs/nfs-server.example.com -k
-                            /tmp/nfs.keytab</screen>
-                        </listitem>
-                        <listitem>
-                            <para>Copy the keytabs over to the NFS
-                            server.</para>
-                        </listitem>
-                        <listitem>
-                            <para>Set the file permissions to 0700.</para>
-                        </listitem>
-                        <listitem>
-                            <para>Add the service key to the keytab
-                            file.</para>
-                            <screen>[root@nfs-server ~]# ( echo rkt
-                            /tmp/nfs.keytab; echo wkt /etc/krb5.keytab)
-                            |ktutil</screen>
-                        </listitem>
-                    </orderedlist>
-                    <note>
-                        <title>TIP</title>
-                        <para>Verify that the NFS service has been properly
-                        configured in &IPA;, with its keytab, by checking the
-                        service entry:</para>
-                        <screen>[jsmith@server ~]$ ipa service-show
-                        nfs/ipaclient2.example.com Principal:
-                        NFS/ipaclient2.example.com@EXAMPLE.COM Keytab:
-                        True</screen>
-                    </note>
-                </listitem>
-                <listitem>
-                    <para>Install the NFS packages. For example:</para>
-                    <screen>[root@nfs-server ~]# yum install nfs-utils</screen>
-                </listitem>
-                <listitem>
-                    <para>Configure weak crypto support. This is required for
-                    every NFS client if 
-                    <emphasis>any</emphasis>client (such as a &RHEL; 5 client)
-                    in the domain will use older encryption options like
-                    DES.</para>
-                    <orderedlist>
-                        <listitem>
-                            <para>Edit the 
-                            <filename>krb5.conf</filename>file to allow weak
-                            crypto.</para>
-                            <screen>[root@nfs-server ~]# vim /etc/krb5.conf
-                            allow_weak_crypto = true</screen>
-                        </listitem>
-                        <listitem>
-                            <para>Update the &IPA; server Kerberos
-                            configuration to support the DES encryption
-                            type.</para>
-                            <screen>[jsmith@ipaserver ~]$ ldapmodify -x -D
-                            "cn=directory manager" -w password -h
-                            ipaserver.example.com -p 389 dn:
-                            cn=EXAMPLEREALM,cn=kerberos,dc=example,dc=com
-                            changetype: modify add: krbSupportedEncSaltTypes
-                            krbSupportedEncSaltTypes: des-cbc-crc:normal - add:
-                            krbSupportedEncSaltTypes krbSupportedEncSaltTypes:
-                            des-cbc-crc:special - add: krbDefaultEncSaltTypes
-                            krbDefaultEncSaltTypes:
-                            des-cbc-crc:special</screen>
-                        </listitem>
-                    </orderedlist>
-                </listitem>
-                <listitem>
-                    <para>If the NFS server and client are in different DNS
-                    domains, then configure the NFS domain.</para>
-                    <screen>[root@nfs-server ~]# vim /etc/idmapd.conf Domain =
-                    example.com</screen>
-                </listitem>
-                <listitem>
-                    <para>Edit the 
-                    <filename>/etc/exports</filename>file and add the Kerberos
-                    information:</para>
-                    <para>
-                        <programlisting>/export
-                        *(rw,sec=sys:krb5:krb5i:krb5p)</programlisting>
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>Restart the NFS server and related services.</para>
-                    <screen>[root@nfs-server ~]# service nfs restart
-                    [root@nfs-server ~]# service nfs-server restart
-                    [root@nfs-server ~]# service nfs-secure restart
-                    [root@nfs-server ~]# service nfs-secure-server
-                    restart</screen>
-                </listitem>
-                <listitem>
-                    <para>Configure the NFS server as an NFS client, following
-                    the directions in 
-                    <xref linkend="krb-nfs-client" />.</para>
-                </listitem>
-            </orderedlist>
-        </section>
-        <section id="krb-nfs-client">
-            <title>Setting up a Kerberized NFS Client</title>
-            <orderedlist>
-                <listitem>
-                    <para>Obtain a Kerberos ticket before running &IPA;
-                    tools.</para>
-                    <screen>[jsmith@server ~]$ kinit admin</screen>
-                </listitem>
-                <listitem>
-                    <para>If the NFS client is not enrolled as a client in the
-                    &IPA; domain, then set up the required host entries, as
-                    described in 
-                    <xref linkend="adding-host-entry" />.</para>
-                </listitem>
-                <listitem>
-                    <para>Generate an NFS service keytab for the NFS client
-                    using the 
-                    <command>ipa-getkeytab</command>command.</para>
-                    <para>The NFS client may be on a &OS; machine in the &IPA;
-                    domain or a different Unix machine. For a &OS; machine, the
-                    
-                    <command>ipa-getkeytab</command>command can be run on the
-                    NFS client machine. Otherwise, the 
-                    <command>ipa-getkeytab</command>command should be run on a
-                    &OS; machine in the &IPA; domain and then copied over to
-                    the NFS client.</para>
-                    <para>If 
-                    <command>ipa-getkeytab</command>command is run on the NFS
-                    client, then save the keys directly to the host keytab. For
-                    example:</para>
-                    <screen condition="five">[jsmith@server ~]$ ipa-getkeytab
-                    -p host/nfs-client-server.example.com@EXAMPLE.COM -k
-                    /etc/krb5.keytab -e des-cbc-crc</screen>
-                    <screen condition="redhat">[jsmith@server ~]$ ipa-getkeytab
-                    -k /etc/krb5.keytab -p
-                    host/nfs-client-server.example.com@EXAMPLE.COM</screen>
-                    <para>For a &OS; machine, that's all you need to do.</para>
-                    <note condition="five">
-                        <title>NOTE</title>
-                        <para>Only DES keys are supported on &RHEL; 5.</para>
-                    </note>
-                    <para>When generating keys to copy over to another system,
-                    then generate the key but do not save it in the host
-                    keytab. The key must be added separately to the keytab
-                    after it is copied to the NFS server:</para>
-                    <orderedlist>
-                        <listitem>
-                            <para>Save the keytab to a temporary file. For
-                            example:</para>
-                            <screen>[jsmith@server ~]$ ipa-getkeytab -p
-                            host/nfs-client-server.example.com@EXAMPLE.COM -k
-                            /tmp/nfs.keytab</screen>
-                        </listitem>
-                        <listitem>
-                            <para>Copy the keytabs over to the NFS
-                            client.</para>
-                        </listitem>
-                        <listitem>
-                            <para>Set the file permissions to 0700.</para>
-                        </listitem>
-                        <listitem>
-                            <para>Add the service key to the keytab
-                            file.</para>
-                            <screen>[root@nfs-client-server ~]# ( echo rkt
-                            /root/nfs-client.keytab; echo wkt /etc/krb5.keytab)
-                            |ktutil</screen>
-                        </listitem>
-                    </orderedlist>
-                </listitem>
-                <listitem condition="five">
-                    <para>Edit the 
-                    <filename>krb5.conf</filename>file to allow weak crypto.
-                    This is required for every client if 
-                    <emphasis>any</emphasis>client in the domain will use older
-                    encryption options like DES.</para>
-                    <screen>[root@nfs-client-server ~]# vim /etc/krb5.conf
-                    allow_weak_crypto = true</screen>
-                </listitem>
-                <listitem>
-                    <para>If the NFS server and client are in different DNS
-                    domains, then configure the NFS domain. The 
-                    <filename>idmapd.conf</filename>must be the same on the NFS
-                    client as it is on the NFS server.</para>
-                    <screen>[root@nfs-client-server ~]# vim /etc/idmapd.conf
-                    Domain = example.com</screen>
-                </listitem>
-                <listitem>
-                    <para>Start the GSS daemon.</para>
-                    <screen>[root@nfs-client-server ~]# service rpcgssd start
-                    [root@nfs-client-server ~]# service rpcbind start
-                    [root@nfs-client-server ~]# service rpcidmapd
-                    start</screen>
-                </listitem>
-                <listitem>
-                    <para>Mount the directory.</para>
-                    <screen>[root@nfs-client-server ~]# echo "$NFSSERVER:/this
-                    /mnt/this nfs4 sec=krb5i,rw,proto=tcp,port=2049"
-                    &gt;&gt;/etc/fstab [root@nfs-client-server ~]# mount
-                    -av</screen>
-                </listitem>
-            </orderedlist>
-        </section>
-    </section>
-    <section id="adding-locations">
-        <title>Configuring Locations</title>
-        <para>A location is a set of maps, which are all stored in 
-        <filename>auto.master</filename>, and a location can store multiple
-        maps. The location entry only works as a container for map entries; it
-        is not an automount configuration in and of itself.</para>
-        <important>
-            <title>IMPORTANT</title>
-            <para>&PROD; does not set up or configure autofs. That must be done
-            separately. &PROD; works with an existing autofs deployment.</para>
-        </important>
-        <section id="configuring-locations-ui">
-            <title>Configuring Locations through the Web UI</title>
-            <orderedlist>
-                <listitem>
-                    <para>Click the 
-                    <guilabel>Policy</guilabel>tab.</para>
-                </listitem>
-                <listitem>
-                    <para>Click the 
-                    <guilabel>Automount</guilabel>subtab.</para>
-                </listitem>
-                <listitem>
-                    <para>Click the 
-                    <guilabel>Add</guilabel>link at the top of the list of
-                    automount locations.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/automount-location-list.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>Enter the name for the new location.</para>
-                    <informalfigure>
-                        <mediaobject>
-                            <imageobject>
-                                <imagedata fileref="images/automount-location.png" />
-                            </imageobject>
-                        </mediaobject>
-                    </informalfigure>
-                </listitem>
-                <listitem>
-                    <para>Click the 
-                    <guibutton>Add and Edit</guibutton>button to go to the map
-                    configuration for the new location. Create maps, as
-                    described in 
-                    <xref linkend="Configuring_Direct_Maps-ui" />and 
-                    <xref linkend="Configuring_Indirect_Maps-ui" />.</para>
-                </listitem>
-            </orderedlist>
-        </section>
-        <section id="configuring-locations-cmd">
-            <title>Configuring Locations through the Command Line</title>
-            <para>To create a map, using the 
-            <command>automountlocation-add</command>and give the location name.
-            
-            <screen>$ ipa automountlocation-add 
-            <replaceable>location</replaceable></screen>For example:</para>
-            <screen>$ ipa automountlocation-add raleigh
-            ---------------------------------- Added automount location
-            "raleigh" ---------------------------------- Location:
-            raleigh</screen>
-            <para>When a new location is created, two maps are automatically
-            created for it, 
-            <filename>auto.master</filename>and 
-            <filename>auto.direct</filename>. 
-            <filename>auto.master</filename>is the root map for all automount
-            maps for the location. 
-            <filename>auto.direct</filename>is the default map for direct
-            mounts and is mounted on 
-            <filename>/-</filename>.</para>
-            <para>To view all of the maps configured for a location as if they
-            were deployed on a filesystem, use the 
-            <command>automountlocation-tofiles</command>command:</para>
-            <screen>$ ipa automountlocation-tofiles raleigh /etc/auto.master:
-            /- /etc/auto.direct ---------------------------
-            /etc/auto.direct:</screen>
-        </section>
-    </section>
-    <section id="configuring-maps">
-        <title>Configuring Maps</title>
-        <para>Configuring maps not only creates the maps, it associates mount
-        points through the keys and it assigns mount options that should be
-        used when the directory is accessed. &IPA; supports both direct and
-        indirect maps.</para>
-        <note>
-            <title>NOTE</title>
-            <para>Different clients can use different map sets. Map sets use a
-            tree structure, so maps 
-            <emphasis>cannot</emphasis>be shared between locations.</para>
-        </note>
-        <important>
-            <title>IMPORTANT</title>
-            <para>&PROD; does not set up or configure autofs. That must be done
-            separately. &PROD; works with an existing autofs deployment.</para>
-        </important>
-        <section id="Configuring_Direct_Maps">
-            <title>Configuring Direct Maps</title>
-            <para>Direct maps define exact locations, meaning absolute paths,
-            to the file mount. In the location entry, a direct map is
-            identified by the preceding forward slash: 
-            <screen>--------------------------- /etc/auto.direct: /shared/man
-            server.example.com:/shared/man</screen></para>
-            <section id="Configuring_Direct_Maps-ui">
-                <title>Configuring Direct Maps from the Web UI</title>
-                <orderedlist>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Policy</guilabel>tab.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Automount</guilabel>subtab.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Click name of the automount location to which to
-                        add the map.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/automount-location-list.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>In the 
-                        <guilabel>Automount Maps</guilabel>tab, click the 
-                        <guilabel>+ Add</guilabel>link to create a new
-                        map.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/automount-map-list.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>In pop-up window, select the 
-                        <guilabel>Direct</guilabel>radio button and enter the
-                        name of the new map.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/automount-direct1.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>In the 
-                        <guilabel>Automount Keys</guilabel>tab, click the 
-                        <guilabel>+ Add</guilabel>link to create a new key for
-                        the map.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/automount-key-list.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Enter the mount point. The key defines the actual
-                        mount point in the key name. The 
-                        <guilabel>Info</guilabel>field sets the network
-                        location of the directory, as well as any 
-                        <command>mount</command>options to use.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/automount-direct2.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guibutton>Add</guibutton>button to save the new
-                        key.</para>
-                    </listitem>
-                </orderedlist>
-            </section>
-            <section id="Configuring_Direct_Maps-cmd">
-                <title>Configuring Direct Maps from the Command Line</title>
-                <para>The key defines the actual mount point (in the key name)
-                and any options. A map is a direct or indirect map based on the
-                format of its key.</para>
-                <para>Each location is created with an 
-                <systemitem>auto.direct</systemitem>item. The simplest
-                configuration is to define a direct mapping by adding an
-                automount key the existing direct map entry. It is also
-                possible to create different direct map entries.</para>
-                <!--
-                <orderedlist>
-                            <listitem>
-                                <para>
-                                    Optionally, add a map entry.
-                                </para>
-                                <screen>$ ipa automountmap-add <replaceable>location</replaceable> auto.mymap</screen>
-                            </listitem>
-                            <listitem>
-                                <para>
-                                    Add the map to the <systemitem>auto.master</systemitem> configuration for the location, and include the :
-                                </para>
-                                <screen>>$ ipa automountkey-add <replaceable>location</replaceable> auto.
-                     <listitem>
-                                    -->
-                <para>Add the key for the direct map to the location's 
-                <filename>auto.direct</filename>file. The 
-                <option>--key</option>option identifies the mount point, and 
-                <option>--info</option>gives the network location of the
-                directory, as well as any 
-                <command>mount</command>options to use. For example:</para>
-                <screen>$ ipa automountkey-add raleigh auto.direct --key=/share
-                --info="-ro,soft, ipaserver.example.com:/home/share" Key:
-                /share Mount information: -ro,soft,
-                ipaserver.example.com:/home/share</screen>
-                <para>Mount options are described in the mount manpage, 
-                <ulink url="http://linux.die.net/man/8/mount" />.</para>
-                <para>On Solaris, add the direct map and key using the 
-                <command>ldapclient</command>command to add the LDAP entry
-                directly:</para>
-                <programlisting>ldapclient -a
-                serviceSearchDescriptor=auto_direct:automountMapName=auto.direct,cn=
-                
-                <replaceable>
-                location</replaceable>,cn=automount,dc=example,dc=com?one</programlisting>
-            </section>
-        </section>
-        <section id="Configuring_Indirect_Maps">
-            <title>Configuring Indirect Maps</title>
-            <para>An indirect map essentially specifies a relative path for
-            maps. A parent entry sets the base directory for all of the
-            indirect maps. The indirect map key sets a sub directory; whenever
-            the indirect map location is loaded, the key is appended to that
-            base directory. For example, if the base directory is 
-            <filename>/docs</filename>and the key is 
-            <filename>man</filename>, then the map is 
-            <filename>/docs/man</filename>.</para>
-            <section id="Configuring_Indirect_Maps-ui">
-                <title>Configuring Indirect Maps from the Web UI</title>
-                <orderedlist>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Policy</guilabel>tab.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guilabel>Automount</guilabel>subtab.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Click name of the automount location to which to
-                        add the map.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/automount-location-list.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>In the 
-                        <guilabel>Automount Maps</guilabel>tab, click the 
-                        <guilabel>+ Add</guilabel>link to create a new
-                        map.</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/automount-map-list.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                    </listitem>
-                    <listitem>
-                        <para>In pop-up window, select the 
-                        <guilabel>Indirect</guilabel>radio button and enter the
-                        required information for the indirect map:</para>
-                        <informalfigure>
-                            <mediaobject>
-                                <imageobject>
-                                    <imagedata fileref="images/automount-indirect1.png" />
-                                </imageobject>
-                            </mediaobject>
-                        </informalfigure>
-                        <itemizedlist>
-                            <listitem>
-                                <para>The name of the new map</para>
-                            </listitem>
-                            <listitem>
-                                <para>The mount point. The 
-                                <guilabel>Mount</guilabel>field sets the base
-                                directory to use for all the indirect map
-                                keys.</para>
-                            </listitem>
-                            <listitem>
-                                <para>Optionally, a parent map. The default
-                                parent is 
-                                <filename>auto.master</filename>, but if
-                                another map exists which should be used, that
-                                can be specified in the 
-                                <guilabel>Parent Map</guilabel>field.</para>
-                            </listitem>
-                        </itemizedlist>
-                    </listitem>
-                    <listitem>
-                        <para>Click the 
-                        <guibutton>Add</guibutton>button to save the new
-                        key.</para>
-                    </listitem>
-                </orderedlist>
-            </section>
-            <section id="Configuring_Indirect_Maps-cmd">
-                <title>Configuring Indirect Maps from the Command Line</title>
-                <para>The primary difference between a direct map and an
-                indirect map is that there is no forward slash in front of an
-                indirect key.</para>
-                <screen>--------------------------- /etc/auto.share: man
-                ipa.example.com:/docs/man ---------------------------</screen>
-                <orderedlist>
-                    <listitem>
-                        <para>Create an indirect map to set the base entry
-                        using the 
-                        <command>automountmap-add-indirect</command>command.
-                        The 
-                        <option>--mount</option>option sets the base directory
-                        to use for all the indirect map keys. The default
-                        parent entry is 
-                        <filename>auto.master</filename>, but if another map
-                        exists which should be used, that can be specified
-                        using the 
-                        <option>--parentmap</option>option. 
-                        <screen>$ ipa automountmap-add-indirect 
-                        <replaceable>location mapName</replaceable>--mount= 
-                        <replaceable>directory</replaceable>[--parentmap= 
-                        <replaceable>mapName</replaceable>]</screen>For
-                        example:</para>
-                        <screen>$ ipa automountmap-add-indirect raleigh
-                        auto.share --mount=/share
-                        -------------------------------- Added automount map
-                        "auto.share" --------------------------------</screen>
-                    </listitem>
-                    <listitem>
-                        <para>Add the indirect key for the mount
-                        location:</para>
-                        <screen>$ ipa automountkey-add raleigh auto.share
-                        --key=docs --info="ipa.example.com:/export/docs"
-                        ------------------------- Added automount key "docs"
-                        ------------------------- Key: docs Mount information:
-                        ipa.example.com:/export/docs</screen>
-                    </listitem>
-                    <listitem>
-                        <para>To verify the configuration, check the location
-                        file list using 
-                        <command>automountlocation-tofiles</command>:</para>
-                        <screen>$ ipa automountlocation-tofiles raleigh
-                        /etc/auto.master: /- /etc/auto.direct /share
-                        /etc/auto.share ---------------------------
-                        /etc/auto.direct: ---------------------------
-                        /etc/auto.share: man
-                        ipa.example.com:/export/docs</screen>
-                    </listitem>
-                </orderedlist>
-                <para>On Solaris, add the indirect map using the 
-                <command>ldapclient</command>command to add the LDAP entry
-                directly:</para>
-                <programlisting>ldapclient -a
-                serviceSearchDescriptor=auto_share:automountMapName=auto.share,cn=
-                
-                <replaceable>
-                location</replaceable>,cn=automount,dc=example,dc=com?one</programlisting>
-            </section>
-        </section>
-        <section id="importing-maps">
-            <title>Importing Automount Maps</title>
-            <para>If there are existing automount maps, these can be imported
-            into the &IPA; automount configuration.</para>
-            <screen>ipa automountlocation-import 
-            <replaceable>location map_file</replaceable>[--continuous]</screen>
-            <para>The only required information is the &IPA; automount location
-            and the full path and name of the map file. The 
-            <option>--continuous</option>option tells the 
-            <command>automountlocation-import</command>command to continue
-            through the map file, even if the command encounters errors.</para>
-            <para>For example:</para>
-            <screen>$ ipa automountlocation-import raleigh
-            /etc/custom.map</screen>
-        </section>
-    </section>
+
+				</listitem>
+				 <listitem>
+					<para>
+						Use the <command>ldapclient</command> command to configure the host to use LDAP:
+					</para>
+					 
+<programlisting>ldapclient -v manual -a authenticationMethod=none 
+    -a defaultSearchBase=dc=example,dc=com 
+    -a defaultServerList=ipa.example.com 
+    -a serviceSearchDescriptor=passwd:cn=users,cn=accounts,dc=example,dc=com 
+    -a serviceSearchDescriptor=group:cn=groups,cn=compat,dc=example,dc=com 
+    -a serviceSearchDescriptor=auto_master:automountMapName=auto.master,cn=<replaceable>location</replaceable>,cn=automount,dc=example,dc=com?one 
+    -a serviceSearchDescriptor=auto_home:automountMapName=auto_home,cn=<replaceable>location</replaceable>,cn=automount,dc=example,dc=com?one 
+    -a objectClassMap=shadow:shadowAccount=posixAccount 
+    -a searchTimelimit=15 
+    -a bindTimeLimit=5
+</programlisting>
+
+				</listitem>
+				 <listitem>
+					<para>
+						Enable <command>automount</command>:
+					</para>
+<screen># svcadm enable svc:/system/filesystem/autofs</screen>
+
+				</listitem>
+
+					 <listitem>
+						 <para>
+							 Test the configuration. 
+						 </para>
+						 <orderedlist>
+							 <listitem>
+								 <para>
+							 Check the LDAP configuration:
+							
+<screen># ldapclient -l auto_master
+
+dn: automountkey=/home,automountmapname=auto.master,cn=<replaceable>location</replaceable>,cn=automount,dc=example,dc=com
+objectClass: automount
+objectClass: top
+automountKey: /home
+automountInformation: auto.home
+</screen>
+
+						</para>
+
+					</listitem>
+					 <listitem>
+						<para>
+							List a user's <filename>/home</filename> directory:
+						</para>
+						 <para>
+							
+<screen># ls /home/<replaceable>userName</replaceable></screen>
+
+						</para>
+
+					</listitem>
+
+				</orderedlist>
+			</listitem>
+		</orderedlist>
+				
+
+	</section>
+
+
+</section>
+
+	<section id="kerb-nfs"><title>Setting up a Kerberized NFS Server</title>
+		<para>
+			&PROD; can be used to set up a Kerberized NFS server.
+		</para>
+		<note><title>NOTE</title>
+			<para>
+				The NFS server does not need to be running on &OS;. 
+			</para>
+		</note>
+		<section id="krb-nfs-server"><title>Setting up a Kerberized NFS Server</title>
+			<orderedlist>
+				<listitem>
+					<para>
+						Obtain a Kerberos ticket before running &IPA; tools.
+					</para>
+<screen>[jsmith@server ~]$ kinit admin</screen>
+				</listitem>
+				<listitem>
+					<para>
+						If the NFS host machine has not been added as a client to the &IPA; domain, then create the host entry. See <xref linkend="adding-host-entry" />.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Create the NFS service entry in the &IPA; domain. For example:
+					</para>
+<screen>[jsmith@server ~]$ ipa service-add nfs/nfs-server.example.com</screen>
+					<para>
+						For more information, see <xref linkend="adding-service-entry" />.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Generate an NFS service keytab for the NFS server using the <command>ipa-getkeytab</command> command.
+					</para>
+					<para>
+						The NFS server may be on a &OS; machine in the &IPA; domain or a different Unix machine. For a &OS; machine, the <command>ipa-getkeytab</command> command can be run on the NFS server machine. Otherwise, the <command>ipa-getkeytab</command> command should be run on a &OS; machine in the &IPA; domain and then copied over to the NFS server.
+					</para>
+					<para>
+						If <command>ipa-getkeytab</command> command is run on the NFS server, then save the keys directly to the host keytab. For example:
+					</para>
+<screen condition="five">[jsmith@server ~]$ ipa-getkeytab -s server.example.com -p nfs/nfs-server.example.com -k /etc/krb5.keytab -e des-cbc-crc</screen>
+<screen condition="redhat">[jsmith@server ~]$ ipa-getkeytab -s server.example.com -p nfs/nfs-server.example.com -k /etc/krb5.keytab</screen>
+					<para>
+						For a &OS; machine, that's all you need to do.
+					</para>
+					<note><title>NOTE</title>
+						<para>
+							Only DES keys are supported on &RHEL; 5.
+						</para>
+					</note>
+					<para>
+						When generating keys to copy over to another system, then generate the key but do not save it in the host keytab. The key must be added separately to the keytab after it is copied to the NFS server:
+					</para>
+					<orderedlist>
+						<listitem>
+							<para>
+								Save the keytab to a temporary file. For example:
+							</para>
+<screen>[jsmith@server ~]$ ipa-getkeytab -s server.example.com -p nfs/nfs-server.example.com -k /tmp/nfs.keytab</screen>
+						</listitem>
+						<listitem>
+							<para>
+								Copy the keytabs over to the NFS server.
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								Set the file permissions to 0700.
+							</para>
+						</listitem>
+						<listitem>
+					<para>
+						Add the service key to the keytab file.
+					</para>
+<screen>[root@nfs-server ~]#  (  echo rkt /tmp/nfs.keytab; echo wkt /etc/krb5.keytab) |ktutil</screen>
+				</listitem>
+			</orderedlist>
+			<note><title>TIP</title>
+				<para>
+					Verify that the NFS service has been properly configured in &IPA;, with its keytab, by checking the service entry:
+				</para>
+<screen>[jsmith@server ~]$ ipa service-show nfs/ipaclient2.example.com
+Principal: NFS/ipaclient2.example.com@EXAMPLE.COM
+Keytab: True</screen>
+			</note>
+				</listitem>
+				<listitem>
+					<para>
+						Install the NFS packages. For example:
+					</para>
+<screen>[root@nfs-server ~]# yum install nfs-utils</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Configure weak crypto support. This is required for every NFS client if <emphasis>any</emphasis> client (such as a &RHEL; 5 client) in the domain will use older encryption options like DES.
+					</para>
+					<orderedlist>
+						<listitem>
+							<para>
+								Edit the <filename>krb5.conf</filename> file to allow weak crypto. 
+							</para>
+<screen>[root@nfs-server ~]# vim /etc/krb5.conf
+
+allow_weak_crypto = true</screen>
+						</listitem>
+						<listitem>
+							<para>
+								Update the &IPA; server Kerberos configuration to support the DES encryption type.
+							</para>
+<screen>[jsmith@ipaserver ~]$ ldapmodify -x -D "cn=directory manager" -w password -h ipaserver.example.com -p 389
+
+dn: cn=EXAMPLEREALM,cn=kerberos,dc=example,dc=com
+changetype: modify
+add: krbSupportedEncSaltTypes
+krbSupportedEncSaltTypes: des-cbc-crc:normal
+-
+add: krbSupportedEncSaltTypes
+krbSupportedEncSaltTypes: des-cbc-crc:special
+-
+add: krbDefaultEncSaltTypes
+krbDefaultEncSaltTypes: des-cbc-crc:special</screen>
+						</listitem>
+					</orderedlist>
+				</listitem>
+				<listitem>
+					<para>
+						If the NFS server and client are in different DNS domains, then configure the NFS domain.
+					</para>
+<screen>[root@nfs-server ~]# vim /etc/idmapd.conf
+
+Domain = example.com</screen>
+				</listitem>
+				 <listitem>
+					<para>
+						Edit the <filename>/etc/exports</filename> file and add the Kerberos information:
+					</para>
+					 <para>
+						
+<programlisting>/export  *(rw,sec=sys:krb5:krb5i:krb5p)
+</programlisting>
+
+					</para>
+
+				</listitem>
+				<listitem>
+					<para>
+						Restart the NFS server and related services.
+					</para>
+<screen>[root@nfs-server ~]# service nfs restart
+[root@nfs-server ~]# service nfs-server restart
+[root@nfs-server ~]# service nfs-secure restart
+[root@nfs-server ~]# service nfs-secure-server restart</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Configure the NFS server as an NFS client, following the directions in <xref linkend="krb-nfs-client" />.
+					</para>
+				</listitem>
+			</orderedlist>
+		</section>
+		<section id="krb-nfs-client"><title>Setting up a Kerberized NFS Client</title>
+			<orderedlist>
+				<listitem>
+					<para>
+						Obtain a Kerberos ticket before running &IPA; tools.
+					</para>
+<screen>[jsmith@server ~]$ kinit admin</screen>
+				</listitem>
+				<listitem>
+					<para>
+						If the NFS client is not enrolled as a client in the &IPA; domain, then set up the required host entries, as described in <xref linkend="adding-host-entry" />.
+						</para>
+					</listitem>
+					<listitem>
+					<para>
+						Generate an NFS service keytab for the NFS client using the <command>ipa-getkeytab</command> command.
+					</para>
+					<para>
+						The NFS client may be on a &OS; machine in the &IPA; domain or a different Unix machine. For a &OS; machine, the <command>ipa-getkeytab</command> command can be run on the NFS client machine. Otherwise, the <command>ipa-getkeytab</command> command should be run on a &OS; machine in the &IPA; domain and then copied over to the NFS client.
+					</para>
+					<para>
+						If <command>ipa-getkeytab</command> command is run on the NFS client, then save the keys directly to the host keytab. For example:
+					</para>
+<screen condition="five">[jsmith@server ~]$ ipa-getkeytab -p host/nfs-client-server.example.com@EXAMPLE.COM -k /etc/krb5.keytab -e des-cbc-crc</screen>
+<screen condition="redhat">[jsmith@server ~]$ ipa-getkeytab -k /etc/krb5.keytab -p host/nfs-client-server.example.com@EXAMPLE.COM</screen>
+					<para>
+						For a &OS; machine, that's all you need to do.
+					</para>
+					<note condition="five"><title>NOTE</title>
+						<para>
+							Only DES keys are supported on &RHEL; 5.
+						</para>
+					</note>
+					<para>
+						When generating keys to copy over to another system, then generate the key but do not save it in the host keytab. The key must be added separately to the keytab after it is copied to the NFS server:
+					</para>
+						<orderedlist>
+							<listitem>
+								<para>
+									Save the keytab to a temporary file. For example:
+								</para>
+<screen>[jsmith@server ~]$ ipa-getkeytab -p host/nfs-client-server.example.com@EXAMPLE.COM -k /tmp/nfs.keytab</screen>
+							</listitem>
+							<listitem>
+								<para>
+									Copy the keytabs over to the NFS client.
+								</para>
+							</listitem>
+							<listitem>
+								<para>
+									Set the file permissions to 0700.
+								</para>
+							</listitem>
+							<listitem>
+								<para>
+									Add the service key to the keytab file.
+								</para>
+<screen>[root@nfs-client-server ~]# ( echo rkt /root/nfs-client.keytab; echo wkt /etc/krb5.keytab) |ktutil</screen>
+						</listitem>
+					</orderedlist>
+				</listitem>
+				<listitem condition="five">
+					<para>
+						Edit the <filename>krb5.conf</filename> file to allow weak crypto. This is required for every client if <emphasis>any</emphasis> client in the domain will use older encryption options like DES.
+					</para>
+<screen>[root@nfs-client-server ~]# vim /etc/krb5.conf
+
+allow_weak_crypto = true</screen>
+				</listitem>
+				<listitem>
+					<para>
+						If the NFS server and client are in different DNS domains, then configure the NFS domain. The <filename>idmapd.conf</filename> must be the same on the NFS client as it is on the NFS server.
+					</para>
+<screen>[root@nfs-client-server ~]# vim /etc/idmapd.conf
+
+Domain = example.com</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Start the GSS daemon.
+					</para>
+<screen>[root@nfs-client-server ~]# service rpcgssd start
+[root@nfs-client-server ~]# service rpcbind start
+[root@nfs-client-server ~]# service rpcidmapd start</screen>
+				</listitem>
+				<listitem>
+					<para>
+						Mount the directory.
+					</para>
+<screen>[root@nfs-client-server ~]# echo "$NFSSERVER:/this /mnt/this nfs4 sec=krb5i,rw,proto=tcp,port=2049"  >>/etc/fstab
+[root@nfs-client-server ~]# mount -av</screen>
+				</listitem>
+			</orderedlist>
+						
+		</section>
+	</section>
+
+
+		<section id="adding-locations"><title>Configuring Locations</title>
+			<para>
+				A location is a set of maps, which are all stored in <filename>auto.master</filename>, and a location can store multiple maps. The location entry only works as a container for map entries; it is not an automount configuration in and of itself.
+			</para>
+		<important><title>IMPORTANT</title>
+			<para>
+				&PROD; does not set up or configure autofs. That must be done separately. &PROD; works with an existing autofs deployment.
+			</para>
+		</important>
+			<section id="configuring-locations-ui"><title>Configuring Locations through the Web UI</title>
+				<orderedlist>
+					<listitem>
+						<para>
+							Click the <guilabel>Policy</guilabel> tab.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guilabel>Automount</guilabel> subtab.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guilabel>Add</guilabel> link at the top of the list of automount locations.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/automount-location-list.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							Enter the name for the new location.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/automount-location.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guibutton>Add and Edit</guibutton> button to go to the map configuration for the new location. Create maps, as described in 
+							<xref linkend="Configuring_Direct_Maps-ui" /> and <xref linkend="Configuring_Indirect_Maps-ui" />.
+						</para>
+					</listitem>
+				</orderedlist>
+			</section>
+
+			<section id="configuring-locations-cmd"><title>Configuring Locations through the Command Line</title>
+			<para>
+				To create a map, using the <command>automountlocation-add</command> and give the location name.
+<screen>$ ipa automountlocation-add <replaceable>location</replaceable></screen>
+				For example:
+			</para>
+<screen>$ ipa automountlocation-add raleigh
+----------------------------------
+Added automount location "raleigh"
+----------------------------------
+  Location: raleigh</screen>
+			<para>
+				When a new location is created, two maps are automatically created for it, <filename>auto.master</filename> and <filename>auto.direct</filename>. 
+			       <filename>auto.master</filename>	is the root map for all automount maps for the location. <filename>auto.direct</filename> is the default map for
+			       direct mounts and is mounted on <filename>/-</filename>.
+		       </para>
+		       <para>
+			       To view all of the maps configured for a location as if they were deployed on a filesystem, use the <command>automountlocation-tofiles</command> command:
+		       </para>
+<screen>$ ipa automountlocation-tofiles raleigh
+/etc/auto.master:
+/-      /etc/auto.direct
+---------------------------
+/etc/auto.direct:</screen>
+			</section>
+		</section>
+
+		<section id="configuring-maps"><title>Configuring Maps</title>
+			<para>
+				Configuring maps not only creates the maps, it associates mount points through the keys and it assigns mount options that should be used when the directory is accessed. 
+				&IPA; supports both direct and indirect maps.
+			</para>
+			<note><title>NOTE</title>
+				<para>
+					Different clients can use different map sets. Map sets use a tree structure, so maps <emphasis>cannot</emphasis> be shared between locations.
+				</para>
+
+			</note>
+			
+		<important><title>IMPORTANT</title>
+			<para>
+				&PROD; does not set up or configure autofs. That must be done separately. &PROD; works with an existing autofs deployment.
+			</para>
+		</important>
+
+			 <section id="Configuring_Direct_Maps">
+				<title>Configuring Direct Maps</title>
+				 <para>
+					 Direct maps define exact locations, meaning absolute paths, to the file mount. 
+					 In the location entry, a direct map is identified by the preceding forward slash:
+<screen>---------------------------
+/etc/auto.direct:
+/shared/man server.example.com:/shared/man</screen>
+				 </para>
+				 <section id="Configuring_Direct_Maps-ui"><title>Configuring Direct Maps from the Web UI</title>
+				<orderedlist>
+					<listitem>
+						<para>
+							Click the <guilabel>Policy</guilabel> tab.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guilabel>Automount</guilabel> subtab.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Click name of the automount location to which to add the map.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/automount-location-list.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							In the <guilabel>Automount Maps</guilabel> tab, click the <guilabel>+ Add</guilabel> link to create a new map.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/automount-map-list.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							In pop-up window, select the <guilabel>Direct</guilabel> radio button and enter the name of the new map.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/automount-direct1.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							In the <guilabel>Automount Keys</guilabel> tab, click the <guilabel>+ Add</guilabel> link to create a new key for the map.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/automount-key-list.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							Enter the mount point. The key defines the actual mount point in the key name. The <guilabel>Info</guilabel> field sets the network location of the directory, as well as any <command>mount</command> options to use.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/automount-direct2.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guibutton>Add</guibutton> button to save the new key.
+						</para>
+					</listitem>
+				</orderedlist>
+				 </section>
+
+				 <section id="Configuring_Direct_Maps-cmd"><title>Configuring Direct Maps from the Command Line</title>
+				<para>
+					The key defines the actual mount point (in the key name) and any options. A map is a direct or indirect map based on the format of its key.
+				</para>
+				<para>
+					Each location is created with an <systemitem>auto.direct</systemitem> item. 
+					The simplest configuration is to define a direct mapping by adding an automount key the existing direct map entry. It is also possible to 
+					create different direct map entries. 
+				</para>
+
+					<!--
+				<orderedlist>
+							<listitem>
+								<para>
+									Optionally, add a map entry.
+								</para>
+								<screen>$ ipa automountmap-add <replaceable>location</replaceable> auto.mymap</screen>
+							</listitem>
+							<listitem>
+								<para>
+									Add the map to the <systemitem>auto.master</systemitem> configuration for the location, and include the :
+								</para>
+								<screen>>$ ipa automountkey-add <replaceable>location</replaceable> auto.
+					 <listitem>
+									-->
+						<para>
+							Add the key for the direct map to the location's <filename>auto.direct</filename> file. The <option>--key</option> option identifies the mount point, and <option>--info</option> gives the network location of the directory, as well as any <command>mount</command> options to use. For example:
+						</para>
+						 
+<screen>$ ipa automountkey-add raleigh auto.direct --key=/share --info="-ro,soft, ipaserver.example.com:/home/share"
+  Key: /share
+  Mount information: -ro,soft, ipaserver.example.com:/home/share</screen>
+						<para>
+							Mount options are described in the mount manpage, <ulink url="http://linux.die.net/man/8/mount" />.
+						</para>
+				 <para>
+					On Solaris, add the direct map and key using the <command>ldapclient</command> command to add the LDAP entry directly:
+				</para>
+<programlisting>ldapclient -a serviceSearchDescriptor=auto_direct:automountMapName=auto.direct,cn=<replaceable>location</replaceable>,cn=automount,dc=example,dc=com?one</programlisting>
+			</section>
+	</section>
+
+	
+		
+		 <section id="Configuring_Indirect_Maps">
+			 <title>Configuring Indirect Maps</title>
+
+			 <para>
+				 An indirect map essentially specifies a relative path for maps. A parent entry sets the base directory for all of the indirect maps. The indirect map key sets 
+				 a sub directory; whenever the indirect map location is loaded, the key is appended to that base directory. For example, if the base directory is <filename>/docs</filename> 
+				 and the key is <filename>man</filename>, then the map is <filename>/docs/man</filename>.
+			 </para>
+
+			 
+				 <section id="Configuring_Indirect_Maps-ui"><title>Configuring Indirect Maps from the Web UI</title>
+				<orderedlist>
+					<listitem>
+						<para>
+							Click the <guilabel>Policy</guilabel> tab.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guilabel>Automount</guilabel> subtab.
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Click name of the automount location to which to add the map.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/automount-location-list.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							In the <guilabel>Automount Maps</guilabel> tab, click the <guilabel>+ Add</guilabel> link to create a new map.
+						</para>
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/automount-map-list.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+					</listitem>
+					<listitem>
+						<para>
+							In pop-up window, select the <guilabel>Indirect</guilabel> radio button and enter the required information for the indirect map:
+						</para>
+							
+						<informalfigure>
+							<mediaobject>
+								<imageobject>
+									<imagedata fileref="images/automount-indirect1.png" />
+								</imageobject>
+							</mediaobject>
+						</informalfigure>
+						<itemizedlist>
+							<listitem>
+								<para>
+									The name of the new map
+								</para>
+							</listitem>
+							<listitem>
+								<para>
+									The  mount point. The <guilabel>Mount</guilabel> field sets the base directory to use for all the indirect map keys.
+								</para>
+							</listitem>
+							<listitem>
+								<para>
+									Optionally, a parent map. The default parent is <filename>auto.master</filename>, but if another map exists which should be used, that can be specified in the <guilabel>Parent Map</guilabel> field.
+								</para>
+							</listitem>
+						</itemizedlist>
+					</listitem>
+					<listitem>
+						<para>
+							Click the <guibutton>Add</guibutton> button to save the new key.
+						</para>
+					</listitem>
+				</orderedlist>
+			</section>
+
+			 <section id="Configuring_Indirect_Maps-cmd"><title>Configuring Indirect Maps from the Command Line</title>
+			 <para>
+				 The primary difference between a direct map and an indirect map is that there is no forward slash in front of an indirect key.
+			 </para>
+<screen>---------------------------
+/etc/auto.share:
+man     ipa.example.com:/docs/man
+---------------------------</screen>
+			 <orderedlist>
+				 <listitem>
+					<para>
+						Create an indirect map to set the base entry using the <command>automountmap-add-indirect</command> command. The <option>--mount</option> option sets the base directory to use for all the indirect map keys. The default parent entry is <filename>auto.master</filename>, but if another map exists which should be used, that can be specified using the <option>--parentmap</option> option.
+<screen>$ ipa automountmap-add-indirect <replaceable>location mapName</replaceable> --mount=<replaceable>directory</replaceable> [--parentmap=<replaceable>mapName</replaceable>]</screen>
+						For example:
+					</para>
+					 
+<screen>$ ipa automountmap-add-indirect raleigh auto.share --mount=/share
+--------------------------------
+Added automount map "auto.share"
+--------------------------------</screen>
+
+				</listitem>
+				 <listitem>
+					<para>
+						Add the indirect key for the mount location:
+					</para>
+					 
+					<screen>$ ipa automountkey-add raleigh auto.share --key=docs --info="ipa.example.com:/export/docs"
+-------------------------
+Added automount key "docs"
+-------------------------
+  Key: docs
+  Mount information: ipa.example.com:/export/docs</screen>
+
+				</listitem>
+				<listitem>
+					<para>
+						To verify the configuration, check the location file list using <command>automountlocation-tofiles</command>:
+					</para>
+<screen>$ ipa automountlocation-tofiles raleigh
+/etc/auto.master:
+/-      /etc/auto.direct
+/share  /etc/auto.share
+---------------------------
+/etc/auto.direct:
+---------------------------
+/etc/auto.share:
+man     ipa.example.com:/export/docs</screen>
+				</listitem>
+			</orderedlist>
+
+				<para>
+					On Solaris, add the indirect map using the <command>ldapclient</command> command to add the LDAP entry directly:
+				</para>
+<programlisting>ldapclient -a serviceSearchDescriptor=auto_share:automountMapName=auto.share,cn=<replaceable>location</replaceable>,cn=automount,dc=example,dc=com?one</programlisting>
+				</section>	
+			</section>
+
+			<section id="importing-maps"><title>Importing Automount Maps</title>
+				<para>
+					If there are existing automount maps, these can be imported into the &IPA; automount configuration. 
+				</para>
+				<screen>ipa automountlocation-import <replaceable>location map_file</replaceable> [--continuous]</screen>
+				<para>
+					The only required information is the &IPA; automount location and the full path and name of the map file. The <option>--continuous</option> option tells the <command>automountlocation-import</command> command to continue through the map file, even if the command encounters errors.
+				</para>
+				<para>
+					For example:
+				</para>
+				<screen>$ ipa automountlocation-import raleigh /etc/custom.map</screen>
+			</section>
+	</section>
 </chapter>
+
