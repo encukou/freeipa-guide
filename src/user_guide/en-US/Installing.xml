@@ -85,8 +85,30 @@
 
 		<section id="supported-browsers"><title>Supported Web Browsers</title>
 			<para>
-				The only supported browser to access the &IPA; web UI is Firefox 3.x or 4.x.
+				These browsers are supported for connecting to the web UI:
 			</para>
+			<itemizedlist>
+				<listitem>
+					<para>
+						Firefox 15.x and newer
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Firefox 10.x
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Firefox 3.6
+					</para>
+				</listitem>
+				<listitem condition="redhat">
+					<para>
+						Internet Explorer (self-service management only)
+					</para>
+				</listitem>
+			</itemizedlist>
 		</section>
 	
 	<section id="prerequisites">
@@ -142,14 +164,14 @@
 					If the &IPA; server is configured to host its own DNS server, any previous existing DNS ignored. A records and PTR records do not need to match for the &IPA; server machine, and the machine can have any configured IP address. 
 				</para>
 			</note>
-						
+
 	</section>
 		<section id="prereq-ds"><title>&DS;</title>
 			<para>
 				There must not be any instances of &DSF; installed on the host machine.
 			</para>
 		</section>
-	
+
 		<section id="prereq-system"><title>System Files </title>
 			<para>
 				The server script overwrites system files to set up the &IPA; domain. The system should be clean, without custom configuration for services like DNS and Kerberos, before configuring the &IPA; server.
@@ -602,97 +624,107 @@ negative-time-to-live   hosts           20
 					</listitem>
 					<listitem>
 						<para>
+							Choose to not configure DNS. (If you need to configure DNS see <xref linkend="install-dns" />.)
+						</para>
+						<programlisting> Do you want to configure integrated DNS (BIND)? [no]: </programlisting>
+					</listitem>
+					<listitem>
+						<para>
 							Enter the hostname. This is determined automatically using reverse DNS.
 						</para>
-<programlisting language="Bash">Server host name [ipaserver.example.com]:</programlisting>
+<programlisting>Server host name [ipaserver.example.com]:</programlisting>
 					</listitem>
 					<listitem>
 						<para>
 							Enter the domain name. This is determined automatically based on the hostname.
 						</para>
-<programlisting language="Bash">Please confirm the domain name [example.com]:</programlisting>
+<programlisting>Please confirm the domain name [example.com]:</programlisting>
 					</listitem>
-					<listitem>
-						<para>
-							The script then reprints the hostname, IP address, and domain name.
-						</para>
-<programlisting language="Bash">The IPA Master Server will be configured with
-Hostname:    ipaserver.example.com
-IP address:  192.168.1.1
-Domain name: example.com</programlisting>
-					</listitem>
+
 					<listitem>
 						<para>
 							Enter the new Kerberos realm name. This is usually based on the domain name.
 						</para>
-<programlisting language="Bash">Please provide a realm name [EXAMPLE.COM]:</programlisting>
+<programlisting>Please provide a realm name [EXAMPLE.COM]:</programlisting>
 					</listitem>
 					<listitem>
 						<para>
 							Enter the password for the &DS; superuser, <command>cn=Directory Manager</command>. There are password strength requirements for this password, including a minimum password length.
 						</para>
-<programlisting language="Bash">Directory Manager password:
+<programlisting>Directory Manager password:
 Password (confirm):</programlisting>
 					</listitem>
 					<listitem>
 						<para>
 							Enter the password for the &IPA; system user account, <command>admin</command>. This user is created on the machine.
 						</para>
-<programlisting language="Bash">IPA admin password:
+<programlisting>IPA admin password:
 Password (confirm):</programlisting>
+					</listitem>
+					<listitem>
+						<para>
+							The script then reprints the hostname, IP address, domain name and realm name.
+						</para>
+<programlisting>The IPA Master Server will be configured with
+Hostname:    ipaserver.example.com
+IP address:  192.168.1.1
+Domain name: example.com
+Realm name:  EXAMPLE.COM
+
+Continue to configure the system with these values? [no]: yes</programlisting>
 					</listitem>
 					<listitem>
 						<para>
 							After that, the script configures all of the associated services for &IPA;, with task counts and progress bars.
 						</para>
-<programlisting language="Bash">Configuring ntpd
+<programlisting>Configuring NTP daemon (ntpd)
   [1/4]: stopping ntpd
- ...
-done configuring ntpd.
-
-Configuring directory server for the CA: Estimated time 30 seconds
-  [1/3]: creating directory server user
-...
-done configuring pkids.
-
-Configuring certificate server: Estimated time 6 minutes
-  [1/17]: creating certificate server user
-....
-done configuring pki-cad.
-
-Configuring directory server: Estimated time 1 minute
-  [1/32]: creating directory server user
-...
-done configuring dirsrv.
-
-Configuring Kerberos KDC: Estimated time 30 seconds
-  [1/14]: setting KDC account password
-...
-done configuring krb5kdc.
-
+  ...
+Done configuring NTP daemon (ntpd).
+Configuring directory server (dirsrv): Estimated time 1 minute
+  [1/38]: creating directory server user
+  ...
+Configuring certificate server (pki-tomcatd): Estimated time 3 minutes 30 seconds
+  [1/20]: creating certificate server user
+  ...
+Done configuring certificate server (pki-tomcatd).
+Configuring Kerberos KDC (krb5kdc): Estimated time 30 seconds
+  [1/10]: adding sasl mappings to the directory
+  ...
+Done configuring Kerberos KDC (krb5kdc).
 Configuring kadmin
   [1/2]: starting kadmin
   [2/2]: configuring kadmin to start on boot
-done configuring kadmin.
-
-Configuring the web interface: Estimated time 1 minute
-  [1/12]: disabling mod_ssl in httpd
-...
-done configuring httpd.
-Setting the certificate subject base
-restarting certificate server
+Done configuring kadmin.
+Configuring ipa_memcached
+  [1/2]: starting ipa_memcached
+  [2/2]: configuring ipa_memcached to start on boot
+Done configuring ipa_memcached.
+Configuring ipa-otpd
+  [1/2]: starting ipa-otpd
+  [2/2]: configuring ipa-otpd to start on boot
+Done configuring ipa-otpd.
+Configuring the web interface (httpd): Estimated time 1 minute
+  [1/15]: disabling mod_ssl in httpd
+  ...
+Done configuring the web interface (httpd).
 Applying LDAP updates
 Restarting the directory server
 Restarting the KDC
+Sample zone file for bind has been created in /tmp/sample.zone.pUfcGp.db
 Restarting the web server
-Sample zone file for bind has been created in /tmp/sample.zone.ygzij5.db
-==============================================================================
+========================================================================
 Setup complete</programlisting>
 					</listitem>
 					<listitem>
 						<para>
 							Restart the <systemitem class="service">SSH</systemitem> service to retrieve the Kerberos principal and to refresh the name server switch (NSS) configuration file: 
 <programlisting language="Bash">[root@server ~]# service sshd restart</programlisting>
+						</para>
+					</listitem>
+					<listitem>
+						<para>
+							Check if required ports from <xref linkend="tab.ipa-ports" /> are open.
 						</para>
 					</listitem>
 					<listitem>
@@ -706,19 +738,22 @@ Password for admin@EXAMPLE.COM:</programlisting>
 						<para>
 							Test the &IPA; configuration by running a command like <command>ipa user-find</command>. For example:
 						</para>
-<programlisting language="Bash">[root@server ~]# ipa user-find admin
-  --------------
-  1 user matched
-  --------------
+<programlisting>[root@server ~]# ipa user-find admin
+--------------
+1 user matched
+--------------
   User login: admin
   Last name: Administrator
   Home directory: /home/admin
   Login shell: /bin/bash
+  UID: 939000000
+  GID: 939000000
   Account disabled: False
-  Member of groups: admins
-  ----------------------------
-  Number of entries returned 1
-  ----------------------------</programlisting>
+  Password: True
+  Kerberos keys available: True
+----------------------------
+Number of entries returned 1
+----------------------------</programlisting>
   					</listitem>
 				</orderedlist>
 			</section>
@@ -769,7 +804,8 @@ Password for admin@EXAMPLE.COM:</programlisting>
 The IPA Master Server will be configured with
 Hostname:    ipaserver.example.com
 IP address:  192.168.1.1
-Domain name: example.com</programlisting>
+Domain name: example.com
+Realm name:  EXAMPLE.COM</programlisting>
 								<para>
 									The server name must be a valid DNS name, which means only numbers, alphabetic characters, and hyphens (-) are allowed. Other characters, like underscores, in the hostname will cause DNS failures.
 									Additionally, the hostname must all be lower-case. No capital letters are allowed.
@@ -907,7 +943,7 @@ The next step is to get /root/ipa.csr signed by your CA and re-run ipa-server-in
 							<para>
 								The script then prompts for DNS forwarders. If forwarders will be used, enter yes, and then supply the list of DNS servers. If &IPA; will manage its own DNS service, then enter no.
 							</para>
-<programlisting language="Bash">Do you want to configure DNS forwarders? [yes]: no
+<programlisting>Do you want to configure DNS forwarders? [yes]: no
 No DNS forwarders configured</programlisting>
 						</listitem>
 						<listitem>
@@ -919,18 +955,20 @@ No DNS forwarders configured</programlisting>
 							<para>
 								Before completing the configuration, the script prompts to ask whether it should configure reverse DNS services. If you select yes, then it configures the <systemitem>named</systemitem> service.
 							</para>
-<programlisting language="Bash">Do you want to configure the reverse zone? [yes]: yes
-Configuring named:
-  [1/9]: adding DNS container
-  [2/9]: setting up our zone
-  [3/9]: setting up reverse zone
-  [4/9]: setting up our own record
-  [5/9]: setting up kerberos principal
-  [6/9]: setting up named.conf
-  [7/9]: restarting named
-  [8/9]: configuring named to start on boot
-  [9/9]: changing resolv.conf to point to ourselves
-done configuring named.
+<programlisting>Do you want to configure the reverse zone? [yes]: yes
+Configuring DNS (named)
+  [1/11]: adding DNS container
+  [2/11]: setting up our zone
+  [3/11]: setting up reverse zone
+  [4/11]: setting up our own record
+  [5/11]: setting up records for other masters
+  [6/11]: setting up CA record
+  [7/11]: setting up kerberos principal
+  [8/11]: setting up named.conf
+  [9/11]: restarting named
+  [10/11]: configuring named to start on boot
+  [11/11]: changing resolv.conf to point to ourselves
+Done configuring DNS (named).
 ==============================================================================
 Setup complete</programlisting>
 						</listitem>
@@ -1001,7 +1039,7 @@ Setup complete</programlisting>
 					To resolve this issue, remove the <package>bind-chroot</package> package and then restart the &IPA; server. 
 <programlisting language="Bash">[root@server ~]# yum remove bind-chroot
 
-# ipactl restart</programlisting>
+[root@server ~]# ipactl restart</programlisting>
 				</para>
 		</section>
 
@@ -1057,13 +1095,18 @@ Setup complete</programlisting>
 			</listitem>
 			<listitem>
 				<para>
-					The replica must be the same version as the original master server. If the master server is running on &RHEL; 6.3, &IPA; version 2.2.x, then the replica must also run on &RHEL; 6.3 and use the &IPA; 2.2.x packages. 
+					The replica must be the same version as the original master server. If the master server is running on &RHEL; 7.0, &IPA; version 3.4.x, then the replica must also run on &RHEL; 7.0 and use the &IPA; 3.4.x packages. Creating a replica of a different version than the master <emphasis role="bold">is not supported</emphasis>.
 				</para>
-				<important><title>IMPORTANT</title>
+				<para>
+					There is an exception to the rule: A newer version of the replica can be installed as a part of the upgrade process. All other replicas have to be upgraded to the same version in a matter of days or weeks.
+					FreeIPA ​servers​ should not be run for a longer time period with different versions.
+				</para>
+				<!--<important><title>IMPORTANT</title>
 					<para>
 						Creating a replica of a different version than the master <emphasis role="bold">is not supported</emphasis>. Attempting to create a replica using a different version fails when attempting to configure the &DSF; instance.
 					</para>
 				</important>
+				-->
 			</listitem>
 			<listitem>
 				<para>
@@ -1104,17 +1147,20 @@ Setup complete</programlisting>
 					Run the <command>ipa-replica-prepare</command> command <emphasis>on the master &IPA; server</emphasis>. The command requires the 
 					fully-qualified domain name of the <emphasis>replica</emphasis> machine. Using the <option>--ip-address</option> option automatically creates DNS entries for the replica, including  the A and PTR records for the replica to the DNS.
 				</para>
-<programlisting language="Bash">[root@server ~]# ipa-replica-prepare ipareplica.example.com --ip-address 192.168.1.2 
+<programlisting>[root@server ~]# ipa-replica-prepare ipareplica.example.com --ip-address 192.168.1.2
 
-Determining current realm name
-Getting domain name from LDAP
 Preparing replica for ipareplica.example.com from ipaserver.example.com
-Creating SSL certificate for the &DS;
+Creating SSL certificate for the Directory Server
+Creating SSL certificate for the dogtag Directory Server
+Saving dogtag Directory Server port
 Creating SSL certificate for the Web Server
+Exporting RA certificate
 Copying additional files
 Finalizing configuration
-Packaging the replica into replica-info-ipareplica.example.com
-</programlisting>
+Packaging replica information into /var/lib/ipa/replica-info-ipareplica.example.com.gpg
+Adding DNS records for ipareplica.example.com
+Using reverse zone 1.168.192.in-addr.arpa.
+The ipa-replica-prepare command was successful</programlisting>
 
 							<important><title>IMPORTANT</title>
 								<para>
@@ -1151,7 +1197,7 @@ Packaging the replica into replica-info-ipareplica.example.com
 			</listitem>
 			<listitem>
 				<para>
-					On the replica server, run the replica installation script, referencing the replication information file. There are other options for 
+					On the replica server, run the replica installation script, referencing the replication information file. There are other options for
 					setting up DNS, much like the server installation script. Additionally, there is an option to configure a CA for the replica; while CA's are installed by default for servers, they are optional for replicas.
 				</para>
 				<para>
@@ -1160,13 +1206,13 @@ Packaging the replica into replica-info-ipareplica.example.com
 				<para>
 					For example:
 				</para>
-<programlisting language="Bash">[root@ipareplica ~]# ipa-replica-install --setup-ca --setup-dns --no-forwarders /var/lib/ipa/replica-info-ipareplica.example.com.gpg
+<programlisting>[root@ipareplica ~]# ipa-replica-install --setup-ca --setup-dns --no-forwarders /var/lib/ipa/replica-info-ipareplica.example.com.gpg
 
 Directory Manager (existing master) password:
 
 Warning: Hostname (ipareplica.example.com) not found in DNS
 Run connection check to master
-Check connection from replica to remote master 'ipareplica. example.com':
+Check connection from replica to remote master 'ipaserver.example.com':
    Directory Service: Unsecure port (389): OK
    Directory Service: Secure port (636): OK
    Kerberos KDC: TCP (88): OK
@@ -1186,7 +1232,7 @@ admin@EXAMPLE.COM password:
 
 Execute check on remote master
 admin@example.com's password:
-Check connection from master to remote replica 'ipareplica. example.com':
+Check connection from master to remote replica 'ipareplica.example.com':
    Directory Service: Unsecure port (389): OK
    Directory Service: Secure port (636): OK
    Kerberos KDC: TCP (88): OK
@@ -1258,7 +1304,7 @@ _ntp._udp
 				<para>
 					If the initial &IPA; server was created with DNS enabled, then the replica is created with the proper DNS entries. For example:
 				</para>
-<programlisting>[root@ipareplica ~]# DOMAIN=example.com
+<programlisting language="Bash">[root@ipareplica ~]# DOMAIN=example.com
 [root@ipareplica ~]# NAMESERVER=ipareplica
 [root@ipareplica ~]# for i in _ldap._tcp _kerberos._tcp _kerberos._udp _kerberos-master._tcp _kerberos-master._udp _ntp._udp; do echo ""; dig @${NAMESERVER} ${i}.${DOMAIN} srv +nocmd +noquestion +nocomments +nostats +noaa +noadditional +noauthority; done | egrep -v "^;" | egrep _
 
@@ -1325,37 +1371,37 @@ comparetAndWaitEntries ou=people,o=ipaca not found, let's wait</screen>
 		</para>
 <screen>set_krb5_creds - Could not get initial credentials for principal [ldap/ replica1.example.com] in keytab [WRFILE:/etc/dirsrv/ds.keytab]: -1765328324 (Generic error)</screen>
 		<para>
-			These errors are both related to how and when the &DSF; instance loads its Kerberos 
+			These errors are both related to how and when the &DSF; instance loads its Kerberos
 			credentials cache.
 		</para>
 		<para>
-			While &DSF; itself supports multiple different authentication mechanisms, &PROD; only 
-			uses GSS-API for Kerberos connections. The &DSF; instance for &PROD; keeps its Kerberos credentials cache 
+			While &DSF; itself supports multiple different authentication mechanisms, &PROD; only
+			uses GSS-API for Kerberos connections. The &DSF; instance for &PROD; keeps its Kerberos credentials cache
 			in memory. When the &DSF; process ends &mdash; like when the &IPA; replica is stopped &mdash;
-			the credentials cache is destroyed. 
+			the credentials cache is destroyed.
 		</para>
 		<para>
 			Also, the &DSF; is used as the backend storage for the principal information for the KDC.
 		</para>
 		<para>
-			When the replica then restarts, the &DSF; instance starts first, since it supplies 
+			When the replica then restarts, the &DSF; instance starts first, since it supplies
 			information for the KDC, and then the KDC server starts. This start order is what causes the
 			GSS-API and Kerberos connection errors.
 		</para>
 		<para>
-		       The &DSF; attempts to open a GSS-API connection, but 
-		       since there is no credentials cache yet and the KDC is not started, the GSS 
-		       connection fails. Likewise, any attempt to obtain the host credentials also fails.
-	       </para>
-	       <para>
-		       These errors are transient. The &DSF; re-attempts the GSS-API connection after 
-		       the KDC starts and it has a credentials cache. The &DSF; logs then record a 
-		       <command>bind resumed</command> message. 
-	       </para>
-	       <para>
-		       These startup GSS-API connection failures can be ignored as long as that connection 
-		       is successfully established.
-	       </para>
+			The &DSF; attempts to open a GSS-API connection, but
+			since there is no credentials cache yet and the KDC is not started, the GSS
+			connection fails. Likewise, any attempt to obtain the host credentials also fails.
+		</para>
+		<para>
+			These errors are transient. The &DSF; re-attempts the GSS-API connection after
+			the KDC starts and it has a credentials cache. The &DSF; logs then record a
+			<command>bind resumed</command> message.
+		</para>
+		<para>
+			These startup GSS-API connection failures can be ignored as long as that connection
+			is successfully established.
+		</para>
 
 	</section>
 	
@@ -1365,6 +1411,11 @@ comparetAndWaitEntries ou=people,o=ipaca not found, let's wait</screen>
  <section id="Uninstalling_IPA_Servers">
 		<title>Uninstalling &IPA; Servers and Replicas</title>
 		<para>
+			<important><title>IMPORTANT</title>
+				<para>
+					To uninstall replica please read the <xref linkend="removing-replica" /> first.
+				</para>
+			</important>
 			To uninstall both &IPAA; server and &IPAA; replica, pass the <option>--uninstall</option> option to the <command>ipa-server-install</command> command: 
 <programlisting language="Bash">[root@ipareplica ~]# ipa-server-install --uninstall</programlisting>
 
@@ -1372,6 +1423,7 @@ comparetAndWaitEntries ou=people,o=ipaca not found, let's wait</screen>
 
 	</section>
 
+<!-- -out of date section
 	<section id="upgrading">
 		<title condition="redhat">Upgrading &PROD; to &RHEL; 6.4</title>
 		<title condition="fedora">Upgrading from &IPA; 2.1 to 2.2</title>
@@ -1414,7 +1466,7 @@ comparetAndWaitEntries ou=people,o=ipaca not found, let's wait</screen>
 							<para>
 								The LDAP upgrade operation is logged in the upgrade log at <filename>/var/log/ipaupgrade-log</filename>. If any LDAP errors occur, then they are recorded in that log. Once any errors are resolved, the LDAP update process can be manually initiated by running the updater script:
 							</para>
-<screen>[root@server ~]# ipa-ldap-updater --upgrade</screen>
+<screen>[root@server ~]# ipa-ldap-updater &ndash;&ndash;upgrade</screen>
 						</listitem>
 						<listitem>
 							<para>
@@ -1547,5 +1599,6 @@ comparetAndWaitEntries ou=people,o=ipaca not found, let's wait</screen>
 		</orderedlist>
 		</section>
 	</section>
+	- END out of date section -->
 </chapter>
 
