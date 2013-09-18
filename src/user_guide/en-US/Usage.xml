@@ -378,7 +378,7 @@ Added user "jsmith"
 			<figure id="fig.ui-tabs"><title>The Main Menu</title>
 				<mediaobject>
 					<imageobject>
-						<imagedata fileref="images/ui-tabs.png" />
+						<imagedata fileref="images/ui-tabs.png" format="PNG" contentwidth="660px" />
 					</imageobject>
 				</mediaobject>
 			</figure>
@@ -489,7 +489,7 @@ Added user "jsmith"
 			<figure id="fig.ui-member-menu"><title>Member Of...</title>
 				<mediaobject>
 					<imageobject>
-						<imagedata fileref="images/groups-menu2.png" />
+						<imagedata fileref="images/ui-groups-menu.png" />
 					</imageobject>
 				</mediaobject>
 			</figure>
