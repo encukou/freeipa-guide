@@ -71,22 +71,41 @@
 <screen>ipa help <replaceable>topic</replaceable></screen>
 				<note><title>TIP</title>
 					<para>
-						To get a list of all available topics, run the <command>help</command> command without a topic name:
+						To get a list of all available topics, run the <command>help</command> command with <command>topics</command> param:
+					</para>
+<screen>ipa help topics</screen>
+					<para>
+						To get a list of all available commands, run the <command>help</command> command with <command>commands</command> param:
+					</para>
+<screen>ipa help commands</screen>
+					<para>
+						To get more information about <command>help</command> run command without a topic name:
 					</para>
 <screen>ipa help</screen>
 				</note>
 			<para>
 				All topic or command areas follow a consistent pattern for how entries are managed.
 			</para>
+
+			<section id="cmd-usage-kinit"><title>Logging into the &IPA; Domain Before Running</title>
+				<para>
+					Before running any &IPA; commands (with the exception of the installation scripts, such as <command>ipa-server-install</command>), the user must first authenticate to the &IPA; domain by obtaining a Kerberos ticket. This is done using <command>kinit</command>:
+				</para>
+<screen>[user@ipaserver ~]$ kinit admin</screen>
+				<para>
+					Different login options are described in <xref linkend="logging-in" />.
+				</para>
+			</section>
+
 			<section id="ipa-command-adding"><title>Adding, Editing, and Deleting Entries with ipa</title>
 				<para>
 					New entries are added using an <emphasis>*-add</emphasis> command. For example:
 				</para>
-<screen>$ ipa user-add jsmith</screen>
+<screen>[user@ipaserver ~]$ ipa user-add jsmith</screen>
 				<para>
 					For <command>add</command> operations, commands usually prompt for any required configuration attributes, which can be passed as command-line options or using <option>--set/addattr</option> options (<xref linkend="using-setattr-addattr" />).
 				</para>
-<screen>$ ipa user-add
+<screen>[user@ipaserver ~]$ ipa user-add
 First name: John
 Last name: Smith
 User login [jsmith]: jsmith
@@ -101,14 +120,14 @@ Added user "jsmith"
 				<para>
 					Last, entries can be deleted using the <command>*-del</command> command and the entry's name.
 				</para>
-<screen>$ ipa user-del jsmith</screen>
+<screen>[user@ipaserver ~]$ ipa user-del jsmith</screen>
 			</section>
 
 			<section id="ipa-command-displaying"><title>Finding and Displaying Entries with ipa</title>
 				<para>
-					Entries for an entire type are searched for using the <command>*-find</command> command and an optional search criterion. The criterion is a string which can either be an exact match or use an asterisk (*) as a wildcard.
+					Entries for an entire type are searched for using the <command>*-find</command> command and an optional search criterion. The criterion is a string.
 				</para>
-<screen>ipa user-find *smith</screen>
+<screen>[user@ipaserver ~]$ ipa user-find jsmith</screen>
 				<para>
 					With no search criterion, every entry of that type is displayed.
 				</para>
@@ -117,7 +136,7 @@ Added user "jsmith"
 				Part of the server configuration is setting global defaults for size and time limits on searches. While these limits are always enforced in the web UI, they can be overridden with any <command>*-find</command> command with the <option>--sizelimit</option> and <option>--timelimit</option> options.
 				For example, if the default time limit is 60 seconds and a search is going to take longer, the time limit can be increased to 120 seconds:
 			</para>
-<screen>[jsmith@ipaserver ~]$ ipa user-find *sen --timelimit=120</screen>
+<screen>[user@ipaserver ~]$ ipa user-find jsmith --timelimit=120</screen>
 				<para>
 					Not every possible attribute in an entry type can be searched for. A certain subset of attributes are predefined and indexed for searches. (This list is configurable for users and groups, but not for other types of entries.)
 				</para>
@@ -127,6 +146,20 @@ Added user "jsmith"
 				<para>
 					To display a specific entry, use the <command>*-show</command> command and the entry name. As with searches, only a subset of attributes are displayed with the entry unless the <option>--all</option> option is used.
 				</para>
+				<screen>[user@ipaserver ~]$ ipa user-show jsmith
+  User login: jsmith
+  First name: John
+  Last name: Smith
+  Home directory: /home/jsmith
+  Login shell: /bin/sh
+  Email address: jsmith@example.com
+  UID: 1035400001
+  GID: 1035400001
+  Account disabled: False
+  Password: True
+  Member of groups: ipausers
+  Kerberos keys available: True
+</screen>
 			</section>
 
 			<section id="ipa-command-members"><title>Adding Members to Groups and Containers with ipa</title>
@@ -183,16 +216,17 @@ Added user "jsmith"
 				<para>
 					Both <option>--setattr</option> option and <option>--addattr</option> can be used multiple times in the same command invocation. For example:
 				</para>
-<screen>$ ipa user-mod jsmith --addattr=mail=johnnys@me.com --addattr=mail=jsmith@example.com --setattr=description="backup IT manager for the east coast branch"</screen>
+<screen>[user@ipaserver ~]$ ipa user-mod jsmith --addattr=mail=johnnys@me.com --addattr=mail=jsmith@example.com --setattr=description="backup IT manager for the east coast branch"</screen>
 				<para>
 					Likewise, an attribute or specific attribute value can be removed from an entry using the <option>--delattr</option> option. For a single-valued attribute, this removes the attribute; for a multi-valued attribute, it removes only the specified value. For example:
 				</para>
-<screen>$ ipa user-mod jsmith --delattr=mail=johnnys@me.com</screen>
+<screen>[user@ipaserver ~]$ ipa user-mod jsmith --delattr=mail=johnnys@me.com</screen>
 				<note><title>NOTE</title>
 					<para>
-						Deleting attributes is evaluated last, after adding or editing attributes. If the same attribute is added and deleted in the same modify operation, it is a no-op.
+						Options are evaluated in order: <command>--setattr</command>, <command>--addattr</command> and <command>--delattr</command>. If the same attribute is added and deleted in the same modify operation, it is a no-op.
 					</para>
-<screen>$ ipa user-mod jsmith --addattr=mail=johnnys@me.com --delattr=mail=johnnys@me.com</screen>
+<screen>[user@ipaserver ~]$ ipa user-mod jsmith --addattr=mail=johnnys@me.com --delattr=mail=johnnys@me.com
+ipa: ERROR: no modifications to be performed</screen>
 				</note>
 		</section>
 
@@ -205,15 +239,6 @@ Added user "jsmith"
 				</para>
 			</section>
 
-			<section id="cmd-usage-kinit"><title>Logging into the &IPA; Domain Before Running</title>
-				<para>
-					Before running any &IPA; commands (with the exception of the installation scripts, such as <command>ipa-server-install</command>), the user must first authenticate to the &IPA; domain by obtaining a Kerberos ticket. This is done using <command>kinit</command>:
-				</para>
-<screen>[jsmith@ipaserver ~]$ kinit admin</screen>
-				<para>
-					Different login options are described in <xref linkend="logging-in" />.
-				</para>
-			</section>
 		</section>
 
 		<section id="ipa-ui"><title>Looking at the &IPA; UI</title>
@@ -303,6 +328,16 @@ Added user "jsmith"
 											DNS (if configured)
 										</para>
 									</listitem>
+									<listitem>
+										<para>
+											Certificates entries
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											Realm domain entries
+										</para>
+									</listitem>
 								</itemizedlist>
 							</entry>
 						</row>
@@ -338,13 +373,23 @@ Added user "jsmith"
 											Kerberos ticket policy
 										</para>
 									</listitem>
+									<listitem>
+										<para>
+											SELinux user maps entries
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											Automember entries
+										</para>
+									</listitem>
 								</itemizedlist>
 							</entry>
 						</row>
 						
 						<row>
 							<entry>
-								&IPA; Server (access controls within &PROD;)
+								IPA Server (access controls within &PROD;)
 							</entry>
 							<entry>
 								<itemizedlist>
@@ -355,12 +400,27 @@ Added user "jsmith"
 									</listitem>
 									<listitem>
 										<para>
-											Self permissions
+											Self service permissions
 										</para>
 									</listitem>
 									<listitem>
 										<para>
 											Delegations (user access control over other users)
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											ID ranges
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											Trusts (shown if <command>ipa-adtrust-install</command> was run)
+										</para>
+									</listitem>
+									<listitem>
+										<para>
+											Configuration
 										</para>
 									</listitem>
 								</itemizedlist>
@@ -378,7 +438,7 @@ Added user "jsmith"
 			<figure id="fig.ui-tabs"><title>The Main Menu</title>
 				<mediaobject>
 					<imageobject>
-						<imagedata fileref="images/ui-tabs.png" format="PNG" contentwidth="660px" />
+						<imagedata fileref="images/ui-tabs.png" format="PNG" />
 					</imageobject>
 				</mediaobject>
 			</figure>
@@ -512,7 +572,7 @@ Added user "jsmith"
 			<para>
 				Logging into &PROD; requires running <command>kinit</command> on a client within the &IPA; domain. 
 			</para>
-<screen>$ kinit</screen>
+<screen>[user@ipaserver ~]$ kinit</screen>
 			<para>
 				The <command>kinit</command> command must be run from a machine which has been configured as a client within the &IPA; domain, so that the client retrieves authenticates with the &IPA; KDC.
 			</para>
@@ -522,7 +582,7 @@ Added user "jsmith"
 				for them to authenticate to the &IPA; Kerberos domain successfully. For example, if you are logged 
 				into the machine as <command>jsmith</command>:
 			</para>
-<screen>$ kinit
+<screen>[jsmith@ipaserver ~]$ kinit
 Password for jsmith@EXAMPLE.COM:</screen>
 				<note><title>NOTE</title>
 					<para>
@@ -537,13 +597,13 @@ Password for jsmith@EXAMPLE.COM:</screen>
 			To specify an &IPA; username &mdash; because a person's system username is different then the &IPA; username or to switch &IPA; 
 			user accounts &mdash; simply rerun the <command>kinit</command> command, specifying the new user. For example:
 		</para>
-<screen>$ kinit <replaceable>userName</replaceable> 
+<screen>[user@ipaserver ~]$ kinit <replaceable>userName</replaceable>
 Password for <replaceable>userName</replaceable>@EXAMPLE.COM:</screen>
 		<para>
 				When the server was first set up, an administrative user, <systemitem>admin</systemitem>, is created to perform normal administrative activities.
 				To authenticate as the admin user, use the name admin when running <command>kinit</command>:
 			</para>
-<screen>$ kinit admin</screen>
+<screen>[user@ipaserver ~]$ kinit admin</screen>
 		<note><title>NOTE</title>
 		 <para>
 			Only one set of tickets can be stored per logged-in user. The current stored credentials are the ones that will be used when accessing &IPA; services.
@@ -560,7 +620,7 @@ Password for <replaceable>userName</replaceable>@EXAMPLE.COM:</screen>
 			 from the server:
 		</para>
 		 
-<screen>$ klist
+<screen>[user@ipaserver ~]$ klist
 Ticket cache: FILE:/tmp/krb5cc_500
 Default principal: ipaUser@EXAMPLE.COM
 
@@ -627,7 +687,7 @@ klist: You have no tickets cached
 			<itemizedlist>
 				<listitem>
 					<para>
-						Firefox 15.x
+						Firefox 15.x and newer
 					</para>
 				</listitem>
 				<listitem>
@@ -1004,7 +1064,7 @@ example.com = EXAMPLE.COM</screen>
 
 		<section id="searches"><title>Understanding Search Limits and Settings</title>
 			<para>
-				Some searches can result in a large number of entries being returned, possibly even all entries. Search limits improve overall server performance by limiting 
+				Some searches can result in a large number of entries being returned, possibly even all entries. Search limits improve overall server performance by limiting
 				how long the server spends in a search and how many entries are returned. 
 			</para>
 
@@ -1034,7 +1094,7 @@ example.com = EXAMPLE.COM</screen>
 					</listitem>
 					<listitem>
 						<para>
-							<emphasis>The page size limit.</emphasis> Although not strictly a search limit, the page size limit does limit how many entries are returned per page. The server returns the set of entries, up to the search limit, and then randomly selects up to 20 entries per page for display. Paging results makes the results more understandable and more viewable.
+							<emphasis>The page size limit.</emphasis> Although not strictly a search limit, the page size limit does limit how many entries are returned per page. The server returns the set of entries, up to the search limit, and then selects up to 20 entries per page for display. Paging results makes the results more understandable and more viewable.
 						</para>
 						<para>
 							This is hard-coded to 20 for all searches.
@@ -1042,7 +1102,7 @@ example.com = EXAMPLE.COM</screen>
 					</listitem>
 					<listitem>
 						<para>
-							<emphasis>The LDAP search limit (--pkey option).</emphasis> All searches performed in the UI, and CLI searches which use the <option>--pkey</option> option, override the search limit set in the &IPA; server configuration and use the search limit set in the underlying LDAP directory. 
+							<emphasis>The LDAP search limit (--pkey-only option).</emphasis> All searches performed in the UI, and CLI searches which use the <option>--pkey-only</option> option, override the search limit set in the &IPA; server configuration and use the search limit set in the underlying LDAP directory.
 						</para>
 						<para>
 							By default, this limit is 2000 entries. It can be edited by editing the &DSF; configuration.
@@ -1053,19 +1113,19 @@ example.com = EXAMPLE.COM</screen>
 
 	<section id="search-limits"><title>Setting &IPA; Search Limits</title>
 		 <para>
-			<emphasis>Search limits</emphasis> set caps on the number of records returned or the time spent searching when querying the 
-			database for user or group entries. There are two types of search limits: time limits and size (number) limits. 
+			<emphasis>Search limits</emphasis> set caps on the number of records returned or the time spent searching when querying the
+			database for user or group entries. There are two types of search limits: time limits and size (number) limits.
 		</para>
 		<para>
-			With the default settings, users are limited to two-second searches and no more than 100 records returned per search. 
+			With the default settings, users are limited to two-second searches and no more than 100 records returned per search.
 		</para>
 		 <important><title>IMPORTANT</title>
 			<para>
-				Setting search size or time limits too high can negatively affect &IPA; server performance. 
+				Setting search size or time limits too high can negatively affect &IPA; server performance.
 			</para>
 		</important>
 		<section id="search-limits-ui"><title>With the Web UI</title>
-			
+
 			<orderedlist>
 				<listitem>
 							<para>
@@ -1118,13 +1178,13 @@ example.com = EXAMPLE.COM</screen>
 						</listitem>
 				</orderedlist>
 			</section>
-		
+
 		<section id="search-limits-cmd"><title>With the Command Line</title>
 		<para>
 			The search limits can be changed using the <command>config-mod</command>  command.
 		</para>
-		 
-<screen>$ ipa config-mod --searchtimelimit=5 --searchrecordslimit=500
+
+<screen>[user@ipaserver ~]$ ipa config-mod --searchtimelimit=5 --searchrecordslimit=500
 
   Max. username length: 32
   Home directory base: /home
@@ -1143,7 +1203,7 @@ example.com = EXAMPLE.COM</screen>
 					Setting the time limit or size limit value to -1 means that there are no limits on searches.
 				</para>
 			</note>
-		
+
 			</section>
 		</section>
 
@@ -1157,7 +1217,7 @@ example.com = EXAMPLE.COM</screen>
 			<para>
 				For example, if the default time limit is 60 seconds and a search is going to take longer, the time limit can be increased to 120 seconds:
 			</para>
-<screen>[jsmith@ipaserver ~]$ ipa user-find *sen --timelimit=120</screen>
+<screen>[user@ipaserver ~]$ ipa user-find jsmith --timelimit=120</screen>
 		</section>
 
 		<section id="search-fields"><title>Setting Search Attributes</title>
@@ -1173,7 +1233,7 @@ example.com = EXAMPLE.COM</screen>
 
 			<section id="user-search-fields"><title>Setting User Search Attributes</title>
 			<section id="search-fields-ui"><title>From the Web UI</title>
-				
+
 			<orderedlist>
 				<listitem>
 							<para>
@@ -1213,7 +1273,7 @@ example.com = EXAMPLE.COM</screen>
 			<para>
 				To change the search attributes, use the <option>--usersearch</option> option to set the attributes for user searches. 
 			</para>
-<screen>$ ipa config-mod --usersearch=uid,givenname,sn,telephonenumber,ou,title</screen>
+<screen>[user@ipaserver ~]$ ipa config-mod --usersearch=uid,givenname,sn,telephonenumber,ou,title</screen>
 			<note><title>NOTE</title>
 				<para>
 					Always give the complete list of search attributes. Whatever values are passed with the configuration argument overwrite the previous settings.
@@ -1221,8 +1281,6 @@ example.com = EXAMPLE.COM</screen>
 			</note>
 		</section>
 		</section>
-
-		
 
 		<section id="search-fields-groups"><title>Setting Group Search Attributes</title>
 			<para>
@@ -1234,7 +1292,7 @@ example.com = EXAMPLE.COM</screen>
 				Creating indexes is described in the <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Directory_Server/9.0/html/Administration_Guide/Managing_Indexes-Creating_Indexes.html">indexes chapter in the &DS; &AG;</ulink>.
 			</para>
 			<section  id="search-fields-groups-ui"><title>From the Web UI</title>
-				
+
 			<orderedlist>
 				<listitem>
 							<para>
@@ -1275,7 +1333,7 @@ example.com = EXAMPLE.COM</screen>
 			<para>
 				To change the search attributes, use the <option>--groupsearch</option> options to set the attributes for group searches. 
 			</para>
-<screen>$ ipa config-mod --groupsearch=cn,description</screen>
+<screen>[user@ipaserver ~]$ ipa config-mod --groupsearch=cn,description</screen>
 			<note><title>NOTE</title>
 				<para>
 					Always give the complete list of search attributes. Whatever values are passed with the configuration argument overwrite the previous settings.
