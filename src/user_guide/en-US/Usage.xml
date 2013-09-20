@@ -736,33 +736,47 @@ https://server.example.com/ipa/ui</screen>
 
 	<section id="config-browser"><title>Configuring the Browser</title>
 		 <para>
-			 Firefox can use Kerberos credentials to authenticate to the &IPA; UI, but Kerberos negotiation needs
-			to be configured to use the &IPA; domain. At the first log-in attempt, if Firefox has not been configured to support Kerberos authentication, then an error message appears.
+			Firefox can use Kerberos credentials to authenticate to the &IPA; UI, but Kerberos negotiation needs
+			to be configured to use the &IPA; domain.
+
+			At the first log-in attempt, if Firefox has not been configured to support Kerberos authentication, then an error message appears with form based authentication, as described in <xref linkend="form-based-auth" />.
 		</para>
 		<figure id="fig.kerb-error-browser"><title>Kerberos Authentication Error</title>
 			<mediaobject>
 				<imageobject>
-					<imagedata fileref="images/browser-kinit-rhel.png" />
+					<imagedata fileref="images/ui-login-form-warn.png" />
 				</imageobject>
 			</mediaobject>
 		</figure>
 		<para>
-			If you see that error, then the &IPA; web UI can perform the required configuration:
+			If you want to configure Firefox to use Kerberos credentials, then the &IPA; web UI can perform the required configuration:
 		</para>
 		<orderedlist>
 			<listitem>
 				<para>
-					Click the <guilabel>follow these directions</guilabel> link.
+					Click the <guilabel>configured</guilabel> link.
 				</para>
 			</listitem>
 			<listitem>
 				<para>
-					Click the link to import the CA certificate for the &IPA; server.
+					Click the <guilabel>Firefox configuration page</guilabel> link.
 				</para>
 				<informalfigure>
 					<mediaobject>
 						<imageobject>
 							<imagedata fileref="images/configuring-browser1.png" />
+						</imageobject>
+					</mediaobject>
+				</informalfigure>
+			</listitem>
+			<listitem>
+				<para>
+					Click the button to import the CA certificate for the &IPA; server.
+				</para>
+				<informalfigure>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="images/configuring-browser-step1.png" />
 						</imageobject>
 					</mediaobject>
 				</informalfigure>
@@ -783,27 +797,52 @@ https://server.example.com/ipa/ui</screen>
 			</listitem>
 			<listitem>
 				<para>
+					Click the button to install the Kerberos Configuration Firefox extension.
+				</para>
+				<informalfigure>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="images/configuring-browser-step2.png" />
+						</imageobject>
+					</mediaobject>
+				</informalfigure>
+			</listitem>
+			<listitem>
+				<para>
 					Click the <guilabel>Configure Firefox</guilabel> button. This automatically fills out all the <command>negotiate</command> settings in the Firefox configuration to use the &IPA; domain settings. 
 				</para>
 				<informalfigure>
 					<mediaobject>
 						<imageobject>
-							<imagedata fileref="images/configuring-browser2.png" />
+							<imagedata fileref="images/configuring-browser-step3.png" />
 						</imageobject>
 					</mediaobject>
 				</informalfigure>
 				
 				<para>
-					When the process is complete, a success box pops up saying that Firefox has been configured for single sign-on. For there, you are redirected to the &IPA; web UI.
+					When the process is complete, a text shows saying that Firefox has been successfully configured.
 				</para>
 				<informalfigure>
 					<mediaobject>
 						<imageobject>
-							<imagedata fileref="images/configuring-browser3.png" />
+							<imagedata fileref="images/configuring-browser-step3a.png" />
 						</imageobject>
 					</mediaobject>
 				</informalfigure>
 			</listitem>
+			<listitem>
+				<para>
+					Click the <guilabel>Return to Web UI</guilabel> button to log in.
+				</para>
+				<informalfigure>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="images/configuring-browser-step4.png" />
+						</imageobject>
+					</mediaobject>
+				</informalfigure>
+			</listitem>
+
 		</orderedlist>
 			<para>
 				This can also be done manually:
@@ -912,32 +951,28 @@ network.negotiate-auth.gsslib: C:\Program Files\MIT\Kerberos\bin\gssapi32.dll</p
 	</section>
 	
 	 <section id="form-based-auth">
-		 <title>Logging in with Simple Username/Password Credentials</title>
+		 <title>Form based authentication</title>
 		 <para>
-			 If Kerberos authentication fails, then browser login also fails. That prevents access to 
-			 the &IPA; web UI. Simple authentication for the UI allows users to log in
-			 even if there are problems with the Kerberos service or if the system is outside the &IPA; domain.
+			Form based authentication for the UI allows users to log in
+			even if there are problems with the Kerberos service or if the system is outside the &IPA; domain.
 		</para>
 		<para>
-			When the &IPA; server cannot find a valid Kerberos ticket for the user attempting to log into the web UI, it splashes an error message. Since the preferred method of connecting to &IPA; domain services (including the UI) is using Kerberos authentication, the error first says to renew the Kerberos credentials or to configure the browser to support Kerberos authentication.
+			When the &IPA; server cannot find a valid Kerberos ticket for the user attempting to log into the web UI, it shows a login form. Preferred method of connecting to &IPA; domain services (including the UI) is using Kerberos authentication.
 		</para>
-		<para>
-			The second part of the message offers the alternative of using simple authentication. The <guilabel>form-based authentication</guilabel> link opens a login page.
-		</para>
-		<figure><title>&IPA; Form-Based Login Option</title>
+		<figure><title>&IPA; Form-Based Login</title>
 			<mediaobject>
 				<imageobject>
-					<imagedata fileref="images/login-alt2.png" />
+					<imagedata fileref="images/ui-login-form-login.png" />
 				</imageobject>
 			</mediaobject>
 		</figure>
 		<para>
-			Then simply supply the UID and password for a configured &IPA; user.
+			Simply supply the UID and password for a configured &IPA; user to log into the web UI.
 		</para>
 		<figure><title>&IPA; Password Prompt</title>
 			<mediaobject>
 				<imageobject>
-					<imagedata fileref="images/login-alt.png" />
+					<imagedata fileref="images/ui-login-form-credentials.png" />
 				</imageobject>
 			</mediaobject>
 		</figure>
@@ -945,6 +980,7 @@ network.negotiate-auth.gsslib: C:\Program Files\MIT\Kerberos\bin\gssapi32.dll</p
 
 	</section>
 
+<!-- Proxy is not supported
 	<section id="ui-and-proxies"><title>Using the UI with Proxy Servers</title>
 		<indexterm>
 			<primary>port forwarding</primary>
@@ -972,7 +1008,7 @@ network.negotiate-auth.gsslib: C:\Program Files\MIT\Kerberos\bin\gssapi32.dll</p
 			<ulink url="http://www.meadowy.org/~gotoh/ssh/openssh-socks.html" />.
 		 </para>
 	</section>
-
+-->
 
 		 <section id="Troubleshooting-UI">
 			 <title>Troubleshooting UI Connection Problems</title>
