@@ -129,7 +129,7 @@
 							Create a new location for the user directory maps:
 						</para>
 
-<screen>$ ipa automountlocation-add userdirs
+<screen>[user@ipaserver ~]$ ipa automountlocation-add userdirs
 Location: userdirs</screen>
 
 					</listitem>
@@ -138,7 +138,7 @@ Location: userdirs</screen>
 							Add a direct map to the new location's <filename>auto.direct</filename> file. In this example, the mount point is <filename>/share</filename>:
 						</para>
 
-<screen>$ ipa automountkey-add userdirs auto.direct --key=/share --info="-ro,soft, ipaserver.example.com:/home/share"
+<screen>[user@ipaserver ~]$ ipa automountkey-add userdirs auto.direct --key=/share --info="-ro,soft, ipaserver.example.com:/home/share"
 
 Key: /share
 Mount information: -ro,soft, ipaserver.example.com:/home/share</screen>
@@ -228,31 +228,39 @@ Mount information: -ro,soft, ipaserver.example.com:/home/share</screen>
 			New user entries are added with the <command>user-add</command> command. Attributes (listed in <xref linkend="tab.default-attrs" />)
 			can be added to the entry with specific values or the command can be run with no arguments.
 		</para>
-<screen>$ ipa user-add [<replaceable>username</replaceable>] [<replaceable>attributes</replaceable>]</screen>
+<screen>ipa user-add [<replaceable>username</replaceable>] [<replaceable>attributes</replaceable>]</screen>
 		<para>
 			When no arguments are used, the command prompts for the required user account information and uses the defaults for the
 			other attributes, with the defaults printed below. For example:
 		</para>
-<screen>$ ipa user-add
+<screen>[user@ipaserver ~]$ ipa user-add
 First name: John
 Last name: Smith
 User login [jsmith]: jsmith
 --------------------
 Added user "jsmith"
 --------------------
-User login: jsmith
-First name: John
-Last name: Smith
-Home directory: /home/jsmith
-GECOS field: jsmith
-Login shell: /bin/sh
-Kerberos principal: jsmith@EXAMPLE.COM
-UID: 387115841</screen>
+  User login: jsmith
+  First name: John
+  Last name: Smith
+  Full name: John Smith
+  Display name: John Smith
+  Initials: JS
+  Home directory: /home/jsmith
+  GECOS: John Smith
+  Login shell: /bin/sh
+  Kerberos principal: jsmith@EXAMPLE.COM
+   Email address: jsmith@example.com
+  UID: 882600007
+  GID: 882600007
+  Password: False
+  Member of groups: ipausers
+  Kerberos keys available: False</screen>
 
 		<para>
 			Any of the user attributes can be passed with the command. This will either set values for optional attributes or override the default values for default attributes.
 		</para>
-<screen>$ ipa user-add jsmith --first=John --last=Smith --manager=bjensen --email=johnls@example.com --homedir=/home/work/johns --password</screen>
+<screen>[user@ipaserver ~]$ ipa user-add jsmith --first=John --last=Smith --manager=bjensen --email=johnls@example.com --homedir=/home/work/johns --password</screen>
 				<important><title>IMPORTANT</title>
 					<para>
 						When a user is created without specifying a UID or GID number, then the user account is automatically assigned an ID number that is next available in the server or replica range. (Number ranges are described more in <xref linkend="Managing-Unique_UID_and_GID_Attributes" />.) This means that a user always has a unique number for its UID number and, if configured, for its private group.
@@ -283,7 +291,7 @@ UID: 387115841</screen>
 						<informalfigure>
 							<mediaobject>
 								<imageobject>
-									<imagedata fileref="images/user-list.png" />
+									<imagedata fileref="images/user-list-click-on-user.png" />
 								</imageobject>
 							</mediaobject>
 						</informalfigure>
@@ -326,11 +334,11 @@ UID: 387115841</screen>
 			The <command>user-mod</command> command edits user accounts by adding or changing attributes. At its most basic, the <command>user-mod</command> specifies the
 			user account by login ID, the attribute to edit, and the new value:
 		</para>
-<screen>$ ipa user-mod <replaceable>loginID</replaceable> --<replaceable>attributeName=newValue</replaceable></screen>
+<screen>ipa user-mod <replaceable>loginID</replaceable> --<replaceable>attributeName=newValue</replaceable></screen>
 		 <para>
 			For example, to change a user's work title from <emphasis>Editor II</emphasis> to <emphasis>Editor III</emphasis>:
 		</para>
-<screen>$ ipa user-mod jsmith --title="Editor III"</screen>
+<screen>[user@ipaserver ~]$ ipa user-mod jsmith --title="Editor III"</screen>
 		<indexterm>
 			<primary>attributes</primary>
 			<secondary>setting multi-valued</secondary>
@@ -349,15 +357,15 @@ UID: 387115841</screen>
 			<para>
 				A user is created first using his work email account.
 			</para>
-<screen>$ ipa user-add jsmith --first=John --last=Smith --email=johnls@example.com</screen>
+<screen>[user@ipaserver ~]$ ipa user-add jsmith --first=John --last=Smith --email=johnls@example.com</screen>
 			<para>
 				Then, his personal email account is added.
 			</para>
-<screen>$ ipa user-mod jsmith --addattr=mail=johnnys@me.com</screen>
+<screen>[user@ipaserver ~]$ ipa user-mod jsmith --addattr=mail=johnnys@me.com</screen>
 			<para>
 				Both email addresses are listed for the user.
 			</para>
-<screen>$ ipa user-find jsmith --all
+<screen>[user@ipaserver ~]$ ipa user-find jsmith --all
 --------------
 1 user matched
 --------------
@@ -368,7 +376,7 @@ UID: 387115841</screen>
   			<para>
 				To set two values at the same time, use the <option>--addattr</option> option twice:
 			</para>
-<screen>$ ipa user-add jsmith --first=John --last=Smith --email=johnls@example.com --addattr=mail=johnnys@me.com --addattr=mail=admin@example.com</screen>
+<screen>[user@ipaserver ~]$ ipa user-add jsmith --first=John --last=Smith --email=johnls@example.com --addattr=mail=johnnys@me.com --addattr=mail=admin@example.com</screen>
 			</example>
 		</section>
 	</section>
@@ -391,48 +399,93 @@ UID: 387115841</screen>
 						</para>
 					</listitem>
 					<listitem>
-						<para>
-							Click the name of the user for whom to deactivate or activate.
-						</para>
-						<informalfigure>
-							<mediaobject>
-								<imageobject>
-									<imagedata fileref="images/user-list.png" />
-								</imageobject>
-							</mediaobject>
-						</informalfigure>
+						<itemizedlist>
+							<para>
+								Activation or deactivation user(s):
+							</para>
+							<listitem>
+							<orderedlist>
+								<para>
+									Directly from the users list:
+								</para>
+								<listitem>
+								<para>
+									Select the checkboxes by the names of the users to activate or deactivate.
+								</para>
+								<informalfigure>
+									<mediaobject>
+										<imageobject>
+											<imagedata fileref="images/user-list-checked-actions.png" />
+										</imageobject>
+									</mediaobject>
+								</informalfigure>
+							</listitem>
+							<listitem>
+								<para>
+									Click the <guilabel>Disable/Enable</guilabel>  link at the top of the task area.
+								</para>
+							</listitem>
+							<listitem>
+								<para>
+									Confirm operation.
+								</para>
+								<informalfigure>
+									<mediaobject>
+										<imageobject>
+											<imagedata fileref="images/user-disable.png" />
+										</imageobject>
+									</mediaobject>
+								</informalfigure>
+							</listitem>
+						</orderedlist>
 					</listitem>
 					<listitem>
-						<para>
-							Scroll to the <guilabel>Account Settings</guilabel> area.
-						</para>
+						<orderedlist>
+								<para>
+									From the user view:
+								</para>
+								<listitem>
+								<para>
+									Click the name of the user for whom to deactivate or activate.
+								</para>
+								<informalfigure>
+									<mediaobject>
+										<imageobject>
+											<imagedata fileref="images/user-list-click-on-user.png" />
+										</imageobject>
+									</mediaobject>
+								</informalfigure>
+							</listitem>
+							<listitem>
+								<para>
+									Choose the <guilabel>Disable/Enable</guilabel> action.
+								</para>
+								<informalfigure>
+									<mediaobject>
+										<imageobject>
+											<imagedata fileref="images/user-acctsettings.png" />
+										</imageobject>
+									</mediaobject>
+								</informalfigure>
+							</listitem>
+							<listitem>
+							<para>
+								Click the <guilabel>Apply</guilabel> button at the top of the page.
+							</para>
+							</listitem>
+						</orderedlist>
 					</listitem>
-					<listitem>
-						<para>
-							Click the <guilabel>Deactivate</guilabel> link.
-						</para>
-						<informalfigure>
-							<mediaobject>
-								<imageobject>
-									<imagedata fileref="images/user-acctsettings.png" />
-								</imageobject>
-							</mediaobject>
-						</informalfigure>
-					</listitem>
-					<listitem>
-						<para>
-							Click the <guilabel>Update</guilabel> link at the top of the page.
-						</para>
-					</listitem>
-				</orderedlist>
-			</section>
+				</itemizedlist>
+			</listitem>
+			</orderedlist>
+		</section>
 
 
 			<section id="Activating_and_Deactivating_User_Accounts-cmd"><title>From the Command Line</title>
 				<para>
 					Users are activated and disabled using <command>user-enable</command> and <command>user-disable</command> commands. All that is required is the user login. For example:
 				</para>
-<screen>$ ipa user-disable jsmith</screen>
+<screen>[user@ipaserver ~]$ ipa user-disable jsmith</screen>
 			</section>
 		</section>
 
@@ -479,7 +532,7 @@ member: uid=youruser,cn=users,cn=accouns,dc=example,dc=com
 						<informalfigure>
 							<mediaobject>
 								<imageobject>
-									<imagedata fileref="images/user-list.png" />
+									<imagedata fileref="images/user-list-checked-actions.png" />
 								</imageobject>
 							</mediaobject>
 						</informalfigure>
@@ -508,11 +561,11 @@ member: uid=youruser,cn=users,cn=accouns,dc=example,dc=com
 				 <para>
 					Users are deleted using the <command>user-del</command> command and then the user login. For example, a single user:
 				</para>
-<screen>$ ipa user-del jsmith</screen>
+<screen>[user@ipaserver ~]$ ipa user-del jsmith</screen>
 				 <para>
 					To delete multiple users, simply list the users, separated by spaces.
 				</para>
-<screen>$ ipa user-del jsmith bjensen mreynolds cdickens</screen>
+<screen>[user@ipaserver ~]$ ipa user-del jsmith bjensen mreynolds cdickens</screen>
 				 <para>
 					When deleting multiple users, use the <option>--continue</option> option to force the command to continue regardless of errors. A summary of the successful and failed operations is printed to stdout when the command completes. If <option>--continue</option> is not used, then the command proceeds with deleting users <emphasis>until</emphasis> it encounters an error, and then it exits.
 				</para>
@@ -574,7 +627,7 @@ member: uid=youruser,cn=users,cn=accouns,dc=example,dc=com
 					<para>
 						Generate a user key. For example, using the OpenSSH tools:
 					</para>
-<screen>[jsmith@server ~]$ ssh-keygen -t rsa -C jsmith@example.com
+<screen>[user@ipaserver ~]$ ssh-keygen -t rsa -C jsmith@example.com
 Generating public/private rsa key pair.
 Enter file in which to save the key (/home/jsmith/.ssh/id_rsa):
 Created directory '/home/jsmith/.ssh'.
@@ -601,7 +654,7 @@ The key's randomart image is:
 					<para>
 						Copy the public key from the key file. The full key entry has the form <emphasis>type key== comment</emphasis>. Only the <emphasis>key==</emphasis> is required, but the entire entry can be stored.
 					</para>
-<screen>[jsmith@server ~]$ cat  /home/jsmith/.ssh/id_rsa.pub
+<screen>[user@ipaserver ~]$ cat  /home/jsmith/.ssh/id_rsa.pub
 
 ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 				</listitem>
@@ -617,7 +670,7 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 					<informalfigure>
 						<mediaobject>
 							<imageobject>
-								<imagedata fileref="images/user-list.png" />
+								<imagedata fileref="images/user-list-click-on-user.png" />
 							</imageobject>
 						</mediaobject>
 					</informalfigure>
@@ -685,7 +738,7 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 				</mediaobject>
 			</figure>
 			<para condition="fedora">
-				After uploading the user keys, configure SSSD to use &PROD; as one of its identity domains and set up OpenSSH to use the SSSD tooling for managing user keys.
+				After uploading the user keys, configure SSSD to use &PROD; as one of its identity domains and set up OpenSSH to use the SSSD tooling for managing user keys. This is covered in the <ulink url="http://www.freeipa.org/images/1/10/Freeipa30_SSSD_OpenSSH_integration.pdf">SSSD and OpenSSH Integration</ulink>.
 			</para>
 			<para condition="redhat">
 				After uploading the user keys, configure SSSD to use &PROD; as one of its identity domains and set up OpenSSH to use the SSSD tooling for managing user keys. This is covered in the <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/openssh-sssd.html">&OS; Deployment Guide</ulink>.
@@ -695,16 +748,16 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 			<para>
 				The <option>--sshpubkey</option> option uploads the 64 bit-encoded public key to the user entry. For example:
 			</para>
-<screen>[jsmith@server ~]$ ipa user-mod jsmith --sshpubkey="ssh-rsa 12345abcde= ipaclient.example.com"</screen>
+<screen>[user@server ~]$ ipa user-mod jsmith --sshpubkey="ssh-rsa 12345abcde= ipaclient.example.com"</screen>
 			<para>
 				With a real key, the key is longer and usually ends with an equals sign (=).
 			</para>
 			<para>
-				To upload multiple keys, pass a comma-separated list of keys with a single <option>--sshpubkey</option> option:
+				To upload multiple keys:
 			</para>
-<screen>--sshpubkey="12345abcde==,key2==,key3=="</screen>
+<screen>[user@server ~]$ ipa user-mod jsmith --sshpubkey="12345abcde==" --sshpubkey="key2==" --sshpubkey="key3=="</screen>
 			<para condition="fedora">
-				After uploading the user keys, configure SSSD to use &PROD; as one of its identity domains and set up OpenSSH to use the SSSD tooling for managing user keys.
+				After uploading the user keys, configure SSSD to use &PROD; as one of its identity domains and set up OpenSSH to use the SSSD tooling for managing user keys. This is covered in the <ulink url="http://www.freeipa.org/images/1/10/Freeipa30_SSSD_OpenSSH_integration.pdf">SSSD and OpenSSH Integration</ulink>.
 			</para>
 			<para condition="redhat">
 				After uploading the user keys, configure SSSD to use &PROD; as one of its identity domains and set up OpenSSH to use the SSSD tooling for managing user keys. This is covered in the <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/openssh-sssd.html">&OS; Deployment Guide</ulink>.
@@ -724,7 +777,7 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 					<informalfigure>
 						<mediaobject>
 							<imageobject>
-								<imagedata fileref="images/user-list.png" />
+								<imagedata fileref="images/user-list-click-on-user.png" />
 							</imageobject>
 						</mediaobject>
 					</informalfigure>
@@ -758,8 +811,8 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 				The command-line tools can be used to remove all keys. This is done by running <command>ipa user-mod</command> with the <option>--sshpubkey=</option> set to a blank value; this removes <emphasis>all</emphasis> public keys for the user.
 			For example:
 		</para>
-<screen>[jsmith@server ~]$ kinit admin
-[jsmith@server ~]$ ipa user-mod --sshpubkey= jsmith</screen>
+<screen>[user@server ~]$ kinit admin
+[user@server ~]$ ipa user-mod --sshpubkey= jsmith</screen>
 		</section>
 	</section>
 
@@ -806,7 +859,7 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 						<informalfigure>
 							<mediaobject>
 								<imageobject>
-									<imagedata fileref="images/user-list.png" />
+									<imagedata fileref="images/user-list-click-on-user.png" />
 								</imageobject>
 							</mediaobject>
 						</informalfigure>
@@ -848,8 +901,8 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 					Changing a password &mdash; your own or another user's &mdash; is done using the <command>user-mod</command> command, as with other
 					user account changes.
 				</para>
-<screen>[bjensen@ipaserver ~]$ kinit admin
-[bjensen@ipaserver ~]$ ipa user-mod jsmith --password</screen>
+<screen>[user@ipaserver ~]$ kinit admin
+[user@ipaserver ~]$ ipa user-mod jsmith --password</screen>
 			</section>
 		</section>
 
@@ -864,26 +917,39 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 			<para>
 				An account is unlocked using the <command>user-unlock</command> command. For example:
 			</para>
-<screen>[bjensen@ipaserver ~]$ kinit admin
-[bjensen@ipaserver ~]$ ipa user-unlock jsmith</screen>
+<screen>[user@ipaserver ~]$ kinit admin
+[user@ipaserver ~]$ ipa user-unlock jsmith</screen>
 		</section>
 
 
 		<section id="user-private-groups"><title>Managing User Private Groups</title>
-			<!-- XXXXXXXXXXXXXXXXX FIX ME XXXXXXXXXXXXXXXXXXX
-			does this have a ui procedure?
-			-->
 		<para>
 			On &OS; systems, every time a user is created, a corresponding, secret user group is automatically created with that new user as its only member. This is a <emphasis>user private group</emphasis>. Using user private groups makes it simpler and safer to manage file and directory permissions because <command>umask</command> defaults only have to restrict user access, not group access.
 		</para>
 		<para>
 			When a new user is created in the &IPA; domain, it is also created with a corresponding private group, following the &OS; convention. For most environments, this is an acceptable default behavior, but there may be certain users or types of users which do not require a private group or the environment may already have those GIDs<footnote><para>See <xref linkend="Managing-Unique_UID_and_GID_Attributes" /> for information on changing GID/UID assignment ranges.</para></footnote> assigned to NIS groups or other system groups.
 		</para>
+		<note><title>TIP</title>
+			<para>
+				Command <command>ipa group-find</command> with option <option>--private</option> shows user private groups:
+			</para>
+			<screen>[user@ipaserver ~]$ ipa group-find --private jsmith
+----------------
+1 group matched
+----------------
+  Group name: jsmith
+  Description: User private group for jsmith
+  GID: 1035400001
+----------------------------
+Number of entries returned 1
+----------------------------
+</screen>
+		</note>
 		<section id="disabling-managed-entries-users"><title>Disabling Private Groups for a Specific User</title>
 		<para>
 			Private group creation can be disabled when the user is created by using the <option>--noprivate</option> option.
 		</para>
-<screen>[jsmith@server ~]$ ipa user-add jsmith --first=John --last=Smith <userinput>--noprivate</userinput></screen>
+<screen>[user@ipaserver ~]$ ipa user-add jsmith --first=John --last=Smith <userinput>--noprivate</userinput></screen>
 		</section>
 		<section id="disabling-managed-entries-globally"><title>Disabling Private Groups Globally</title>
 			<para>
@@ -1000,7 +1066,7 @@ Disabling Plugin</screen>
 					 The changes to the range are done by editing the &DSF; configuration to change the DNA Plug-in instance. The range is defined in the <parameter>dnaNextRange</parameter> parameter. For example:
 				</para>
 
-<screen>ldapmodify -x -D "cn=Directory Manager" -W -h server.example.com -p 389
+<screen>[user@ipaserver ~]$ ldapmodify -x -D "cn=Directory Manager" -W -h server.example.com -p 389
 Enter LDAP Password: *******
 dn: cn=Posix IDs,cn=Distributed Numeric Assignment Plugin,cn=plugins,cn=config
 changetype: modify
@@ -1022,7 +1088,7 @@ dnaNextRange: 123400000-123500000</screen>
 
 		<section id="user-schema"><title>Managing User and Group Schema</title>
 			<para>
-  				When a user entry is created, it is automatically assigned certain LDAP object classes which, in turn, make available certain
+				When a user entry is created, it is automatically assigned certain LDAP object classes which, in turn, make available certain
 				attributes. LDAP attributes are the way that information is stored in the directory. (This is discussed in detail in the
 				<citetitle>&DS; &DPG;</citetitle> and the <citetitle>&DS; Schema Reference</citetitle>.)
 			</para>
@@ -1058,6 +1124,7 @@ dnaNextRange: 123400000-123500000</screen>
 									<member>inetorgperson</member>
 									<member>inetuser</member>
 									<member>posixaccount</member>
+									<member>ipasshuser</member>
 								</simplelist>
 							</entry>
 						</row>
@@ -1510,7 +1577,7 @@ dnaNextRange: 123400000-123500000</screen>
 							<informalfigure>
 								<mediaobject>
 									<imageobject>
-										<imagedata fileref="images/server-config-users.png" />
+										<imagedata fileref="images/server-config-users2.png" />
 									</imageobject>
 								</mediaobject>
 							</informalfigure>
@@ -1559,7 +1626,7 @@ dnaNextRange: 123400000-123500000</screen>
 					<para>
 						For example:
 					</para>
-<screen>$ ipa config-mod <userinput>--userobjectclasses=</userinput>top,person,organizationalperson,inetorgperson,inetuser,posixaccount, krbprincipalaux,krbticketpolicyaux,ipaobject,<userinput>employeeinfo</userinput></screen>
+<screen>[user@ipaserver ~]$ ipa config-mod --userobjectclasses=top --userobjectclasses=person --userobjectclasses=organizationalperson --userobjectclasses=inetorgperson --userobjectclasses=inetuser --userobjectclasses=posixaccount --userobjectclasses=krbprincipalaux --userobjectclasses=krbticketpolicyaux --userobjectclasses=ipaobject <userinput>--userobjectclasses=</userinput><userinput>employeeinfo</userinput></screen>
 				</listitem>
 			</orderedlist>
 		</section>
@@ -1640,7 +1707,7 @@ dnaNextRange: 123400000-123500000</screen>
 					<para>
 						For example:
 					</para>
-<screen>$ ipa config-mod <userinput>--groupobjectclasses=</userinput>top,groupofnames,nestedgroup,ipausergroup,ipaobject,<userinput>employeegroup</userinput></screen>
+<screen>[user@ipaserver ~]$ ipa config-mod --userobjectclasses=top --userobjectclasses=groupofnames --userobjectclasses=nestedgroup --userobjectclasses=ipausergroup --userobjectclasses=ipaobject --userobjectclasses=ipasshuser <userinput>--userobjectclasses=employeegroup</userinput></screen>
 				</listitem>
 			</orderedlist>
 		</section>
@@ -1653,7 +1720,7 @@ dnaNextRange: 123400000-123500000</screen>
 	<section id="user-groups"><title>Managing User Groups</title>
 		<para>
 			User groups are a way of centralizing control over important management tasks, particularly access control and password policies.
-			Three groups are created during the installation, specifically for use by &IPA; operations:
+			Four groups are created during the installation, specifically for use by &IPA; operations:
 		</para>
 		<itemizedlist>
 			<listitem>
@@ -1669,6 +1736,11 @@ dnaNextRange: 123400000-123500000</screen>
 			<listitem>
 				<para>
 					editors, which is a special group for users working through the web UI. This group allows users to <emphasis>edit</emphasis> other users' entries, though without all of the rights of the admin user.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					trust admins, which is a special group for users working with AD trust resources.
 				</para>
 			</listitem>
 		</itemizedlist>
@@ -1689,7 +1761,7 @@ dnaNextRange: 123400000-123500000</screen>
 
 		</note>
 			<para>
-  				When a group entry is created, it is automatically assigned certain LDAP object classes. (LDAP object classes
+				When a group entry is created, it is automatically assigned certain LDAP object classes. (LDAP object classes
 				and attributes are discussed in detail in the <citetitle>&DS; &DPG;</citetitle> and the <citetitle>&DS; Schema Reference</citetitle>.)
 				For groups, only two attributes truly matter: the name and the description.
 			</para>
@@ -1725,7 +1797,11 @@ dnaNextRange: 123400000-123500000</screen>
 							<entry>
 								<simplelist>
 									<member>groupofnames</member>
-									<member>posixgroup</member>
+									<member>posixgroup<footnote id="posix-group-note">
+										<para>
+											Added only for POSIX groups.
+										</para></footnote>
+									</member>
 								</simplelist>
 							</entry>
 						</row>
@@ -1750,7 +1826,7 @@ dnaNextRange: 123400000-123500000</screen>
 						<informalfigure>
 							<mediaobject>
 								<imageobject>
-									<imagedata fileref="images/group-list.png" />
+									<imagedata fileref="images/group-list-no-examplegroup.png" />
 								</imageobject>
 							</mediaobject>
 						</informalfigure>
@@ -1814,7 +1890,7 @@ dnaNextRange: 123400000-123500000</screen>
 					Two attributes are always required: the group name and the group description. If those attributes are not given as arguments, then the
 					script prompts for them.
 				</para>
-<screen>$ ipa group-add <replaceable>groupName</replaceable> --desc="<replaceable>description</replaceable>" [--nonposix]</screen>
+<screen>ipa group-add <replaceable>groupName</replaceable> --desc="<replaceable>description</replaceable>" [--nonposix]</screen>
 				<para>
 					Additionally, there is one other configuration option, <option>--nonposix</option>. (By default, all groups are created as POSIX
 					groups.)
@@ -1823,19 +1899,18 @@ dnaNextRange: 123400000-123500000</screen>
 				 <para>
 					For example:
 				</para>
-<screen>$ ipa group-add examplegroup --desc="for examples" --nonposix
+<screen>[user@ipaserver ~]$ ipa group-add examplegroup --desc="for examples" --nonposix
 
 ----------------------
 Added group "examplegroup"
 ----------------------
   Group name: examplegroup
-  Description: for examples
-  GID: 855800010</screen>
+  Description: for examples</screen>
 		<para>
 			When no arguments are used, the command prompts for the required group account information:
 		</para>
 
-<screen>$ ipa group-add
+<screen>[user@ipaserver ~]$ ipa group-add
 Group name: engineering
 Description: for engineers
 -------------------------
@@ -1894,7 +1969,7 @@ Added group "engineering"
 						<informalfigure>
 							<mediaobject>
 								<imageobject>
-									<imagedata fileref="images/group-list.png" />
+									<imagedata fileref="images/group-list-click-on-group.png" />
 								</imageobject>
 							</mediaobject>
 						</informalfigure>
@@ -1956,7 +2031,7 @@ Added group "engineering"
 						<informalfigure>
 							<mediaobject>
 								<imageobject>
-									<imagedata fileref="images/user-list.png" />
+									<imagedata fileref="images/user-list-click-on-user.png" />
 								</imageobject>
 							</mediaobject>
 						</informalfigure>
@@ -1999,19 +2074,18 @@ Added group "engineering"
 				</orderedlist>
 			</section>
 
-
 			<section id="group-members-cmd"><title>With the Command Line</title>
 			 <para>
 				Members are added to a group using the <command>group-add-member</command> command. This command can add both users as group members and other groups as group members.
 			</para>
 			<para>
-				The syntax of the <command>group-add-member</command> command requires only the group name and a comma-separated list of users to add:
+				The syntax of the <command>group-add-member</command> command requires only the group name and --users/--groups option(s) of user/group to add:
 			</para>
-<screen>$ ipa group-add-member <replaceable>groupName</replaceable> [--users=<replaceable>list</replaceable>] [--groups=<replaceable>list</replaceable>] </screen>
+<screen>[user@ipaserver ~]$ ipa group-add-member <replaceable>groupName</replaceable> [--users=<replaceable>user</replaceable> [--users=...]] [--groups=<replaceable>group</replaceable> [--groups=...]]  </screen>
 			<para>
 				For example, this adds three users to the <command>engineering</command> group:
 			</para>
-<screen>$ ipa group-add-member engineering --users=jsmith,bjensen,mreynolds
+<screen>[user@ipaserver ~]$ ipa group-add-member engineering --users=jsmith --users=bjensen --users=mreynolds
   Group name: engineering
   Description: for engineers
   GID: 387115842
@@ -2024,7 +2098,7 @@ Number of members added 3
 					Likewise, other groups can be added as members, which creates nested groups:
 				</para>
 
-<screen>$ ipa group-add-member engineering --groups=dev,qe1,dev2
+<screen>[user@ipaserver ~]$ ipa group-add-member engineering --groups=dev --groups=qe1 --groups=dev2
   Group name: engineering
   Description: for engineers
   GID: 387115842
@@ -2037,7 +2111,7 @@ Number of members added 3
 			<para>
 				When displaying nested groups, members are listed as members and the members of any member groups are listed as indirect members. For example:
 			</para>
-<screen>$ ipa group-show examplegroup
+<screen>[user@ipaserver ~]$ ipa group-show examplegroup
   Group name: examplegroup
   Description: for examples
   GID: 93200002
@@ -2057,7 +2131,7 @@ Number of members added 3
 				<para>
 					A group member is removed using the <command>group-remove-member</command> command.
 				</para>
-<screen>$ ipa group-remove-member engineering --users=jsmith
+<screen>[user@ipaserver ~]$ ipa group-remove-member engineering --users=jsmith
 
   Group name: engineering
   Description: for engineers
@@ -2093,7 +2167,7 @@ Number of members removed 1
 				<figure><title>Indirect and Direct Members</title>
 					<mediaobject>
 						<imageobject>
-							<imagedata fileref="images/groups-menu.png" />
+							<imagedata fileref="images/group-(in)direct-membership.png" />
 						</imageobject>
 					</mediaobject>
 				</figure>
@@ -2102,8 +2176,6 @@ Number of members removed 1
 				</para>
 			</section>
 		</section>
-
-
 
 		<section id="Configuring_IPA_Groups-Deleting_IPA_Groups">
 			<title>Deleting User Groups</title>
@@ -2131,7 +2203,7 @@ Number of members removed 1
 						<informalfigure>
 							<mediaobject>
 								<imageobject>
-									<imagedata fileref="images/group-list.png" />
+									<imagedata fileref="images/group-list-checked.png" />
 								</imageobject>
 							</mediaobject>
 						</informalfigure>
@@ -2156,17 +2228,15 @@ Number of members removed 1
 				</orderedlist>
 			</section>
 
-
 			<section id="deleting-group-cmd"><title>With the Command Line</title>
 				 <para>
 					The <command>group-del</command> command to deletes the specified group. For example:
 				</para>
-<screen>$ ipa group-del examplegroup</screen>
+<screen>[user@ipaserver ~]$ ipa group-del examplegroup</screen>
 			</section>
 		</section>
 
 	</section>
-
 
 	<section id="searching"><title>Searching for Users and Groups</title>
 	 <para>
@@ -2250,7 +2320,7 @@ Number of members removed 1
 		<para>
 			Searches are simple:
 		</para>
-<screen>$ ipa user-find|group-find <replaceable>string</replaceable> <replaceable>options</replaceable></screen>
+<screen>ipa user-find|group-find <replaceable>string</replaceable> <replaceable>options</replaceable></screen>
 		<para>
 			There are a few general rules with searches:
 		</para>
@@ -2281,11 +2351,21 @@ Number of members removed 1
 				</para>
 			</listitem>
 		</itemizedlist>
+
+		<note><title>TIP</title>
+			 <para>
+				   Following additional option variations of <command>group-find</command> command can be executed to filter group searching:
+			</para>
+			<screen>ipa group-find --external
+ipa group-find --posix
+ipa group-find --nonposix
+			</screen>
+		</note>
 		<example id="ex.user-search"><title>User Search for John</title>
 			<para>
 				The basic search looks for the string <emphasis>john</emphasis>, which can appear in any of the search indexes.
 			</para>
-<screen>$ ipa user-find john
+<screen>[user@ipaserver ~]$ ipa user-find john
 
 ---------------
 2 users matched
@@ -2313,7 +2393,7 @@ Number of entries returned 2
 			<para>
 				A search can also accept options like <option>--raw</option>. <option>--raw</option> prints the LDAP attributes for the user account rather than the reading-friendly field names.
 			</para>
-<screen>$ ipa user-find john --raw
+<screen>[user@ipaserver ~]$ ipa user-find john --raw
 
 ---------------
 2 users matched
@@ -2574,14 +2654,13 @@ Number of entries returned 2
 				The <command>config-show</command> command shows the current configuration which applies to all new user accounts. By default, only the most common attributes are displayed; use the <option>--all</option> option to show the complete configuration.
 			</para>
 
-<screen># ipa config-show --all
-
-  dn: cn=ipaconfig,cn=etc,dc=example,dc=com
-  Max. username length: 32
+<screen>[user@ipaserver ~]$ ipa config-show --all
+  dn: cn=ipaConfig,cn=etc,dc=example,dc=com
+  Maximum username length: 32
   Home directory base: /home
   Default shell: /bin/sh
   Default users group: ipausers
-  Default e-mail domain for new users: example.com
+  Default e-mail domain: example.com
   Search time limit: 2
   Search size limit: 100
   User search fields: uid,givenname,sn,telephonenumber,ou,title
@@ -2589,15 +2668,16 @@ Number of entries returned 2
   Enable migration mode: FALSE
   Certificate Subject base: O=EXAMPLE.COM
   Default group objectclasses: top, groupofnames, nestedgroup, ipausergroup, ipaobject
-  Default user objectclasses: top, person, organizationalperson, inetorgperson, inetuser, posixaccount,
-                              krbprincipalaux, krbticketpolicyaux, ipaobject
+  Default user objectclasses: top, person, organizationalperson, inetorgperson, inetuser, posixaccount, krbprincipalaux, krbticketpolicyaux, ipaobject, ipasshuser
   Password Expiration Notification (days): 4
   Password plugin features: AllowNThash
+  SELinux user map order: guest_u:s0$xguest_u:s0$user_u:s0$staff_u:s0-s0:c0.c1023$unconfined_u:s0-s0:c0.c1023
+  Default SELinux user: unconfined_u:s0-s0:c0.c1023
+  Default PAC types: MS-PAC, nfs:NONE
   cn: ipaConfig
   objectclass: nsContainer, top, ipaGuiConfig, ipaConfigObject</screen>
 			</section>
 		</section>
-
 
 </chapter>
 
