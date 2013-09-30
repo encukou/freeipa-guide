@@ -5,9 +5,9 @@
 <section id="feedback">
 	<title>Giving Feedback</title>
 	<para>
-		If there is any error in this book or there is any way to improve the 
-		documentation, please let us know. Bugs can be filed against the documentation for &IPA; through 
-		Bugzilla, <ulink url="http://bugzilla.redhat.com/bugzilla">http://bugzilla.redhat.com/bugzilla</ulink>. Make the bug report as specific as 
+		If there is any error in this book or there is any way to improve the
+		documentation, please let us know. Bugs can be filed against the documentation for &IPA; through
+		Bugzilla, <ulink url="http://bugzilla.redhat.com/bugzilla">http://bugzilla.redhat.com/bugzilla</ulink>. Make the bug report as specific as
 		possible, so we can be more effective in correcting any issues:
 	</para>
 
@@ -25,7 +25,7 @@
 		</listitem>
 		<listitem>
 			<para>
-				For errors, give the page number (for the PDF) or URL (for the HTML), and give a 
+				For errors, give the page number (for the PDF) or URL (for the HTML), and give a
 				succinct description of the problem, such as incorrect procedure or typo.
 			</para>
 			<para>
@@ -34,14 +34,14 @@
 		</listitem>
 		<listitem>
 			<para>
-				Give a clear title for the bug. For example, <command>"Incorrect command example for 
+				Give a clear title for the bug. For example, <command>"Incorrect command example for
 				setup script options"</command> is better than <command>"Bad example"</command>.
 			</para>
 		</listitem>
 	</orderedlist>
 	<para condition="redhat">
-		We appreciate receiving any feedback &mdash; requests for new sections, corrections, improvements, enhancements, even 
-		new ways of delivering the documentation or new styles of docs. You are welcome to contact &RH; Content Services 
+		We appreciate receiving any feedback &mdash; requests for new sections, corrections, improvements, enhancements, even
+		new ways of delivering the documentation or new styles of docs. You are welcome to contact &RH; Content Services
 		directly at <ulink url="mailto:docs@redhat.com">docs@redhat.com</ulink>.
 	</para>
 <!-- end redhat -->
@@ -66,7 +66,7 @@
 		</listitem>
 		<listitem>
 			<para>
-				For errors, give the page number (for the PDF) or URL (for the HTML), and give a 
+				For errors, give the page number (for the PDF) or URL (for the HTML), and give a
 				succinct description of the problem, such as incorrect procedure or typo.
 			</para>
 			<para>
@@ -75,13 +75,13 @@
 		</listitem>
 		<listitem>
 			<para>
-				Give a clear title for the bug. For example, <command>"Incorrect command example for 
+				Give a clear title for the bug. For example, <command>"Incorrect command example for
 				setup script options"</command> is better than <command>"Bad example"</command>.
 			</para>
 		</listitem>
 	</orderedlist>
 	<para condition="fedora">
-		We appreciate receiving any feedback &mdash; requests for new sections, corrections, improvements, enhancements, even 
+		We appreciate receiving any feedback &mdash; requests for new sections, corrections, improvements, enhancements, even
 		new ways of delivering the documentation or new styles of docs. You are welcome to contact the Fedora docs team at <ulink url="mailto:docs@lists.fedoraproject.org">docs@lists.fedoraproject.org</ulink>.
 	</para>
 <!-- end fedora -->

@@ -16,10 +16,10 @@
 	 <pubsnumber>1</pubsnumber>
 	 <abstract>
 		<para>
-			Identity and policy management &mdash; for both users and machines &mdash; is a core function for almost any enterprise environment. IPA provides a way to 
-			create an identity domain that allows machines to enroll to a domain and immediately access identity information required for single sign-on and authentication 
+			Identity and policy management &mdash; for both users and machines &mdash; is a core function for almost any enterprise environment. IPA provides a way to
+			create an identity domain that allows machines to enroll to a domain and immediately access identity information required for single sign-on and authentication
 			services, as well as policy settings that govern authorization and access.
-			This manual covers all aspects of installing, configuring, and managing IPA domains, including both servers and clients. 
+			This manual covers all aspects of installing, configuring, and managing IPA domains, including both servers and clients.
 			This guide is intended for IT and systems administrators.
 		</para>
 

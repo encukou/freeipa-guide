@@ -7,11 +7,11 @@
 		A <emphasis>client</emphasis> is any system which is a member of the &PROD; domain. While this is frequently a &OS; system (and &IPA; has special tools to make configuring &OS; clients very simple), machines with other operating systems can also be added to the &IPA; domain.
 	</para>
 	 <para>
-		 One important aspect of &IPAA; client is that <emphasis>only</emphasis> the system configuration determines whether the system is part of the domain. (The configuration includes things like belonging to the Kerberos domain, DNS domain, and having the proper authentication and certificate setup.) 
+		 One important aspect of &IPAA; client is that <emphasis>only</emphasis> the system configuration determines whether the system is part of the domain. (The configuration includes things like belonging to the Kerberos domain, DNS domain, and having the proper authentication and certificate setup.)
 	 </para>
 	 <note><title>NOTE</title>
 		 <para>
-			 &IPA; does not require any sort of agent or daemon running on a client for the client to join the domain. However, for the best management options, security, and performance, clients should run the System Security Services Daemon (SSSD). 
+			 &IPA; does not require any sort of agent or daemon running on a client for the client to join the domain. However, for the best management options, security, and performance, clients should run the System Security Services Daemon (SSSD).
 		 </para>
 		 <para>
 			 For more information on SSSD, see <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6-Beta/html/Deployment_Guide/SSSD-Introduction.html" condition="five">the SSSD chapter in the Deployment Guide</ulink><ulink url="https://fedorahosted.org/sssd/" condition="fedora">the SSSD project page</ulink>.
@@ -46,7 +46,7 @@
 				 <para>
 					Setting up the Kerberos configuration includes specifying the realm and domain details, and default ticket attributes. Forwardable tickets are configured by default, which facilitates connection to the administration interface from any operating system, and also provides for auditing of administration operations. For example, this is the Kerberos configuration for &OS; systems:
 				</para>
-				
+
 <programlisting>[libdefaults]
 default_realm = EXAMPLE.COM
 dns_lookup_realm = false
@@ -106,7 +106,7 @@ example.com = EXAMPLE.COM
 		</itemizedlist>
 
 	</section>
-	
+
 	 <section id="Installing_the_IPA_Client_on_Linux">
 		<title>Configuring a &OS; System as &IPAA; Client</title>
 		 <para>
@@ -153,7 +153,7 @@ example.com = EXAMPLE.COM
 				<para>
 					Run the client setup command.
 				</para>
-				
+
 <programlisting language="Bash"># ipa-client-install --enable-dns-updates</programlisting>
 				<para>
 					The <option>--enable-dns-updates</option> option updates DNS with the client machine's IP address. This option should only be used if the &IPA; server was installed with integrated DNS or if the DNS server on the network accepts DNS entry updates with the GSS-TSIG protocol.
@@ -176,7 +176,7 @@ example.com = EXAMPLE.COM
 				<para>
 					If prompted, enter the domain name for the &IPA;'s DNS domain.
 				</para>
-				
+
 <programlisting language="Bash">DNS discovery failed to determine your DNS domain
 Please provide the domain name of your IPA server (ex: example.com): example.com</programlisting>
 
@@ -185,7 +185,7 @@ Please provide the domain name of your IPA server (ex: example.com): example.com
 				<para>
 					If prompted, enter the fully-qualified domain name of the &IPA; server. Alternatively, use the <option>--server</option> option with the client installation script to supply the fully-qualified domain name of the &IPA; server.
 				</para>
-				
+
 <programlisting language="Bash">DNS discovery failed to find the IPA Server
 Please provide your IPA server name (ex: ipa.example.com): ipaserver.example.com</programlisting>
 
@@ -199,7 +199,7 @@ Please provide your IPA server name (ex: ipa.example.com): ipaserver.example.com
 				<para>
 					The client script then prompts for a Kerberos identity to use to contact and then join the Kerberos realm. When these credentials are supplied, then the client is able to join the &IPA; Kerberos domain and then complete the configuration:
 				</para>
-				
+
 <screen>
 Continue to configure the system with these values? [no]: yes
 User authorized to enroll computers: admin
@@ -219,7 +219,7 @@ Client configuration complete.
 				<para>
 					Test that the client can connect successfully to the &IPA; domain and can perform basic tasks. For example, check that the &IPA; tools can be used to get user and group information:
 				</para>
-				
+
 <programlisting language="Bash">$ id
 $ getent passwd <replaceable>userID</replaceable>
 $ getent group ipausers</programlisting>
@@ -236,7 +236,7 @@ $ getent group ipausers</programlisting>
 					</para>
 <programlisting>RPCGSSDARGS="-vvv"
 RPCSVCGSSDARGS="-vvv"</programlisting>
-				</note>	
+				</note>
 				 <orderedlist>
 					 <listitem>
 						<para>
@@ -254,7 +254,7 @@ RPCSVCGSSDARGS="-vvv"</programlisting>
 							On the &IPA; server, obtain a keytab for the NFS service principal.
 						</para>
 						 <para>
-							
+
 <programlisting language="Bash"># ipa-getkeytab -s ipaserver.example.com -p nfs/ipaclient.example.com@EXAMPLE -k /tmp/krb5.keytab</programlisting>
 
 						</para>
@@ -287,7 +287,7 @@ RPCSVCGSSDARGS="-vvv"</programlisting>
 							Configure the <filename>/etc/exports</filename> file on the NFS server.
 						</para>
 <programlisting  language="Bash">/ipashare       gss/krb5p(rw,no_root_squash,subtree_check,fsid=0)</programlisting>
-					</listitem>	
+					</listitem>
 					<listitem>
 						<para>
 							On the client, mount the NFS share. Use the same <option>-o sec</option> setting as is used in the <filename>/etc/exports</filename> file for the NFS server.
@@ -305,8 +305,8 @@ RPCSVCGSSDARGS="-vvv"</programlisting>
 
 	<section id="linux-manual"><title>Manually Configuring a Linux Client</title>
 		<para>
-			The <command>ipa-client-install</command> command automatically configures services like Kerberos, SSSD, PAM, and NSS. 
-			However, if the <command>ipa-client-install</command> command cannot be used on a system for some reason, then 
+			The <command>ipa-client-install</command> command automatically configures services like Kerberos, SSSD, PAM, and NSS.
+			However, if the <command>ipa-client-install</command> command cannot be used on a system for some reason, then
 			the &IPA; client entries and the services can be configured manually.
 		</para>
 		 <orderedlist>
@@ -323,7 +323,7 @@ RPCSVCGSSDARGS="-vvv"</programlisting>
 			</listitem>
 			<listitem>
 				<para>
-					<emphasis>On &IPAA; server.</emphasis> Create keytabs for the client. 
+					<emphasis>On &IPAA; server.</emphasis> Create keytabs for the client.
 				</para>
 				<orderedlist>
 					<listitem>
@@ -352,11 +352,11 @@ RPCSVCGSSDARGS="-vvv"</programlisting>
 				</para>
 				<note><title>TIP</title>
 					<para>
-						If there is an existing <filename>/etc/krb5.ketab</filename> that should be preserved, 
+						If there is an existing <filename>/etc/krb5.ketab</filename> that should be preserved,
 						the two files can be combined using <command>ktutil</command>.
 					</para>
 				</note>
-			</listitem>	
+			</listitem>
 			<listitem>
 				<para>
 					Set the correct user permissions and, if necessary, SELinux contexts for the <filename>/etc/krb5.ketab</filename> file.
@@ -405,7 +405,7 @@ netgroup:   files sss
 			</listitem>
 			<listitem>
 				<para>
-					Configure the <filename>/etc/krb5.conf</filename> file to point to the &IPA; KDC. 
+					Configure the <filename>/etc/krb5.conf</filename> file to point to the &IPA; KDC.
 				</para>
 <screen>[logging]
  default = FILE:/var/log/krb5libs.log
@@ -431,7 +431,7 @@ netgroup:   files sss
 [domain_realm]
  .example.com = EXAMPLE.COM
  example.com = EXAMPLE.COM</screen>
-			</listitem>			
+			</listitem>
 			<listitem>
 				<para>
 					Update the <filename>/etc/pam.d</filename> configuration to use the <filename>pam_sss.so</filename> modules.
@@ -446,7 +446,7 @@ account     [default=bad success=ok user_unknown=ignore] pam_sss.so
 ...
 session     optional      pam_sss.so</screen>
 					</listitem>
-					
+
 					<listitem>
 						<para>
 							For <filename>/etc/pam.d/system-auth</filename>:
@@ -494,7 +494,7 @@ session     optional      pam_sss.so</screen>
 					</para>
 <programlisting>RPCGSSDARGS="-vvv"
 RPCSVCGSSDARGS="-vvv"</programlisting>
-				</note>	
+				</note>
 				 <orderedlist>
 					 <listitem>
 						<para>
@@ -512,7 +512,7 @@ RPCSVCGSSDARGS="-vvv"</programlisting>
 							On the &IPA; server, obtain a keytab for the NFS service principal.
 						</para>
 						 <para>
-							
+
 <programlisting language="Bash"># ipa-getkeytab -s ipaserver.example.com -p nfs/ipaclient.example.com@EXAMPLE -k /tmp/krb5.keytab</programlisting>
 
 						</para>
@@ -545,10 +545,10 @@ RPCSVCGSSDARGS="-vvv"</programlisting>
 							Configure the <filename>/etc/exports</filename> file on the NFS server.
 						</para>
 <programlisting  language="Bash">/ipashare       gss/krb5p(rw,no_root_squash,subtree_check,fsid=0)</programlisting>
-					</listitem>	
+					</listitem>
 					<listitem>
 						<para>
-							On the client, mount the NFS share. 
+							On the client, mount the NFS share.
 							<itemizedlist>
 								<listitem>
 									<para>
@@ -570,15 +570,15 @@ RPCSVCGSSDARGS="-vvv"</programlisting>
 			</listitem>
 
 		</orderedlist>
-	</section>	
+	</section>
 
 	 <section id="Enrollment_with_Separation_of_Duties">
 		<title>Performing a Split Enrollment</title>
 		<para>
-			Enrolling machines as clients in the &IPA; domain is a two-part process. A host entry is created for the client (and stored in the &DSF; instance), and then a keytab is created to provision the client. 
+			Enrolling machines as clients in the &IPA; domain is a two-part process. A host entry is created for the client (and stored in the &DSF; instance), and then a keytab is created to provision the client.
 		</para>
 		 <para>
-			 Both parts are performed automatically by the <command>ipa-client-install</command> command. It is also possible to 
+			 Both parts are performed automatically by the <command>ipa-client-install</command> command. It is also possible to
 			 perform those steps separately; this allows for administrators to prepare machines and &IPA; in advance of actually
 			 configuring the clients. This allows more flexible setup scenarios, including bulk deployments.
 		 </para>
@@ -592,10 +592,10 @@ RPCSVCGSSDARGS="-vvv"</programlisting>
 			</para>
 
 		</note>
-	
+
 		 <para>
 			 There may be a situation where an administrator in one group is prohibited from <emphasis>creating</emphasis> a host entry and, therefore, from simply running the <command>ipa-client-install</command> command
-			 and allowing it to create the host. However, that administrator may have the right to run the command <emphasis>after</emphasis> a host entry exists. In that case, one administrator 
+			 and allowing it to create the host. However, that administrator may have the right to run the command <emphasis>after</emphasis> a host entry exists. In that case, one administrator
 			 can create the host entry manually, then the second administrator can complete the enrollment by running the <command>ipa-client-install</command> command.
 		</para>
 		 <orderedlist>
@@ -626,6 +626,6 @@ RPCSVCGSSDARGS="-vvv"</programlisting>
 
 		</orderedlist>
 	</section>
-	
+
 </chapter>
 

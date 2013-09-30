@@ -32,11 +32,11 @@
         idnsname=client1,idnsname=example.com,cn=dns,dc=example,dc=com
         idnsname: client1 arecord: 10.0.0.1 arecord: 10.0.0.2 arecord: 10.0.0.3
         aaaarecord: fc00::1 objectclass: top objectclass: idnsrecord</screen>
-        <para>The schema used to define the DNS entries is in the 
-        <filename>/usr/share/ipa/60basev2.ldif</filename>schema file 
+        <para>The schema used to define the DNS entries is in the
+        <filename>/usr/share/ipa/60basev2.ldif</filename>schema file
         <footnote>
             <para>Any updated schema files, included updated DNS schema
-            elements, are located in the 
+            elements, are located in the
             <filename>/usr/share/ipa/updates</filename>directory.</para>
         </footnote>.</para>
         <indexterm>
@@ -47,17 +47,17 @@
             <primary>bind</primary>
             <secondary>DNS and LDAP</secondary>
         </indexterm>
-        <para>The BIND service communicates with the &DS; using the system 
+        <para>The BIND service communicates with the &DS; using the system
         <filename>bind-dyndb-ldap</filename>plug-in. When &PROD; is configured
-        to manage DNS ( 
-        <xref linkend="enabling-dns" />), &IPA; creates a 
-        <command>dynamic-db</command>configuration section in the 
+        to manage DNS (
+        <xref linkend="enabling-dns" />), &IPA; creates a
+        <command>dynamic-db</command>configuration section in the
         <filename>/etc/named.conf</filename>file for the BIND service. This
-        configures the 
-        <filename>bind-dyndb-ldap</filename>plug-in for the BIND ( 
+        configures the
+        <filename>bind-dyndb-ldap</filename>plug-in for the BIND (
         <systemitem>named</systemitem>) service.</para>
         <para>When this plug-in is properly configured, it delivers the DNS
-        records from the &DS; to the 
+        records from the &DS; to the
         <systemitem>named</systemitem>service. The configuration can be changed
         to adapt the behavior of the plug-in and, therefore, the LDAP-BIND
         interactions.</para>
@@ -88,9 +88,9 @@
     <section id="enabling-dns">
         <title>Setting up DNS After &IPA; Server Installation</title>
         <para>DNS can be configured as part of the &IPA; server installation,
-        simply by using the 
+        simply by using the
         <option>--setup-dns</option>option. If DNS is not configured then, it
-        can be configured later using the 
+        can be configured later using the
         <command>ipa-dns-install</command>command. For example:</para>
         <screen>ipa-dns-install -p secret --ip-address=1.2.34.56
         --no-forwarders [--zone-refresh=60 | --zone-notif]</screen>
@@ -111,17 +111,17 @@
                 <para>
                 <option>--no-forwarders</option>means that there are no
                 forwarders used with the DNS service, only root servers.
-                Alternatively, use the 
+                Alternatively, use the
                 <option>--forwarder</option>option to define a forward to use;
-                to specify multiple forwarders, use the 
+                to specify multiple forwarders, use the
                 <option>--forwarder</option>option multiple times.</para>
             </listitem>
             <listitem>
                 <para>Reverse DNS is configured automatically. It is possible
-                to disable reverse DNS by using the 
+                to disable reverse DNS by using the
                 <option>--no-reverse</option>option.</para>
                 <para>If an existing reverse DNS zone is already configured,
-                using the 
+                using the
                 <option>--no-reverse</option>option uses the existing reverse
                 zone rather than creating a new reverse zone.</para>
             </listitem>
@@ -130,16 +130,16 @@
                 zones are added and to update its DNS server accordingly. If no
                 value is explicitly given, the zone refresh period is 30
                 seconds. The refresh interval can be set to another value using
-                the 
+                the
                 <option>--zone-refresh</option>option, which sets the polling
                 interval in seconds.</para>
             </listitem>
             <listitem>
                 <para>Similar to refreshing the zones, the &IPA; server can
                 leave a persistent search open with its &DS; and capture any
-                new zone changes immediately. This is enabled with the 
+                new zone changes immediately. This is enabled with the
                 <option>--zone-notif</option>option.</para>
-                <para>If the 
+                <para>If the
                 <option>--zone-notif</option>option is used to configure DNS,
                 then the automatic zone refresh is disabled.</para>
             </listitem>
@@ -157,12 +157,12 @@
                 <title>Adding DNS Zones from the Web UI</title>
                 <orderedlist>
                     <listitem>
-                        <para>Open the 
-                        <guilabel>Identity</guilabel>tab, and select the 
+                        <para>Open the
+                        <guilabel>Identity</guilabel>tab, and select the
                         <guilabel>DNS</guilabel>subtab.</para>
                     </listitem>
                     <listitem>
-                        <para>Click the 
+                        <para>Click the
                         <guilabel>Add</guilabel>link at the top of the list of
                         DNS zones.</para>
                         <informalfigure>
@@ -175,7 +175,7 @@
                     </listitem>
                     <listitem>
                         <para>Fill in the information about the new DNS zone.
-                        The 
+                        The
                         <guilabel>Zone Name</guilabel>is required; this is the
                         actual domain name. The other information about the
                         administrator email and the authoritative name server
@@ -189,17 +189,17 @@
                         </informalfigure>
                     </listitem>
                     <listitem>
-                        <para>Click the 
+                        <para>Click the
                         <guilabel>Add and Add Another</guilabel>button to go
-                        directly to the DNS zone page. In the 
+                        directly to the DNS zone page. In the
                         <guilabel>Settings</guilabel>tab, it is possible to
                         reset the default zone configuration to enable dynamic
-                        binds ( 
+                        binds (
                         <xref linkend="Adding_DNS_Zones-Using_Dynamic_DNS_Updates-ui" />)
-                        or change other default records information ( 
+                        or change other default records information (
                         <xref linkend="editing-dns-zone-ui" />). It is also
-                        possible to begin adding new DNS resource records ( 
-                        <xref linkend="adding-dns-records-ui" />) in the 
+                        possible to begin adding new DNS resource records (
+                        <xref linkend="adding-dns-records-ui" />) in the
                         <guilabel>DNS Resource Records</guilabel>tab.</para>
                         <informalfigure>
                             <mediaobject>
@@ -213,35 +213,35 @@
             </section>
             <section id="Managing_DNS_Zones-Adding_DNS_Zones-cmd">
                 <title>Adding DNS Zones from the Command Line</title>
-                <para>The 
+                <para>The
                 <command>ipa dnszone-add</command>command adds a new zone to
                 the DNS domain. At a minimum, this requires the name of the new
                 subdomain:</para>
-                <screen>$ ipa dnszone-add 
+                <screen>$ ipa dnszone-add
                 <replaceable>domainName</replaceable></screen>
                 <para>If the name is not given, the script prompts for it.
-                Other command-line options can also be passed with the 
+                Other command-line options can also be passed with the
                 <command>ipa dnszone-add</command>command.</para>
                 <para>To add a zone entry:</para>
                 <orderedlist>
                     <listitem>
-                        <para>Add the new zone. For example: 
+                        <para>Add the new zone. For example:
                         <screen>$ ipa dnszone-add newserver.example.com
                         --admin-email=admin@example.com --minimum=3000
                         --dynamic-update=TRUE</screen></para>
                     </listitem>
                     <listitem>
-                        <para>Reload the name service. 
+                        <para>Reload the name service.
                         <screen># rndc reload</screen></para>
                         <note>
                             <title>TIP</title>
                             <para>To make new resource records immediately
                             resolvable without restarting the name service,
-                            enable persistent searches with the 
+                            enable persistent searches with the
                             <systemitem class="daemon">
                             named</systemitem>service or configure the BIND
                             service to poll the &DS; automatically for zone
-                            changes. See 
+                            changes. See
                             <xref linkend="dns-persistent-search" />.</para>
                         </note>
                     </listitem>
@@ -264,10 +264,10 @@
                 server.example.com. objectclass: top objectclass: idnsrecord
                 objectclass: idnszone</screen>
             </example>
-            <para>All of the possible zone settings are listed in 
+            <para>All of the possible zone settings are listed in
             <xref linkend="tab.zone-attr" />. Along with setting the actual
             information for the zone, the settings define how the DNS server
-            handles the 
+            handles the
             <emphasis>start of authority</emphasis>(SOA) record entries and how
             it updates its records from the DNS name server.</para>
             <table id="tab.zone-attr">
@@ -347,12 +347,12 @@
                             <entry>BIND update policy</entry>
                             <entry>--update-policy</entry>
                             <entry>Sets the permissions allowed to clients in
-                            the DNS zone. 
+                            the DNS zone.
                             <important>
                                 <title>IMPORTANT</title>
                                 <para>If this is set to false, &IPA; client
                                 machines will not be able to add or update
-                                their IP address. See 
+                                their IP address. See
                                 <xref linkend="Adding_DNS_Zones-Using_Dynamic_DNS_Updates" />for
                                 more information.</para>
                             </important></entry>
@@ -371,7 +371,7 @@
                         </row>
                         <row>
                             <entry>Allow transfer</entry>
-                            <entry>--allow-transfer= 
+                            <entry>--allow-transfer=
                             <replaceable>string</replaceable></entry>
                             <entry>Gives a semi-colon-separated listed of IP
                             addresses or network names which are allowed to
@@ -394,11 +394,11 @@
                         </row>
                         <row>
                             <entry>Zone forwarders</entry>
-                            <entry>--forwarder= 
+                            <entry>--forwarder=
                             <replaceable>string</replaceable></entry>
                             <entry>Specifies a forwarder specifically
                             configured for the DNS zone. This is separate from
-                            any global forwarders used in the &IPA; domain. 
+                            any global forwarders used in the &IPA; domain.
                             <para>To specificy multiple forwarders, use the
                             option multiple times.</para></entry>
                         </row>
@@ -406,7 +406,7 @@
                             <entry>Forward policy</entry>
                             <entry>--forward-policy=only|first</entry>
                             <entry>Sets whether the zone will only forward
-                            requests to configured the DNS name servers (a 
+                            requests to configured the DNS name servers (a
                             <emphasis>forward-only</emphasis>zone) or whether
                             it will check the forwarders first for DNS records
                             and then check its own local records.</entry>
@@ -418,8 +418,8 @@
                 <title>Editing the Zone Configuration in the Web UI</title>
                 <orderedlist>
                     <listitem>
-                        <para>Open the 
-                        <guilabel>Identity</guilabel>tab, and select the 
+                        <para>Open the
+                        <guilabel>Identity</guilabel>tab, and select the
                         <guilabel>DNS</guilabel>subtab.</para>
                     </listitem>
                     <listitem>
@@ -433,12 +433,12 @@
                         </informalfigure>
                     </listitem>
                     <listitem>
-                        <para>Open the 
+                        <para>Open the
                         <guilabel>Settings</guilabel>tab.</para>
                     </listitem>
                     <listitem>
                         <para>Change any of the DNS zone settings. The full
-                        list of attributes is described in 
+                        list of attributes is described in
                         <xref linkend="tab.zone-attr" />. There are some common
                         attributes to change:</para>
                         <itemizedlist>
@@ -471,7 +471,7 @@
                         </informalfigure>
                     </listitem>
                     <listitem>
-                        <para>Click the 
+                        <para>Click the
                         <guilabel>Update</guilabel>link at the top of the
                         settings page.</para>
                     </listitem>
@@ -482,14 +482,14 @@
                 Line</title>
                 <para>The zone can be created with additional attributes and
                 values different from the default by passing additional options
-                with the 
+                with the
                 <command>dnszone-add</command>command. Likewise, attributes can
                 be added or modified in the zone entry by passing the same
-                attribute options with the 
-                <command>dnszone-mod</command>command. These are listed in 
+                attribute options with the
+                <command>dnszone-mod</command>command. These are listed in
                 <xref linkend="tab.zone-attr" />.</para>
                 <para>If an attribute does not exist in the DNS zone entry,
-                than the 
+                than the
                 <command>dnszone-mod</command>command adds the attribute. If
                 the attribute exists, then it overwrites the current value with
                 the specified value.</para>
@@ -502,7 +502,7 @@
                 idnsname: example.com idnssoamname: server.example.com.
                 idnssoarname: root.server.example.com. idnssoaserial:
                 2011130701 idnssoarefresh: 3600 idnssoaretry: 900
-                idnssoaexpire: 1209600 idnssoaminimum: 3600 
+                idnssoaexpire: 1209600 idnssoaminimum: 3600
                 <userinput>dnsttl: 1800</userinput>idnsupdatepolicy: grant
                 EXAMPLE.COM krb5-self * A; grant EXAMPLE.COM krb5-self * AAAA;
                 idnszoneactive: TRUE idnsallowdynupdate: TRUE nsrecord:
@@ -522,14 +522,14 @@
             configuration.</para>
             <para>There can be situations when it is necessary to remove a zone
             from activity without permanently removing the zone. This is done
-            by 
+            by
             <emphasis>disabling</emphasis>the zone.</para>
             <section id="enabling-zones-ui">
                 <title>Disabling Zones in the Web UI</title>
                 <orderedlist>
                     <listitem>
-                        <para>Open the 
-                        <guilabel>Identity</guilabel>tab, and select the 
+                        <para>Open the
+                        <guilabel>Identity</guilabel>tab, and select the
                         <guilabel>DNS</guilabel>subtab.</para>
                     </listitem>
                     <listitem>
@@ -543,13 +543,13 @@
                         </informalfigure>
                     </listitem>
                     <listitem>
-                        <para>Open the 
+                        <para>Open the
                         <guilabel>Settings</guilabel>tab.</para>
                     </listitem>
                     <listitem>
-                        <para>Scroll down to the 
+                        <para>Scroll down to the
                         <guilabel>Active zone</guilabel>field. To disable the
-                        zone, set the value to 
+                        zone, set the value to
                         <guilabel>Disabled</guilabel>.</para>
                         <informalfigure>
                             <mediaobject>
@@ -560,7 +560,7 @@
                         </informalfigure>
                     </listitem>
                     <listitem>
-                        <para>Click the 
+                        <para>Click the
                         <guilabel>Update</guilabel>link at the top of the
                         settings page.</para>
                     </listitem>
@@ -568,12 +568,12 @@
             </section>
             <section id="enabling-zones-cmd">
                 <title>Disabling Zones in the Command Line</title>
-                <para>Disabling a zone is done by using the 
+                <para>Disabling a zone is done by using the
                 <command>dnszone-disable</command>command.</para>
                 <para>For example:</para>
                 <screen>$ ipa dnszone-disable server.example.com</screen>
                 <para>When the zone needs to be brought back online, it can be
-                re-enabled using the 
+                re-enabled using the
                 <command>dnszone-enable</command>command.</para>
             </section>
         </section>
@@ -593,7 +593,7 @@
                 <primary>DNS zone records</primary>
             </indexterm>
             <para>&IPA; supports several different types of DNS records, listed
-            in 
+            in
             <xref linkend="tab.record-types" />.</para>
             <indexterm>
                 <primary>zone records</primary>
@@ -644,16 +644,16 @@
                     <title>TIP</title>
                     <para>To make new resource records immediately resolvable
                     without restarting the name service, enable persistent
-                    searches with the 
+                    searches with the
                     <systemitem class="daemon">named</systemitem>service or
                     configure the BIND service to poll the &DS; automatically
-                    for zone changes. See 
+                    for zone changes. See
                     <xref linkend="dns-persistent-search" />.</para>
                 </note>
                 <orderedlist>
                     <listitem>
-                        <para>Open the 
-                        <guilabel>Identity</guilabel>tab, and select the 
+                        <para>Open the
+                        <guilabel>Identity</guilabel>tab, and select the
                         <guilabel>DNS</guilabel>subtab.</para>
                     </listitem>
                     <listitem>
@@ -668,9 +668,9 @@
                         </informalfigure>
                     </listitem>
                     <listitem>
-                        <para>In the 
+                        <para>In the
                         <guilabel>DNS Resource Records</guilabel>tab, click the
-                        
+
                         <guilabel>Add</guilabel>link.</para>
                         <informalfigure>
                             <mediaobject>
@@ -681,7 +681,7 @@
                         </informalfigure>
                     </listitem>
                     <listitem>
-                        <para>Select the type of record to create in the 
+                        <para>Select the type of record to create in the
                         <guilabel>Record Type</guilabel>drop-down menu. The
                         required data is different, depending on the record
                         type. For example, a CNAME record requires a hostname.
@@ -701,74 +701,74 @@
                             <listitem>
                                 <para>
                                 <emphasis>A</emphasis>. This is a basic map for
-                                a hostname and an ordinary IPv4 address. The 
+                                a hostname and an ordinary IPv4 address. The
                                 <guilabel>Record Name</guilabel>is a hostname,
-                                such as 
-                                <emphasis role="bold">www</emphasis>. The 
+                                such as
+                                <emphasis role="bold">www</emphasis>. The
                                 <guilabel>IP Address</guilabel>value is a
-                                standard IPv4 address, such as 
+                                standard IPv4 address, such as
                                 <emphasis role="bold">
                                 192.168.1.2</emphasis>.</para>
-                                <para>More information about A records is in 
+                                <para>More information about A records is in
                                 <ulink url="http://tools.ietf.org/html/rfc1035">
                                 RFC 1035</ulink>.</para>
                             </listitem>
                             <listitem>
                                 <para>
                                 <emphasis>AAAA</emphasis>. This is a basic map
-                                for a hostname and an IPv6 address. The 
+                                for a hostname and an IPv6 address. The
                                 <guilabel>Record Name</guilabel>is a hostname,
-                                such as 
-                                <emphasis role="bold">www</emphasis>. The 
+                                such as
+                                <emphasis role="bold">www</emphasis>. The
                                 <guilabel>IP Address</guilabel>value is a
-                                standard hexadecimal IPv6 address, such as 
+                                standard hexadecimal IPv6 address, such as
                                 <emphasis role="bold">
                                 fe80::20c:29ff:fe02:a1b3</emphasis>.</para>
                                 <para>More information about AAAA records is in
-                                
+
                                 <ulink url="http://tools.ietf.org/html/rfc3596">
                                 RFC 3596</ulink>.</para>
                             </listitem>
                             <listitem>
                                 <para>
-                                <emphasis>SRV</emphasis>. 
+                                <emphasis>SRV</emphasis>.
                                 <firstterm>Service (SRV) resource
                                 records</firstterm>map service names to the DNS
                                 name of the server that is providing that
-                                particular service. The 
-                                <guilabel>Record Name</guilabel>has the format 
+                                particular service. The
+                                <guilabel>Record Name</guilabel>has the format
                                 <emphasis>_service._protocol</emphasis>, such
-                                as 
+                                as
                                 <emphasis role="bold">_ldap._tcp</emphasis>.
                                 There are individual fields to set the
                                 priority, weight, port number, and hostname for
                                 the target service.</para>
-                                <para>More information about SRV records is in 
+                                <para>More information about SRV records is in
                                 <ulink url="http://tools.ietf.org/html/rfc2782">
                                 RFC 2782</ulink>.</para>
                             </listitem>
                             <listitem>
                                 <para>
                                 <emphasis>PTR</emphasis>. A pointer record type
-                                (PTR) record adds a 
+                                (PTR) record adds a
                                 <emphasis>reverse</emphasis>DNS record, which
                                 maps an IP address to a domain name. In this
-                                case, the 
+                                case, the
                                 <guilabel>Record Name</guilabel>is the record
                                 ID number for the DNS entry of the resource and
-                                the 
+                                the
                                 <guilabel>Hostname</guilabel>value is the
-                                hostname with a terminal period, such as 
+                                hostname with a terminal period, such as
                                 <emphasis role="bold">
                                 server.example.com.</emphasis>.</para>
-                                <para>More information about PTR records is in 
+                                <para>More information about PTR records is in
                                 <ulink url="http://tools.ietf.org/html/rfc1035#page-12">
                                 RFC 1035</ulink>.</para>
                             </listitem>
                         </itemizedlist>
                     </listitem>
                     <listitem>
-                        <para>Click the 
+                        <para>Click the
                         <guibutton>Add</guibutton>button to save the new
                         resource record.</para>
                     </listitem>
@@ -777,14 +777,14 @@
             <section id="adding-dns-records-cmd">
                 <title>Adding DNS Resource Records from the Command
                 Line</title>
-                <para>The same script, 
+                <para>The same script,
                 <command>ipa dnsrecord-add</command>, is used to add resource
                 records of any type, but the options for the script and the
                 required data are different, based on the resource record
                 type.</para>
                 <section id="dnsrecord-add-about">
                     <title>About the Commands to Add DNS Records</title>
-                    <para>The 
+                    <para>The
                     <command>ipa dnsrecord-add</command>command adds records to
                     DNS zones, based on the type. Adding a record has the same
                     basic command format:</para>
@@ -796,24 +796,24 @@
                         <primary>DNS zone records</primary>
                         <secondary>format for adding</secondary>
                     </indexterm>
-                    <screen>$ ipa dnsrecord-add 
-                    <replaceable>zoneName recordName</replaceable>-- 
+                    <screen>$ ipa dnsrecord-add
+                    <replaceable>zoneName recordName</replaceable>--
                     <replaceable>recordType-option=data</replaceable></screen>
-                    <para>The 
+                    <para>The
                     <emphasis>zoneName</emphasis>is the name of the DNS zone to
-                    which the record is being added. The 
+                    which the record is being added. The
                     <emphasis>recordName</emphasis>is an identifier for the new
                     DNS resource record.</para>
                     <para>
                     <xref linkend="tab.dnsrecord-add-about" />lists options for
                     the most common resource record types: A (IPv4), AAAA
                     (IPv6), SRV, and PTR. Options for other supported record
-                    types are listed in the 
+                    types are listed in the
                     <command>ipa dnsrecord-add</command>help and
                     manpages.</para>
                     <note>
                         <title>NOTE</title>
-                        <para>The 
+                        <para>The
                         <command>ipa dnsrecord-add</command>command only
                         creates forward entries, not reverse entries.</para>
                     </note>
@@ -839,7 +839,7 @@
                                     </entry>
                                 </row>
                                 <row>
-                                    <entry>--ttl= 
+                                    <entry>--ttl=
                                     <emphasis>number</emphasis></entry>
                                     <entry>Sets the time to live for the
                                     record.</entry>
@@ -878,13 +878,13 @@
                                     </entry>
                                 </row>
                                 <row>
-                                    <entry>--a-rec= 
+                                    <entry>--a-rec=
                                     <emphasis>ARECORD</emphasis></entry>
                                     <entry>Passes a comma-separated list of A
                                     records.</entry>
                                 </row>
                                 <row>
-                                    <entry>--a-ip-address= 
+                                    <entry>--a-ip-address=
                                     <emphasis>string</emphasis></entry>
                                     <entry>Gives the IP address for the
                                     record.</entry>
@@ -911,13 +911,13 @@
                                     </entry>
                                 </row>
                                 <row>
-                                    <entry>--aaaa-rec= 
+                                    <entry>--aaaa-rec=
                                     <emphasis>AAAARECORD</emphasis></entry>
                                     <entry>Passes a comma-separated list of
                                     AAAA (IPv6) records.</entry>
                                 </row>
                                 <row>
-                                    <entry>--aaaa-ip-address= 
+                                    <entry>--aaaa-ip-address=
                                     <emphasis>string</emphasis></entry>
                                     <entry>Gives the IPv6 address for the
                                     record.</entry>
@@ -944,13 +944,13 @@
                                     </entry>
                                 </row>
                                 <row>
-                                    <entry>--ptr-rec= 
+                                    <entry>--ptr-rec=
                                     <emphasis>PTRRECORD</emphasis></entry>
                                     <entry>Passes a comma-separated list of PTR
                                     records.</entry>
                                 </row>
                                 <row>
-                                    <entry>--ptr-hostname= 
+                                    <entry>--ptr-hostname=
                                     <emphasis>string</emphasis></entry>
                                     <entry>Gives the hostname for the
                                     record.</entry>
@@ -977,13 +977,13 @@
                                     </entry>
                                 </row>
                                 <row>
-                                    <entry>--srv-rec= 
+                                    <entry>--srv-rec=
                                     <emphasis>SRVRECORD</emphasis></entry>
                                     <entry>Passes a comma-separated list of SRV
                                     records.</entry>
                                 </row>
                                 <row>
-                                    <entry>--srv-priority= 
+                                    <entry>--srv-priority=
                                     <emphasis>number</emphasis></entry>
                                     <entry>Sets the priority of the record.
                                     There can be multiple SRV records for a
@@ -994,20 +994,20 @@
                                     priority first.</entry>
                                 </row>
                                 <row>
-                                    <entry>--srv-weight= 
+                                    <entry>--srv-weight=
                                     <emphasis>number</emphasis></entry>
                                     <entry>Sets the weight of the record. This
                                     helps determine the order of SRV records
                                     with the same priority.</entry>
                                 </row>
                                 <row>
-                                    <entry>--srv-port= 
+                                    <entry>--srv-port=
                                     <emphasis>number</emphasis></entry>
                                     <entry>Gives the port for the service on
                                     the target host.</entry>
                                 </row>
                                 <row>
-                                    <entry>--srv-target= 
+                                    <entry>--srv-target=
                                     <emphasis>string</emphasis></entry>
                                     <entry>Gives the domain name of the target
                                     host. This can be a single period (.) if
@@ -1024,10 +1024,10 @@
                         <title>TIP</title>
                         <para>To make new resource records immediately
                         resolvable without restarting the name service, enable
-                        persistent searches with the 
+                        persistent searches with the
                         <systemitem class="daemon">named</systemitem>service or
                         configure the BIND service to poll the &DS;
-                        automatically for zone changes. See 
+                        automatically for zone changes. See
                         <xref linkend="dns-persistent-search" />.</para>
                     </note>
                     <indexterm>
@@ -1041,15 +1041,15 @@
                     <example id="ex.ipv4-record">
                         <title>IPv4 Record</title>
                         <para>Type A resource records map hostnames to IPv4
-                        addresses. The 
+                        addresses. The
                         <emphasis>record</emphasis>value for these commands,
                         then, is a standard IPv4 address. The URL label is
-                        usually www. 
+                        usually www.
                         <screen>$ ipa dnsrecord-add example.com www --a-rec
-                        10.64.14.165</screen>This creates the record 
+                        10.64.14.165</screen>This creates the record
                         <uri>www.example.com</uri>with the IP address
                         10.64.14.165.</para>
-                        <para>More information about A records is in 
+                        <para>More information about A records is in
                         <ulink url="http://tools.ietf.org/html/rfc1035">RFC
                         1035</ulink>.</para>
                     </example>
@@ -1063,18 +1063,18 @@
                     </indexterm>
                     <example id="ex.ipv6-record">
                         <title>IPv6 Record</title>
-                        <para>Type AAAA resource records ( 
+                        <para>Type AAAA resource records (
                         <firstterm>quad-A records)</firstterm>map hostnames to
-                        IPv6 addresses. The 
+                        IPv6 addresses. The
                         <emphasis>record</emphasis>value for these commands is
                         an IPv6 address. As with Type A records, the URL label
-                        is usually www. 
+                        is usually www.
                         <screen>$ ipa dnsrecord-add example.com www --aaaa-rec
                         fe80::20c:29ff:fe02:a1b3</screen>This creates the
-                        record 
+                        record
                         <uri>www.example.com</uri>with the IP address
                         fe80::20c:29ff:fe02:a1b3. More information about AAAA
-                        records is in 
+                        records is in
                         <ulink url="http://tools.ietf.org/html/rfc3596">RFC
                         3596</ulink>.</para>
                     </example>
@@ -1098,19 +1098,19 @@
                         <para>As with Type A and Type AAAA records, SRV records
                         specify a way to connect to and identify the service,
                         but the record format is different.</para>
-                        <para>The 
+                        <para>The
                         <emphasis>recordName</emphasis>identifies the service
-                        type and the connection protocol, in the format 
+                        type and the connection protocol, in the format
                         <emphasis>_service._protocol</emphasis>.</para>
-                        <para>The 
-                        <emphasis>record</emphasis>information has the format 
+                        <para>The
+                        <emphasis>record</emphasis>information has the format
                         <emphasis>"priority weight port
                         target"</emphasis>.</para>
                         <screen>$ ipa dnsrecord-add server.example.com
                         _ldap._tcp --srv-rec="0 100 389 server1.example.com." $
                         ipa dnsrecord-add server.example.com _ldap._tcp
                         --srv-rec="1 100 389 server2.example.com."</screen>
-                        <para>More information about SRV records is in 
+                        <para>More information about SRV records is in
                         <ulink url="http://tools.ietf.org/html/rfc2782">RFC
                         2782</ulink>.</para>
                     </example>
@@ -1124,47 +1124,47 @@
                     </indexterm>
                     <example id="ex.ptr-record">
                         <title>PTR Record</title>
-                        <para>A pointer record type (PTR) record adds a 
+                        <para>A pointer record type (PTR) record adds a
                         <emphasis>reverse</emphasis>DNS record, which maps an
                         IP address to a domain name, rather than the other way
                         around.</para>
                         <para>All reverse DNS lookups for IPv4 addresses use
-                        reverse entries that are defined in the 
+                        reverse entries that are defined in the
                         <command>in-addr.arpa.</command>domain. The reverse
                         address, in human-readable form, is the exact reverse
-                        of the regular IP address, with the 
+                        of the regular IP address, with the
                         <command>in-addr.arpa.</command>domain appended to it.
-                        For example, for the IP address 
+                        For example, for the IP address
                         <systemitem>192.0.1.2</systemitem>, the reverse address
-                        is 
+                        is
                         <systemitem>2.1.0.192.in-addr.arpa</systemitem>.</para>
                         <para>When adding the reverse DNS record, the format of
-                        the 
+                        the
                         <command>dnsrecord-add</command>command is also
                         reverse, compared to the usage for adding regular DNS
                         entries:</para>
-                        <screen>$ ipa dnsrecord-add 
+                        <screen>$ ipa dnsrecord-add
                         <replaceable>reverseIpAddress
-                        recordId</replaceable>--ptr-rec 
+                        recordId</replaceable>--ptr-rec
                         <replaceable>FQDN</replaceable></screen>
-                        <para>The 
+                        <para>The
                         <emphasis>recordId</emphasis>is the numeric identifier
                         to use for the entry in the zone.</para>
                         <para>For example, this adds a record with an ID of 4
-                        for 
+                        for
                         <command>server2.example.com</command>:</para>
                         <screen>$ ipa dnsrecord-add 2.1.0.192.in-addr.arpa 4
                         --ptr-rec server2.example.com.</screen>
-                        <para>More information about PTR records is in 
+                        <para>More information about PTR records is in
                         <ulink url="http://tools.ietf.org/html/rfc1035#page-12">
                         RFC 1035</ulink>.</para>
                     </example>
                     <note>
                         <title>NOTE</title>
                         <para>Reverse zones can also be configured for IPv6
-                        addresses, with zones in the 
+                        addresses, with zones in the
                         <command>.ip6.arpa.</command>domain. For more
-                        information about IPv6 reverse zones, see 
+                        information about IPv6 reverse zones, see
                         <ulink url="http://www.ietf.org/rfc/rfc3596.txt">RFC
                         3596</ulink>.</para>
                     </note>
@@ -1188,8 +1188,8 @@
                 record:</para>
                 <orderedlist>
                     <listitem>
-                        <para>Open the 
-                        <guilabel>Identity</guilabel>tab, and select the 
+                        <para>Open the
+                        <guilabel>Identity</guilabel>tab, and select the
                         <guilabel>DNS</guilabel>subtab.</para>
                     </listitem>
                     <listitem>
@@ -1203,7 +1203,7 @@
                         </informalfigure>
                     </listitem>
                     <listitem>
-                        <para>In the 
+                        <para>In the
                         <guilabel>DNS Resource Records</guilabel>tab, click the
                         name of the resource record.</para>
                         <informalfigure>
@@ -1216,7 +1216,7 @@
                     </listitem>
                     <listitem>
                         <para>Click the checkbox by the name of the record type
-                        to delete, and then click the active 
+                        to delete, and then click the active
                         <guilabel>Delete</guilabel>link at the top of the
                         list.</para>
                         <informalfigure>
@@ -1234,8 +1234,8 @@
                 in the zone:</para>
                 <orderedlist>
                     <listitem>
-                        <para>Open the 
-                        <guilabel>Identity</guilabel>tab, and select the 
+                        <para>Open the
+                        <guilabel>Identity</guilabel>tab, and select the
                         <guilabel>DNS</guilabel>subtab.</para>
                     </listitem>
                     <listitem>
@@ -1249,7 +1249,7 @@
                         </informalfigure>
                     </listitem>
                     <listitem>
-                        <para>In the 
+                        <para>In the
                         <guilabel>DNS Resource Records</guilabel>tab, select
                         the checkbox by the name of the resource record to
                         delete. This deletes the entire record.</para>
@@ -1262,7 +1262,7 @@
                         </informalfigure>
                     </listitem>
                     <listitem>
-                        <para>Click the 
+                        <para>Click the
                         <guilabel>Delete</guilabel>link at the top of the zone
                         records page.</para>
                     </listitem>
@@ -1271,21 +1271,21 @@
             <section id="Managing_DNS_Zones-Deleting_Records_from_DNS_Zones-cmd">
 
                 <title>Deleting Records with the Command Line</title>
-                <para>Records are removed from the zone using the 
+                <para>Records are removed from the zone using the
                 <command>ipa dnsrecord-del</command>command. As with adding
                 records, records are deleted using an option that specifies the
-                type of record ( 
+                type of record (
                 <option>--</option>
                 <emphasis>recordType</emphasis>
                 <option>-rec</option>) and the record value.</para>
-                <para>For example, to remove the A type record: 
+                <para>For example, to remove the A type record:
                 <screen>$ ipa dnsrecord-del example.com www --a-rec
                 10.64.14.213</screen></para>
-                <para>If you run the 
+                <para>If you run the
                 <command>ipa dnsrecord-del</command>command without any
                 options, the command prompts for information about the record
                 to delete.</para>
-                <para>Alternatively, using the 
+                <para>Alternatively, using the
                 <option>--del-all</option>option removes all associated records
                 for the zone.</para>
                 <!-- what is this for?
@@ -1298,7 +1298,7 @@
     </section>
     <section id="bind-dyndb-ldap-config">
         <title>Configuring the bind-dyndb-ldap Plug-in</title>
-        <para>The 
+        <para>The
         <filename>bind-dyndb-ldap</filename>system plug-in contains a DNS
         record cache for zones and a history of successful DNS resolutions.
         Maintaining the cache improves lookup performance in the &DS; because
@@ -1315,14 +1315,14 @@
             "auth_method sasl"; arg "sasl_mech GSSAPI"; arg "sasl_user
             DNS/server.example.com"; };</screen>
         </example>
-        <para>This configuration uses implied default values for 
+        <para>This configuration uses implied default values for
         <emphasis>other</emphasis>plug-in behaviors, like how long it maintains
         the cache. The assumed, default configuration can be changed by adding
-        arguments to the 
+        arguments to the
         <command>dynamic-db "ipa"</command>entry.</para>
-        <screen>arg " 
+        <screen>arg "
         <replaceable>argument value</replaceable>";</screen>
-        <para>The additional parameters are listed in 
+        <para>The additional parameters are listed in
         <xref linkend="tab.bind-dyndb-ldap-param" />.</para>
         <note>
             <title>NOTE</title>
@@ -1345,7 +1345,7 @@
                         <entry>cache_ttl</entry>
                         <entry>Checks the DNS configuration in the &DS; for new
                         zones.</entry>
-                        <entry>120 (seconds); this is defined in the 
+                        <entry>120 (seconds); this is defined in the
                         <package>bind-dyndb-ldap</package>plug-in.</entry>
                     </row>
                     <row>
@@ -1353,10 +1353,10 @@
                         <entry>Checks frequency, in seconds, that the server
                         checks the DNS configuration in the &DS; for new
                         zones.</entry>
-                        <entry>60 (seconds); this is configured by 
+                        <entry>60 (seconds); this is configured by
                         <command>ipa-dns-install</command>. If this is not set
-                        in the 
-                        <filename>/etc/named.conf</filename>file, the 
+                        in the
+                        <filename>/etc/named.conf</filename>file, the
                         <package>bind-dyndb-ldap</package>plug-in sets this
                         value to zero (0), which disables zone refresh.</entry>
                     </row>
@@ -1378,34 +1378,34 @@
             changes, it will not (necessarily) be propagated to the name server
             for up to 120 seconds. If the &DS; has a high traffic volume or if
             records do not change frequently, then the cache time can be
-            increased to improve performance by adding the 
+            increased to improve performance by adding the
             <parameter>cache_ttl</parameter>parameter.</para>
             <screen>dynamic-db "ipa" { ... arg "cache_ttl 1800"; };</screen>
         </section>
         <section id="dns-persistent-search">
             <title>Enabling Zone Refreshes and Persistent Searches</title>
-            <para>The DNS service receives its information through the 
+            <para>The DNS service receives its information through the
             <systemitem>bind-dyndb-ldap</systemitem>plug-in. The plug-in
             resolves only zones which were configured and enabled in the &DS;
             when the name server started. When the name service restarts, the
             plug-in reloads its configuration and identifies any new zones or
             any new resource records.</para>
-            <para>However, the 
+            <para>However, the
             <systemitem>bind-dyndb-ldap</systemitem>plug-in pulls zone and
             resource record information from the &IPA; LDAP directory, and it
             is possible to pull information from that directory apart from
-            simply restarting the plug-in. The 
+            simply restarting the plug-in. The
             <systemitem>bind-dyndb-ldap</systemitem>plug-in search for zone
             changes actively either by refreshing the zone data or by keeping a
             persistent connection open to the &DS; and immediately catching any
             changes.</para>
-            <para>Periodically checking for new zones is the same as 
+            <para>Periodically checking for new zones is the same as
             <emphasis>refreshing</emphasis>the zone configuration. This is set
-            in the 
+            in the
             <parameter>zone_refresh</parameter>argument.</para>
             <screen>dynamic-db "ipa" { ... arg "zone_refresh 30"; };</screen>
             <para>Alternatively, the plug-in can maintain an open connection to
-            the server through a 
+            the server through a
             <emphasis>persistent search</emphasis>. Persistent searches provide
             immediate notification of changes, unlike polling, and maintain a
             local cache of the configuration data.</para>
@@ -1415,21 +1415,21 @@
                 zone resource records.</para>
             </note>
             <para>Persistent searches are disabled by default but can be
-            enabled in the 
+            enabled in the
             <parameter>psearch</parameter>argument:</para>
             <screen>dynamic-db "ipa" { ... arg "psearch yes"; };</screen>
             <para>Because persistent searches leave an ongoing, open connection
             with the &DS;, there can be some performance issues. Performance
-            implications are covered in the 
+            implications are covered in the
             <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Directory_Server/9.0/html/Administration_Guide/persistent-search.html">
             &RHDS; &AG;</ulink>.</para>
         </section>
     </section>
     <section id="changing-forwarder">
         <title>Changing Recursive Queries Against Forwarders</title>
-        <para>The 
+        <para>The
         <command>ipa-client-install</command>script sets a configuration
-        statement in the 
+        statement in the
         <filename>/etc/named.conf</filename>file that allows name resolution
         against hosts that are outside the &IPA; DNS domain. (This requires
         that the &IPA; server be set up with DNS configured and with forwarders
@@ -1437,28 +1437,28 @@
         recursive queries against configured forwarders.</para>
         <para>By default, any host is permitted to issue recursive queries
         against configured forwarders. The &IPA; installation script
-        automatically adds a line to the 
+        automatically adds a line to the
         <filename>/etc/named.conf</filename>file to allow these recursive
         queries.</para>
-        <screen>forward first; forwarders { 10.16.36.29; }; 
+        <screen>forward first; forwarders { 10.16.36.29; };
         <userinput>allow-recursion { any; };</userinput></screen>
-        <para>This behavior can be changed in the 
+        <para>This behavior can be changed in the
         <command>allow-recursion</command>statement.</para>
         <orderedlist>
             <listitem>
-                <para>Open the 
+                <para>Open the
                 <filename>/etc/named.conf</filename>file.</para>
             </listitem>
             <listitem>
-                <para>Reset the 
-                <command>allow-recursion</command>statement. This is set to 
+                <para>Reset the
+                <command>allow-recursion</command>statement. This is set to
                 <command>any</command>by default, which allows all hosts to
                 resolve names against all forwarders.</para>
-                <screen>forward first; forwarders { 10.16.36.29; }; 
+                <screen>forward first; forwarders { 10.16.36.29; };
                 <userinput>allow-recursion { any; };</userinput></screen>
             </listitem>
             <listitem>
-                <para>Restart the 
+                <para>Restart the
                 <command>named</command>service.</para>
                 <screen>service named restart</screen>
             </listitem>
@@ -1474,7 +1474,7 @@
         </indexterm>
         <para>Dynamic DNS updates are not enabled by default for new DNS zones
         in &IPA;. If dynamic updates are not allowed, then it may not be
-        possible for the 
+        possible for the
         <command>ipa-client-install</command>script to join a client to the
         domain because it cannot add a DNS record pointing to the new
         client.</para>
@@ -1482,8 +1482,8 @@
             <title>Enabling Dynamic DNS Updates in the Web UI</title>
             <orderedlist>
                 <listitem>
-                    <para>Open the 
-                    <guilabel>Identity</guilabel>tab, and select the 
+                    <para>Open the
+                    <guilabel>Identity</guilabel>tab, and select the
                     <guilabel>DNS</guilabel>subtab.</para>
                 </listitem>
                 <listitem>
@@ -1497,11 +1497,11 @@
                     </informalfigure>
                 </listitem>
                 <listitem>
-                    <para>Open the 
+                    <para>Open the
                     <guilabel>Settings</guilabel>tab.</para>
                 </listitem>
                 <listitem>
-                    <para>Scroll down to the 
+                    <para>Scroll down to the
                     <guilabel>Dynamic update</guilabel>field, and set the value
                     to True.</para>
                     <informalfigure>
@@ -1513,7 +1513,7 @@
                     </informalfigure>
                 </listitem>
                 <listitem>
-                    <para>Click the 
+                    <para>Click the
                     <guilabel>Update</guilabel>link at the top of the settings
                     page.</para>
                 </listitem>
@@ -1521,7 +1521,7 @@
         </section>
         <section id="Adding_DNS_Zones-Using_Dynamic_DNS_Updates-cmd">
             <title>Enabling Dynamic DNS Updates in the Command Line</title>
-            <para>To allow dynamic updates to the DNS zones, set the 
+            <para>To allow dynamic updates to the DNS zones, set the
             <option>--dynamic-update</option>option.</para>
             <screen>$ ipa dnszone-mod server.example.com
             --dynamic-update=TRUE</screen>
@@ -1529,7 +1529,7 @@
     </section>
     <section id="config-forwarders">
         <title>Configuring Forwarders and Forward Policy</title>
-        <para>A 
+        <para>A
         <emphasis>DNS forwarder</emphasis>is a server which passes DNS queries
         on to another, external DNS name server for resolution. Within the
         &IPA; DNS domain, there are three configuration properties that define
@@ -1552,11 +1552,11 @@
             <title>Configuring Global Forwarders</title>
             <para>Global forwarders are configured as part of the &IPA; server
             configuration itself. Forwarders are (optionally) set up when the
-            server is installed with the 
-            <option>setup-dns</option>option or when the 
+            server is installed with the
+            <option>setup-dns</option>option or when the
             <command>ipa-dns-install</command>script is used.</para>
             <para>After server configuration, the list of global forwarders can
-            be edited using the 
+            be edited using the
             <command>dnsconfig-mod</command>command. For example:</para>
             <screen>[jsmith@server ~]$ ipa dnsconfig-mod --forwarder=0.9.8.7
             Global forwarders: 0.9.8.7</screen>
@@ -1564,7 +1564,7 @@
         <section id="zone-forwarder">
             <title>Configuring Zone Forwarders</title>
             <para>Forwarders can be configured to be used with a specific DNS
-            zone as part of the zone configuration. The 
+            zone as part of the zone configuration. The
             <option>--forwarder</option>option sets a semi-colon-separated list
             of forwarders to use with the zone.</para>
             <para>For example:</para>
@@ -1582,18 +1582,18 @@
             <para>Once forwarders are configured, there are different ways that
             the zone can use them to service requests.</para>
             <para>The zone can use the forwarders only for servicing name
-            resolution requests; this is called a 
+            resolution requests; this is called a
             <emphasis>forward-only zone</emphasis>. A forward-only zone does
             not check its own name records. Only the forwarder server records
             are checked. If the record does not exist on the configured
             forwarders, then the zone returns a negative response to the
             client.</para>
             <para>Alternatively, the zone can check the forwarder records
-            first, and then fallback on its own resource records. This has a 
+            first, and then fallback on its own resource records. This has a
             <emphasis>first</emphasis>policy.</para>
-            <para>This configuration is set in the 
-            <option>--forward-policy</option>option, using a policy of either 
-            <command>only</command>or 
+            <para>This configuration is set in the
+            <option>--forward-policy</option>option, using a policy of either
+            <command>only</command>or
             <command>first</command>. For example:</para>
             <screen>[jsmith@server ~]$ ipa dnszone-mod --forward-policy=only
             example.com Zone name: example.com ... Zone forwarders:
@@ -1604,32 +1604,32 @@
         <title>Enabling Zone Transfers</title>
         <para>Name servers maintain authoritative data for the zones; as
         changes are made to the zones, those changes must be sent to and
-        distributed among the name servers for the DNS domain. A 
+        distributed among the name servers for the DNS domain. A
         <emphasis>zone transfer</emphasis>moves resource records from one name
-        server to another. An 
+        server to another. An
         <emphasis>authoritative transfer</emphasis>(AXFR) is a zone transfer
         which includes that authoritative data for the zone (as opposed to an
         incremental transfer, which only delivers the most immediate zone
         change).</para>
-        <para>Zone transfers are defined in 
-        <ulink url="http://www.faqs.org/rfcs/rfc1034.html">RFC 1034</ulink>and 
+        <para>Zone transfers are defined in
+        <ulink url="http://www.faqs.org/rfcs/rfc1034.html">RFC 1034</ulink>and
         <ulink url="http://www.faqs.org/rfcs/rfc5936.html">RFC
         5936</ulink>.</para>
         <para>Zone transfers can be enabled when the zone is created or when it
-        is modified by using the 
+        is modified by using the
         <option>--allow-transfer</option>option to set a list of name servers
         to which the zone records can be transferred.</para>
         <para>For example:</para>
         <screen>[jsmith@server ~]$ ipa dnszone-mod
         --allow-transfer=255.255.255.255;0.0.0.0;1.2.3.4 example-zone</screen>
-        <para>The default is 
+        <para>The default is
         <command>any</command>, which the zone to be transferred anywhere in
         the DNS domain.</para>
-        <para>Once it is enabled in the 
+        <para>Once it is enabled in the
         <systemitem>bind</systemitem>service, &IPA; DNS zones can be
-        transferred, by name, by clients like 
+        transferred, by name, by clients like
         <command>dig</command>:</para>
-        <screen>[root@server ~]# dig @ipa-server 
+        <screen>[root@server ~]# dig @ipa-server
         <replaceable>zone_name</replaceable>AXFR</screen>
     </section>
     <section id="dns-queries">
@@ -1639,13 +1639,13 @@
         performance, it may be advisable to restrict what clients can query DNS
         records in the zone.</para>
         <para>DNS queries can be configured when the zone is created or when it
-        is modified by using the 
+        is modified by using the
         <option>--allow-query</option>option to set a list of clients which are
         allowed to issue queries.</para>
         <para>For example:</para>
         <screen>[jsmith@server ~]$ ipa dnszone-mod
         --allow-query=255.255.255.255;0.0.0.0;1.2.3.4 example-zone</screen>
-        <para>The default is 
+        <para>The default is
         <command>any</command>, which allows the zone to be queried by any
         client.</para>
     </section>
@@ -1656,25 +1656,25 @@
         independently, it is possible for forward entries to exist without
         corresponding reverse entries, and vice versa.</para>
         <para>A DNS zone can be configured to allow its forward and reverse
-        entries to be synchronized automatically, by setting the 
-        <option>--allow-sync-ptr</option>option to 
+        entries to be synchronized automatically, by setting the
+        <option>--allow-sync-ptr</option>option to
         <command>true</command>. This can be done when the zone is created or
         when it is edited.</para>
         <para>For example, for editing an existing entry:</para>
         <screen>[jsmith@server ~]$ ipa dnszone-mod --allow-sync-ptr
         example-zone</screen>
-        <para>The default is 
+        <para>The default is
         <command>false</command>, which disables synchronization and has better
         server performance.</para>
     </section>
     <section id="dns-policies">
         <title>Setting DNS Access Policies</title>
         <para>The &IPA; DNS domain can define access controls, based on
-        grant/deny rules, for zones. This creates an 
-        <command>update-policy</command>statement in the 
+        grant/deny rules, for zones. This creates an
+        <command>update-policy</command>statement in the
         <filename>/etc/named.conf</filename>file, which defines the DNS access
         rule.</para>
-        <screen>--update-policy "grant|deny 
+        <screen>--update-policy "grant|deny
         <replaceable>zoneName</replaceable>
         <replaceable>policyName</replaceable>
         <replaceable>recordName</replaceable>
@@ -1703,7 +1703,7 @@
                 each record type, even within the same DNS zone entry.</para>
             </listitem>
         </itemizedlist>
-        <para>For example, to grant the 
+        <para>For example, to grant the
         <command>EXAMPLE.COM</command>zone the ability to edit its own A and
         AAAA resource record entries:</para>
         <screen>$ ipa dnszone-mod example.com --update-policy="grant
@@ -1712,7 +1712,7 @@
         <important>
             <title>IMPORTANT</title>
             <para>If the update policy is set to false, &IPA; client machines
-            will not be able to add or update their IP address. See 
+            will not be able to add or update their IP address. See
             <xref linkend="Adding_DNS_Zones-Using_Dynamic_DNS_Updates" />for
             more information.</para>
         </important>
@@ -1720,7 +1720,7 @@
     <section id="dns-resolve">
         <title>Resolving Hostnames in the &IPA; Domain</title>
         <para>It is possible to check the DNS entries for &IPA; domain members
-        using the 
+        using the
         <command>dns-resolve</command>command. If the record exists and is
         properly formatted in the DNS configuration, then the command returns
         the DNS record. If not, the command returns an error, that the hostname
@@ -1731,12 +1731,12 @@
     </section>
     <section id="load-balancing">
         <title>Changing Load Balancing for &IPA; Servers and Replicas</title>
-        <para>As 
+        <para>As
         <xref linkend="ipa-servers-replicas" />touches on, &IPA; servers and
         replicas in the domain automatically share the load among instances to
-        maintain performance. The load balancing is defined first by the 
+        maintain performance. The load balancing is defined first by the
         <emphasis>priority</emphasis>set for the server or replica in its SRV
-        entry, and then by the 
+        entry, and then by the
         <emphasis>weight</emphasis>of that instance for servers/replicas with
         the same priority. Clients contact servers/replicas with the highest
         priority and then work their way down.</para>
@@ -1751,7 +1751,7 @@
         <screen>$ ipa dnsrecord-add server.example.com _ldap._tcp --srv-rec="0
         100 389 server1.example.com." $ ipa dnsrecord-add server.example.com
         _ldap._tcp --srv-rec="1 100 389 server2.example.com."</screen>
-        <para>More information about SRV records is in 
+        <para>More information about SRV records is in
         <ulink url="http://tools.ietf.org/html/rfc2782">RFC
         2782</ulink>.</para>
     </section>

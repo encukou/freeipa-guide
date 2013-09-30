@@ -4,14 +4,14 @@
 <appendix id="certmongerX">
 	<title>Working with certmonger</title>
 	<para>
-		Part of managing machine authentication is managing machine certificates. On clients, &IPA; manages the 
-		certificate lifecycle with the <emphasis>certmonger</emphasis> service, which works 
+		Part of managing machine authentication is managing machine certificates. On clients, &IPA; manages the
+		certificate lifecycle with the <emphasis>certmonger</emphasis> service, which works
 		together with the certificate authority (CA) provided by &IPA;.
 	</para>
 	<para>
-		The <systemitem class="daemon">certmonger</systemitem> daemon and its command-line clients simplify the process of generating public/private key pairs, creating certificate requests, 
+		The <systemitem class="daemon">certmonger</systemitem> daemon and its command-line clients simplify the process of generating public/private key pairs, creating certificate requests,
 		and submitting requests to the CA for signing. As part of managing certificates, the <systemitem class="daemon">certmonger</systemitem> daemon monitors certificates for expiration and
-		can renew certificates that are about to expire. The certificates that <systemitem class="daemon">certmonger</systemitem> monitors are tracked in files stored in a configurable 
+		can renew certificates that are about to expire. The certificates that <systemitem class="daemon">certmonger</systemitem> monitors are tracked in files stored in a configurable
 		directory. The default location is <filename>/var/lib/certmonger/requests</filename>.
 	</para>
 	<para>
@@ -28,7 +28,7 @@
 	</para>
 	<section id="certmonger-req"><title>Requesting a Certificate with certmonger</title>
 	 <para>
-		 With the &IPA; CA, <command>certmonger</command> uses the <command>ipa-getcert</command> command. 
+		 With the &IPA; CA, <command>certmonger</command> uses the <command>ipa-getcert</command> command.
 		</para>
 	<para>
 		Certificates and keys are stored locally in plaintext files (<filename>.pem</filename>) or in an NSS database, identified by the certificate nickname. When requesting a certificate, then, the request should identify the location where the certificate will be stored and the nickname of the certificate. For example:
@@ -56,7 +56,7 @@
 		</listitem>
 		<listitem>
 			<para>
-				The <option>-f</option> option stores the certificate in the given file. 
+				The <option>-f</option> option stores the certificate in the given file.
 			</para>
 		</listitem>
 		<listitem>
@@ -81,7 +81,7 @@
 		</listitem>
  	</itemizedlist>
 	</section>
-	
+
 	 <section id="Working_with_certmonger-Using_certmonger_with_NSS">
 		<title>Storing Certificates in NSS Databases</title>
 		 <para>
@@ -110,6 +110,6 @@
 			A certificate can be <emphasis>un</emphasis>tracked by <command>certmonger</command> by using the <command>stop-tracking</command> command.
 		</para>
 
-	</section>	
+	</section>
 </appendix>
 

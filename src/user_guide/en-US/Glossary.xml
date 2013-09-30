@@ -16,7 +16,7 @@
 <glossterm>ACI</glossterm>
 <glossdef>
 <para>An instruction that grants or denies permissions to entries in the directory.</para>
-<glossseealso otherterm="access-control-instruction" /> 
+<glossseealso otherterm="access-control-instruction" />
 </glossdef></glossentry>
 
 <glossentry id="access-control-list">
@@ -50,8 +50,8 @@ Disables a user account, group of accounts, or an entire domain so that all auth
 <glossterm>All IDs Threshold</glossterm>
 
 <glossdef><para>
-<emphasis>Replaced with the ID list scan limit in &DS; version 7.1.</emphasis> 
-A size limit which is globally applied to every index key managed by the server. When the size of an individual ID list reaches this limit, the server replaces that ID list with an All IDs token. 
+<emphasis>Replaced with the ID list scan limit in &DS; version 7.1.</emphasis>
+A size limit which is globally applied to every index key managed by the server. When the size of an individual ID list reaches this limit, the server replaces that ID list with an All IDs token.
 </para>
 <glossseealso otherterm="IDList-scan-limit" />
 </glossdef></glossentry>
@@ -81,7 +81,7 @@ Allows for efficient approximate or "sounds-like" searches.
 <glossterm>attribute</glossterm>
 
 <glossdef><para>
-Holds descriptive information about an entry. Attributes have a label and a value. Each attribute also follows a standard syntax for the type of information that can be stored as the attribute value. 
+Holds descriptive information about an entry. Attributes have a label and a value. Each attribute also follows a standard syntax for the type of information that can be stored as the attribute value.
 </para></glossdef></glossentry>
 
 <glossentry id="attribute-list">
@@ -146,7 +146,7 @@ Distinguished name used to authenticate to Directory Server when performing an o
 <glossterm>bind rule</glossterm>
 
 <glossdef><para>
-In the context of access control, the bind rule specifies the credentials and conditions that a particular user or client must satisfy in order to get access to directory information. 
+In the context of access control, the bind rule specifies the credentials and conditions that a particular user or client must satisfy in order to get access to directory information.
 </para></glossdef></glossentry>
 
 <glossentry id="branch-entry">
@@ -204,7 +204,7 @@ Company or organization that sells and issues authentication certificates. You m
 <glossterm>CGI</glossterm>
 
 <glossdef><para>
-Common Gateway Interface. An interface for external programs to communicate with the HTTP server. Programs written to use CGI are called CGI programs or CGI scripts and can be written in many of the common programming languages. CGI programs handle forms or perform output parsing that is not done by the server itself. 
+Common Gateway Interface. An interface for external programs to communicate with the HTTP server. Programs written to use CGI are called CGI programs or CGI scripts and can be written in many of the common programming languages. CGI programs handle forms or perform output parsing that is not done by the server itself.
 </para></glossdef></glossentry>
 
 <glossentry id="chaining">
@@ -375,7 +375,7 @@ The privileged database administrator, comparable to the root user in UNIX. Acce
 <glossterm>directory service</glossterm>
 
 <glossdef><para>
-A database application designed to manage descriptive, attribute-based information about people and resources within an organization. 
+A database application designed to manage descriptive, attribute-based information about people and resources within an organization.
 </para></glossdef></glossentry>
 
 <glossentry id="distinguished-name">
@@ -523,7 +523,7 @@ Hypertext Transfer Protocol. The method for exchanging information between HTTP 
 <glossterm>HTTPD</glossterm>
 
 <glossdef><para>
-An abbreviation for the HTTP daemon or service, a program that serves information using the HTTP protocol. The daemon or service is often called an httpd. 
+An abbreviation for the HTTP daemon or service, a program that serves information using the HTTP protocol. The daemon or service is often called an httpd.
 </para></glossdef></glossentry>
 
 <glossentry id="HTTPS">
@@ -736,7 +736,7 @@ A message digest produced by the MD5 algorithm.
 <glossterm>MIB</glossterm>
 
 <glossdef><para>
-Management Information Base. All data, or any portion thereof, associated with the SNMP network. We can think of the MIB as a database which contains the definitions of all SNMP managed objects. The MIB has a tree-like hierarchy, where the top level contains the most general information about the network and lower levels deal with specific, separate network areas. 
+Management Information Base. All data, or any portion thereof, associated with the SNMP network. We can think of the MIB as a database which contains the definitions of all SNMP managed objects. The MIB has a tree-like hierarchy, where the top level contains the most general information about the network and lower levels deal with specific, separate network areas.
 </para></glossdef></glossentry>
 
 <glossentry id="MIB-namespace">
@@ -795,7 +795,7 @@ Allows the creation of roles that contain other roles.
 <glossterm>network management application</glossterm>
 
 <glossdef><para>
-Network Management Station component that graphically displays information about SNMP managed devices, such as which device is up or down and which and how many error messages were received. 
+Network Management Station component that graphically displays information about SNMP managed devices, such as which device is up or down and which and how many error messages were received.
 </para></glossdef></glossentry>
 
 <glossentry id="network-management-station">
@@ -875,7 +875,7 @@ When granted, indicates that users have access to entries below their own in the
 <glossterm>pass-through subtree</glossterm>
 
 <glossdef><para>
-In pass-through authentication, the <xref linkend="PTA-directory-server" /> 
+In pass-through authentication, the <xref linkend="PTA-directory-server" />
 will pass through bind requests to the <xref linkend="authenticating-directory-server" /> from all clients whose DN is contained in this subtree.
 </para></glossdef></glossentry>
 
@@ -959,7 +959,7 @@ Mechanism by which one Directory Server consults another to check bind credentia
 <glossterm>PTA directory server</glossterm>
 
 <glossdef><para>
-In pass-through authentication (<xref linkend="PTA" />), the PTA Directory Server is 
+In pass-through authentication (<xref linkend="PTA" />), the PTA Directory Server is
 the server that sends (passes through) bind requests it receives to the <xref linkend="authenticating-directory-server" />.
 </para></glossdef></glossentry>
 
@@ -1114,7 +1114,7 @@ Definitions describing what types of information can be stored as entries in the
 <glossterm>schema checking</glossterm>
 
 <glossdef><para>
-Ensures that entries added or modified in the directory conform to the defined schema. Schema checking is on by default, and users will receive an error if they try to save an entry that does not conform to the schema. 
+Ensures that entries added or modified in the directory conform to the defined schema. Schema checking is on by default, and users will receive an error if they try to save an entry that does not conform to the schema.
 </para></glossdef></glossentry>
 
 <glossentry id="Secure-Sockets-Layer">

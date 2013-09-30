@@ -4,15 +4,15 @@
 <preface id="Preface">
 	<title>Preface</title>
 	<para>
-		&PROD; is a &OS;-based way to create a security, identity, and authentication domain. The different security 
-		and authentication protocols available to Linux and Unix systems (like Kerberos, NIS, DNS, PAM, and sudo) are 
+		&PROD; is a &OS;-based way to create a security, identity, and authentication domain. The different security
+		and authentication protocols available to Linux and Unix systems (like Kerberos, NIS, DNS, PAM, and sudo) are
 		complex, unrelated, and difficult to manage coherently, especially when combined with different identity stores.
 	</para>
 	<para>
-		&PROD; provides a layer that unifies all of these disparate services and simplifies the administrative tasks for 
-		managing users, systems, and security. &IPA; breaks management down into two categories: <emphasis>identity</emphasis> and 
-		<emphasis>policy</emphasis>. It centralizes the functions of managing the users and entities within your IT environment (identity) and 
-		then provides a framework to define authentication and authorization for a global security framework and user-friendly 
+		&PROD; provides a layer that unifies all of these disparate services and simplifies the administrative tasks for
+		managing users, systems, and security. &IPA; breaks management down into two categories: <emphasis>identity</emphasis> and
+		<emphasis>policy</emphasis>. It centralizes the functions of managing the users and entities within your IT environment (identity) and
+		then provides a framework to define authentication and authorization for a global security framework and user-friendly
 		tools like single sign-on (policy).
 	</para>
 
@@ -20,7 +20,7 @@
 	<section id="audience-redhat" condition="redhat"><title>Audience and Purpose</title>
 		<para>
 			With &PROD;, a &OS; system can easily become the center of an identity/authentication domain and even provide access to the domain for clients of other operating systems.
-			&IPA; is an integrated system, that builds on existing and reliable technologies like LDAP and certificate protocols, with a robust yet 
+			&IPA; is an integrated system, that builds on existing and reliable technologies like LDAP and certificate protocols, with a robust yet
 			straightforward set of tools (including a web-based UI). The key to identity/policy management with &IPA; is simplicity and flexibility:
 		</para>
 		<itemizedlist>
@@ -46,20 +46,20 @@
 			</listitem>
 		</itemizedlist>
 		<para>
-			This guide is written for systems administrators and IT staff who will manage &IPA; domains, user systems, and servers. This assumes a moderate knowledge of 
-			Linux-based systems administration and familiarity with important concepts like access control, LDAP, and Kerberos. 
+			This guide is written for systems administrators and IT staff who will manage &IPA; domains, user systems, and servers. This assumes a moderate knowledge of
+			Linux-based systems administration and familiarity with important concepts like access control, LDAP, and Kerberos.
 		</para>
 		<para>
-			This guide covers every aspect of 
-			using &IPA;, including preparation and installation processes, administrative tasks, and the &IPA; tools. This guide also explains the major concepts 
-			behind both identity and policy management, generally, and &IPA; features specifically. Administrative tasks in this guide are categorized as either <emphasis>Identity</emphasis> 
+			This guide covers every aspect of
+			using &IPA;, including preparation and installation processes, administrative tasks, and the &IPA; tools. This guide also explains the major concepts
+			behind both identity and policy management, generally, and &IPA; features specifically. Administrative tasks in this guide are categorized as either <emphasis>Identity</emphasis>
 			or <emphasis>Policy</emphasis> in the chapter title to help characterize the administrative functions.
 		</para>
 	</section>
 	<section id="audience-fedora" condition="fedora"><title>Audience and Purpose</title>
 		<para>
 			With &PROD;, a &OS; system can easily become the center of an identity/authentication domain and even provide access to the domain for clients of other operating systems.
-			&IPA; is an integrated system, that builds on existing and reliable technologies like LDAP and certificate protocols, with a robust yet 
+			&IPA; is an integrated system, that builds on existing and reliable technologies like LDAP and certificate protocols, with a robust yet
 			straightforward set of tools (including a web-based UI). The key to identity/policy management with &IPA; is simplicity and flexibility:
 		</para>
 		<itemizedlist>
@@ -85,13 +85,13 @@
 			</listitem>
 		</itemizedlist>
 		<para>
-			This guide is written for systems administrators and IT staff who will manage &IPA; domains, user systems, and servers. This assumes a moderate knowledge of 
-			Linux-based systems administration and familiarity with important concepts like access control, LDAP, and Kerberos. 
+			This guide is written for systems administrators and IT staff who will manage &IPA; domains, user systems, and servers. This assumes a moderate knowledge of
+			Linux-based systems administration and familiarity with important concepts like access control, LDAP, and Kerberos.
 		</para>
 		<para>
-			This guide covers every aspect of 
-			using &IPA;, including preparation and installation processes, administrative tasks, and the &IPA; tools. This guide also explains the major concepts 
-			behind both identity and policy management, generally, and &IPA; features specifically. Administrative tasks in this guide are categorized as either <emphasis>Identity</emphasis> 
+			This guide covers every aspect of
+			using &IPA;, including preparation and installation processes, administrative tasks, and the &IPA; tools. This guide also explains the major concepts
+			behind both identity and policy management, generally, and &IPA; features specifically. Administrative tasks in this guide are categorized as either <emphasis>Identity</emphasis>
 			or <emphasis>Policy</emphasis> in the chapter title to help characterize the administrative functions.
 		</para>
 	</section>

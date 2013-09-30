@@ -13,27 +13,27 @@
 
 	<section id="about-nis"><title>About NIS and &PROD;</title>
 		<para>
-			Network information service (NIS) centrally manages authentication and identity information such as users and passwords, hosts and IP addresses, and POSIX groups. This was originally called 
-			<emphasis>Yellow Pages</emphasis> (abbreviated YP) because of its simple focus on identity and authentication lookups. 
+			Network information service (NIS) centrally manages authentication and identity information such as users and passwords, hosts and IP addresses, and POSIX groups. This was originally called
+			<emphasis>Yellow Pages</emphasis> (abbreviated YP) because of its simple focus on identity and authentication lookups.
 		</para>
 		<para>
-			NIS is  considered too insecure for 
+			NIS is  considered too insecure for
 			most modern network environments because it provides no host authentication mechanisms and it transmits all of its information over the network unencrypted, including password hashes.
-			Still, while NIS has been falling out of favor with administrators, it is still actively used by many system clients. 
+			Still, while NIS has been falling out of favor with administrators, it is still actively used by many system clients.
 			There are ways to work around those insecurities by integrating NIS with other protocols which offer enhanced security.
 		</para>
 		<para>
-			In &PROD;, NIS objects are integrated into &IPA; using the underlying LDAP directory. LDAP services offer support for 
-			NIS objects (as defined in <ulink url="http://tools.ietf.org/html/rfc2307">RFC 2307</ulink>), which &PROD; customizes to provide better integration with other domain identities. 
+			In &PROD;, NIS objects are integrated into &IPA; using the underlying LDAP directory. LDAP services offer support for
+			NIS objects (as defined in <ulink url="http://tools.ietf.org/html/rfc2307">RFC 2307</ulink>), which &PROD; customizes to provide better integration with other domain identities.
 			The NIS object is created inside the LDAP service and then a module like <systemitem>nss_ldap</systemitem> or SSSD fetches the object using an encrypted LDAP connection.
 		</para>
 		<para>
-			NIS entities are stored in <emphasis>netgroups</emphasis>. A netgroup allows nesting (groups inside groups), which standard Unix groups don't support. Also, netgroups provide a way to 
-			group hosts, which is also missing in Unix group. 
+			NIS entities are stored in <emphasis>netgroups</emphasis>. A netgroup allows nesting (groups inside groups), which standard Unix groups don't support. Also, netgroups provide a way to
+			group hosts, which is also missing in Unix group.
 		</para>
 		<para>
-			NIS groups work by defining users and hosts as members of a larger domain. A netgroup sets a trio of information &mdash; host, user, domain. 
-			This is called a <emphasis>triple</emphasis>. 
+			NIS groups work by defining users and hosts as members of a larger domain. A netgroup sets a trio of information &mdash; host, user, domain.
+			This is called a <emphasis>triple</emphasis>.
 <screen>host,user,domain</screen>
 			A netgroup triple associates the user or the host with the domain; it does not associate the user and the host with each other. Therefore, a triple usually defines a host or a user for better
 			clarity and management.
@@ -99,8 +99,8 @@ Member Host: VirtGuests</screen>
 					Edit the plug-in configuration and add the port number as an argument. For example, to set the port to 514:
 				</para>
 <screen>[root@ipaserver ~]# ldapmodify -x -D 'cn=directory manager' -w secret
-	
-dn: cn=NIS Server,cn=plugins,cn=config 
+
+dn: cn=NIS Server,cn=plugins,cn=config
 changetype: modify
 add: nsslapd-pluginarg0
 nsslapd-pluginarg0: 514
@@ -118,10 +118,10 @@ modifying entry "cn=NIS Server,cn=plugins,cn=config"</screen>
 	</section>
 
 	<section id="adding-netgroups"><title>Creating Netgroups</title>
-		
+
 		<para>
-			All netgroups in &PROD; are essentially <emphasis>static</emphasis> groups, meaning that the members of the group are manually and explicitly added to the group. 
-			Tangentially, &IPA; allows <emphasis>nested groups</emphasis>, where a group is a member of another group. In that case, all of the group members of the member group 
+			All netgroups in &PROD; are essentially <emphasis>static</emphasis> groups, meaning that the members of the group are manually and explicitly added to the group.
+			Tangentially, &IPA; allows <emphasis>nested groups</emphasis>, where a group is a member of another group. In that case, all of the group members of the member group
 			automatically belong to the parent group, as well.
 		</para>
 		<para>
@@ -148,9 +148,9 @@ modifying entry "cn=NIS Server,cn=plugins,cn=config"</screen>
 					</listitem>
 					<listitem>
 						<para>
-							Enter both a unique name and a description for the netgroup. Both the name and description are required. 
+							Enter both a unique name and a description for the netgroup. Both the name and description are required.
 						</para>
-						
+
 						<informalfigure>
 							<mediaobject>
 								<imageobject>
@@ -164,7 +164,7 @@ modifying entry "cn=NIS Server,cn=plugins,cn=config"</screen>
 					</listitem>
 					<listitem>
 						<para>
-							Click the <guibutton>Add and Edit</guibutton> button to go immediately to the netgroup's edit pages. 
+							Click the <guibutton>Add and Edit</guibutton> button to go immediately to the netgroup's edit pages.
 						</para>
 					</listitem>
 					<listitem>
@@ -204,9 +204,9 @@ modifying entry "cn=NIS Server,cn=plugins,cn=config"</screen>
 
 			<section id="add-netgroup-cmd"><title>With the Command Line</title>
 		<para>
-		       	New netgroups are added using the <command>netgroup-add</command> command. This adds only the group; members are added separately. 
-			Two attributes are always required: the group name and the group description. If those attributes are not given as arguments, then the 
-			script prompts for them. There is also an option to set the NIS domain name to use for the group; this defaults to the &IPA; domain, but it can be set to 
+			New netgroups are added using the <command>netgroup-add</command> command. This adds only the group; members are added separately.
+			Two attributes are always required: the group name and the group description. If those attributes are not given as arguments, then the
+			script prompts for them. There is also an option to set the NIS domain name to use for the group; this defaults to the &IPA; domain, but it can be set to
 			something different, depending on the network configuration.
 		</para>
 <screen>$ ipa netgroup-add --desc="<replaceable>description</replaceable>"  [--nisdomain=<replaceable>domainName</replaceable>]  <replaceable>groupName</replaceable></screen>
@@ -225,15 +225,15 @@ modifying entry "cn=NIS Server,cn=plugins,cn=config"</screen>
 			</section>
 		</section>
 
-		
+
 		<section id="add-netgroup-members"><title>Adding Netgroup Members</title>
 			<note><title>NOTE</title>
 					<para>
 						Netgroups can contain user groups, host groups, and other netgroups as their members. These are <emphasis>nested</emphasis> groups.
 					</para>
-					
+
 				<para>
-					It can take up to several minutes for the members of the child group to show up as members of the parent group. 
+					It can take up to several minutes for the members of the child group to show up as members of the parent group.
 					This is especially true on virtual machines where the nested groups have more than 500 members.
 				</para>
 					<para>
@@ -267,7 +267,7 @@ modifying entry "cn=NIS Server,cn=plugins,cn=config"</screen>
 						<para>
 							Click the <guilabel>Add</guilabel> link at the top of the task area.
 						</para>
-						
+
 						<informalfigure>
 							<mediaobject>
 								<imageobject>
@@ -278,7 +278,7 @@ modifying entry "cn=NIS Server,cn=plugins,cn=config"</screen>
 					</listitem>
 					<listitem>
 						<para>
-							Click the checkbox by the names of the users to add, and click the right arrows button, <guibutton>>></guibutton>, to move the names 
+							Click the checkbox by the names of the users to add, and click the right arrows button, <guibutton>>></guibutton>, to move the names
 							to the selection box.
 						</para>
 						<informalfigure>
@@ -305,7 +305,7 @@ modifying entry "cn=NIS Server,cn=plugins,cn=config"</screen>
 			 <para>
 				 To set more than one member, use a comma-separated list with the option. For example, this sets two users and two hosts with the other configuration:
 			</para>
-		 
+
 <screen># ipa netgroup-add-member --users=jsmith,bjensen --groups=ITadmin --hosts=host1.example.com,host2.example.com --hostgroups=EngDev --netgroups=nisgroup2 example-group</screen>
 			</section>
 		</section>
@@ -317,8 +317,8 @@ modifying entry "cn=NIS Server,cn=plugins,cn=config"</screen>
 			When the NIS service is enabled on a system, the &IPA; server is automatically configured to set the NIS domain to the &IPA; domain's name, and to include &IPA; users, groups, and netgroups as passwd, group, and netgroup maps in the NIS domain.
 		</para>
 		 <para>
-			 If any automount maps are already defined, these maps need to be manually added to the NIS configuration in &PROD; for them to be exposed to NIS clients. The NIS server is managed by a special 
-			plug-in entry in the &IPA; LDAP directory; this is a container entry, and each NIS domain and map used by the NIS server is configured as a child entry beneath that container. The NIS domain entry in the 
+			 If any automount maps are already defined, these maps need to be manually added to the NIS configuration in &PROD; for them to be exposed to NIS clients. The NIS server is managed by a special
+			plug-in entry in the &IPA; LDAP directory; this is a container entry, and each NIS domain and map used by the NIS server is configured as a child entry beneath that container. The NIS domain entry in the
 			must have the name of the NIS domain, the name of the NIS map, how to find the directory entries to use as the NIS map's contents, and which attributes to use as the NIS map's key and value. Most of these settings will be the same for every map.
 		</para>
 		 <para>
@@ -357,12 +357,12 @@ nis-base: automountmapname=auto.example,cn=default,cn=automount,dc=example,dc=co
 		 </para>
 		 <formalpara><title>For user entries</title>
 			 <para>
-				 Determine what applications are using the user information in the NIS server. While some clients (like <command>sudo</command>) require NIS netgroups, many clients can use 
-				 Unix groups instead. If no netgroups are required, then simply create corresponding user accounts in &IPA; and delete the netgroups entirely. Otherwise, create the user entries in 
+				 Determine what applications are using the user information in the NIS server. While some clients (like <command>sudo</command>) require NIS netgroups, many clients can use
+				 Unix groups instead. If no netgroups are required, then simply create corresponding user accounts in &IPA; and delete the netgroups entirely. Otherwise, create the user entries in
 				 &IPA; and then create &IPAA;-managed netgroup and add those users as members. This is described in <xref linkend="adding-netgroups" />.
 			 </para>
 		 </formalpara>
-		 <formalpara><title>For host entries</title> 
+		 <formalpara><title>For host entries</title>
 			 <para>
 				 Whenever a host group is created in &IPA;, a corresponding shadow NIS group is automatically created. These netgroups can then be managed using the <command>ipa-host-net-manage</command> command.
 			 </para>
@@ -395,13 +395,13 @@ nis-base: automountmapname=auto.example,cn=default,cn=automount,dc=example,dc=co
 					 <listitem>
 						<para>
 							Add the users and hosts as direct members of the netgroup. Alternatively, put add the users and hosts into &IPA; groups or other netgroups, and then add those
-							groups as members to the netgroup. 
+							groups as members to the netgroup.
 						</para>
 					</listitem>
 				</orderedlist>
 
 			</section>
-			
+
 
 	<section id="slapi-nis"><title>Enabling the NIS Listener in &PROD;</title>
 		<para>
@@ -471,23 +471,23 @@ nis-base: automountmapname=auto.example,cn=default,cn=automount,dc=example,dc=co
 			</para>
 <programlisting language="Bash">#!/bin/sh
 <![CDATA[# 1 is the nis domain, 2 is the nis master server
-ypcat -d $1 -h $2 passwd > /dev/shm/nis-map.passwd 2>&1 
-  
-IFS=$'\n' 
-for line in $(cat /dev/shm/nis-map.passwd); do  
-        IFS=' ' 
-        username=$(echo $line|cut -f1 -d:)  
-        # Not collecting encrypted password because we need cleartext password to create kerberos key     
-        uid=$(echo $line|cut -f3 -d:)  
-        gid=$(echo $line|cut -f4 -d:)  
-        gecos=$(echo $line|cut -f5 -d:)  
-        homedir=$(echo $line|cut -f6 -d:)  
-        shell=$(echo $line|cut -f7 -d:)  
-                          
-        # Now create this entry  
-        echo passw0rd1|ipa user-add $username --first=NIS --last=USER --password --gidnumber=$gid --uid=$uid --gecos=$gecos --homedir=$homedir --shell=$shell 
-        ipa user-show $username 
-done ]]>             
+ypcat -d $1 -h $2 passwd > /dev/shm/nis-map.passwd 2>&1
+
+IFS=$'\n'
+for line in $(cat /dev/shm/nis-map.passwd); do
+        IFS=' '
+        username=$(echo $line|cut -f1 -d:)
+        # Not collecting encrypted password because we need cleartext password to create kerberos key
+        uid=$(echo $line|cut -f3 -d:)
+        gid=$(echo $line|cut -f4 -d:)
+        gecos=$(echo $line|cut -f5 -d:)
+        homedir=$(echo $line|cut -f6 -d:)
+        shell=$(echo $line|cut -f7 -d:)
+
+        # Now create this entry
+        echo passw0rd1|ipa user-add $username --first=NIS --last=USER --password --gidnumber=$gid --uid=$uid --gecos=$gecos --homedir=$homedir --shell=$shell
+        ipa user-show $username
+done ]]>
 </programlisting>
 			<para>
 				This can be run for a given NIS domain:
@@ -509,23 +509,23 @@ done ]]>
 			</para>
 <programlisting language="Bash">#!/bin/sh
 <![CDATA[# 1 is the nis domain, 2 is the nis master server
-ypcat -d $1 -h $2 group > /dev/shm/nis-map.group 2>&1 
-  
-IFS=$'\n' 
-for line in $(cat /dev/shm/nis-map.group); do  
-        IFS=' ' 
-        groupname=$(echo $line|cut -f1 -d:)  
-        # Not collecting encrypted password because we need cleartext password to create kerberos key     
-        gid=$(echo $line|cut -f3 -d:)  
-        members=$(echo $line|cut -f4 -d:)  
-                          
-        # Now create this entry  
-        ipa group-add $groupname --desc=NIS_GROUP_$groupname --gid=$gid 
-        if [ -n "$members" ]; then 
-                ipa group-add-member $groupname --users=$members 
-        fi 
-        ipa group-show $groupname 
-done ]]>              
+ypcat -d $1 -h $2 group > /dev/shm/nis-map.group 2>&1
+
+IFS=$'\n'
+for line in $(cat /dev/shm/nis-map.group); do
+        IFS=' '
+        groupname=$(echo $line|cut -f1 -d:)
+        # Not collecting encrypted password because we need cleartext password to create kerberos key
+        gid=$(echo $line|cut -f3 -d:)
+        members=$(echo $line|cut -f4 -d:)
+
+        # Now create this entry
+        ipa group-add $groupname --desc=NIS_GROUP_$groupname --gid=$gid
+        if [ -n "$members" ]; then
+                ipa group-add-member $groupname --users=$members
+        fi
+        ipa group-show $groupname
+done ]]>
 </programlisting>
 			<para>
 				This can be run for a given NIS domain:
@@ -542,31 +542,31 @@ done ]]>
 			</para>
 <programlisting language="Bash">#!/bin/sh
 <![CDATA[# 1 is the nis domain, 2 is the nis master server
-ypcat -d $1 -h $2 hosts | egrep -v "localhost|127.0.0.1" > /dev/shm/nis-map.hosts 2>&1 
- 
-IFS=$'\n' 
-for line in $(cat /dev/shm/nis-map.hosts); do  
-        IFS=' ' 
-        ipaddress=$(echo $line|awk '{print $1}') 
-        hostname=$(echo $line|awk '{print $2}') 
-        master=$(ipa env xmlrpc_uri |tr -d '[:space:]'|cut -f3 -d:|cut -f3 -d/) 
-        domain=$(ipa env domain|tr -d '[:space:]'|cut -f2 -d:) 
-        if [ $(echo $hostname|grep "\." |wc -l) -eq 0 ]; then 
-                hostname=$(echo $hostname.$domain) 
-        fi  
-        zone=$(echo $hostname|cut -f2- -d.) 
-        if [ $(ipa dnszone-show $zone 2>/dev/null | wc -l) -eq 0 ]; then 
-                ipa dnszone-add --name-server=$master --admin-email=root.$master 
-        fi 
-        ptrzone=$(echo $ipaddress|awk -F. '{print $3 "." $2 "." $1 ".in-addr.arpa."}')  
-        if [ $(ipa dnszone-show $ptrzone 2>/dev/null|wc -l) -eq 0 ]; then   
-                ipa dnszone-add  $ptrzone --name-server=$master --admin-email=root.$master 
-        fi 
-        # Now create this entry  
-        ipa host-add $hostname --ip-address=$ipaddress 
-        ipa host-show $hostname 
+ypcat -d $1 -h $2 hosts | egrep -v "localhost|127.0.0.1" > /dev/shm/nis-map.hosts 2>&1
+
+IFS=$'\n'
+for line in $(cat /dev/shm/nis-map.hosts); do
+        IFS=' '
+        ipaddress=$(echo $line|awk '{print $1}')
+        hostname=$(echo $line|awk '{print $2}')
+        master=$(ipa env xmlrpc_uri |tr -d '[:space:]'|cut -f3 -d:|cut -f3 -d/)
+        domain=$(ipa env domain|tr -d '[:space:]'|cut -f2 -d:)
+        if [ $(echo $hostname|grep "\." |wc -l) -eq 0 ]; then
+                hostname=$(echo $hostname.$domain)
+        fi
+        zone=$(echo $hostname|cut -f2- -d.)
+        if [ $(ipa dnszone-show $zone 2>/dev/null | wc -l) -eq 0 ]; then
+                ipa dnszone-add --name-server=$master --admin-email=root.$master
+        fi
+        ptrzone=$(echo $ipaddress|awk -F. '{print $3 "." $2 "." $1 ".in-addr.arpa."}')
+        if [ $(ipa dnszone-show $ptrzone 2>/dev/null|wc -l) -eq 0 ]; then
+                ipa dnszone-add  $ptrzone --name-server=$master --admin-email=root.$master
+        fi
+        # Now create this entry
+        ipa host-add $hostname --ip-address=$ipaddress
+        ipa host-show $hostname
 done]]>
-</programlisting>		
+</programlisting>
 			<para>
 				This can be run for a given NIS domain:
 			</para>
@@ -578,7 +578,7 @@ done]]>
 				</para>
 			</note>
 		</section>
-		
+
 		<section id="nis-import-netgroups"><title>Importing Netgroup Entries</title>
 			<para>
 				The <command>/etc/netgroup</command> file contains all of the NIS netgroup information. These entries can be used to create &IPA; netgroup accounts that mirror the NIS entries.
@@ -588,49 +588,49 @@ done]]>
 			</para>
 <programlisting language="Bash">#!/bin/sh
 <![CDATA[# 1 is the nis domain, 2 is the nis master server
-ypcat -k -d $1 -h $2 netgroup > /dev/shm/nis-map.netgroup 2>&1 
- 
-IFS=$'\n' 
-for line in $(cat /dev/shm/nis-map.netgroup); do  
-        IFS=' ' 
-        netgroupname=$(echo $line|awk '{print $1}') 
-        triples=$(echo $line|sed "s/^$netgroupname //") 
-        echo "ipa netgroup-add $netgroupname --desc=NIS_NG_$netgroupname" 
-        if [ $(echo $line|grep "(,"|wc -l) -gt 0 ]; then 
-                echo "ipa netgroup-mod $netgroupname --hostcat=all" 
-        fi 
-        if [ $(echo $line|grep ",,"|wc -l) -gt 0 ]; then 
-                echo "ipa netgroup-mod $netgroupname --usercat=all" 
-        fi 
- 
-        for triple in $triples; do 
-                triple=$(echo $triple|sed -e 's/-//g' -e 's/(//' -e 's/)//') 
-                if [ $(echo $triple|grep ",.*,"|wc -l) -gt 0 ]; then 
-                        hostname=$(echo $triple|cut -f1 -d,) 
-                        username=$(echo $triple|cut -f2 -d,) 
-                        domain=$(echo $triple|cut -f3 -d,) 
-                        hosts=""; users=""; doms=""; 
-                        [ -n "$hostname" ] && hosts="--hosts=$hostname" 
-                        [ -n "$username" ] && users="--users=$username" 
-                        [ -n "$domain"   ] && doms="--nisdomain=$domain" 
-                        echo "ipa netgroup-add-member $hosts $users $doms" 
-                else 
-                        netgroup=$triple 
-                        echo "ipa netgroup-add $netgroup --desc=NIS_NG_$netgroup" 
-                fi 
-        done 
+ypcat -k -d $1 -h $2 netgroup > /dev/shm/nis-map.netgroup 2>&1
+
+IFS=$'\n'
+for line in $(cat /dev/shm/nis-map.netgroup); do
+        IFS=' '
+        netgroupname=$(echo $line|awk '{print $1}')
+        triples=$(echo $line|sed "s/^$netgroupname //")
+        echo "ipa netgroup-add $netgroupname --desc=NIS_NG_$netgroupname"
+        if [ $(echo $line|grep "(,"|wc -l) -gt 0 ]; then
+                echo "ipa netgroup-mod $netgroupname --hostcat=all"
+        fi
+        if [ $(echo $line|grep ",,"|wc -l) -gt 0 ]; then
+                echo "ipa netgroup-mod $netgroupname --usercat=all"
+        fi
+
+        for triple in $triples; do
+                triple=$(echo $triple|sed -e 's/-//g' -e 's/(//' -e 's/)//')
+                if [ $(echo $triple|grep ",.*,"|wc -l) -gt 0 ]; then
+                        hostname=$(echo $triple|cut -f1 -d,)
+                        username=$(echo $triple|cut -f2 -d,)
+                        domain=$(echo $triple|cut -f3 -d,)
+                        hosts=""; users=""; doms="";
+                        [ -n "$hostname" ] && hosts="--hosts=$hostname"
+                        [ -n "$username" ] && users="--users=$username"
+                        [ -n "$domain"   ] && doms="--nisdomain=$domain"
+                        echo "ipa netgroup-add-member $hosts $users $doms"
+                else
+                        netgroup=$triple
+                        echo "ipa netgroup-add $netgroup --desc=NIS_NG_$netgroup"
+                fi
+        done
 done]]></programlisting>
 			<para>
 				As explained briefly in <xref linkend="about-nis" />, NIS entries exist in a set of three values, called a triple. The triple is <emphasis>host,user,domain</emphasis>, but not every component is required; commonly, a triple only defines a host and domain or user and domain. The way this script is written, the <command>ipa netgroup-add-member</command> command always adds a host, user, and domain triple to the netgroup.
 			</para>
-<programlisting language="Bash"><![CDATA[if [ $(echo $triple|grep ",.*,"|wc -l) -gt 0 ]; then 
-        hostname=$(echo $triple|cut -f1 -d,) 
-        username=$(echo $triple|cut -f2 -d,) 
-        domain=$(echo $triple|cut -f3 -d,) 
-        hosts=""; users=""; doms=""; 
-        [ -n "$hostname" ] && hosts="--hosts=$hostname" 
-        [ -n "$username" ] && users="--users=$username" 
-        [ -n "$domain"   ] && doms="--nisdomain=$domain" 
+<programlisting language="Bash"><![CDATA[if [ $(echo $triple|grep ",.*,"|wc -l) -gt 0 ]; then
+        hostname=$(echo $triple|cut -f1 -d,)
+        username=$(echo $triple|cut -f2 -d,)
+        domain=$(echo $triple|cut -f3 -d,)
+        hosts=""; users=""; doms="";
+        [ -n "$hostname" ] && hosts="--hosts=$hostname"
+        [ -n "$username" ] && users="--users=$username"
+        [ -n "$domain"   ] && doms="--nisdomain=$domain"
         echo "ipa netgroup-add-member $hosts $users $doms" ]]></programlisting>
 			<para>
 				Any missing element is added as a blank, so the triple is properly migrated. For example, for the triple <command>server,,domain</command> the options with the member add command are <command>--hosts=server --users="" --nisdomain=domain</command>.
@@ -643,7 +643,7 @@ done]]></programlisting>
 		</section>
 		<section id="nis-import-automount"><title>Importing Automount Maps</title>
 			<para>
-				Automount maps are actually a series of nested and inter-related entries that define the location (the parent entry), and then associated keys and maps. 
+				Automount maps are actually a series of nested and inter-related entries that define the location (the parent entry), and then associated keys and maps.
 			</para>
 			<para>
 				While the data are the same in the NIS and &IPA; entries, the way that data are defined is different. The NIS information is exported and then used to construct an LDAP entry for the automount location and associated map; it then creates an entry for every configured key for the map.
@@ -654,33 +654,33 @@ done]]></programlisting>
 <programlisting language="Bash">#!/bin/sh
 <![CDATA[# 1 is for the automount entry in ipa
 
-ipa automountlocation-add $1 
- 
-# 2 is the nis domain, 3 is the nis master server, 4 is the map name 
-ypcat -k -d $2 -h $3 $4 > /dev/shm/nis-map.$4 2>&1 
- 
-ipa automountmap-add $1 $4 
- 
-basedn=$(ipa env basedn|tr -d '[:space:]'|cut -f2 -d:) 
-cat > /tmp/amap.ldif <<EOF 
-dn: nis-domain=nisdomain.example.com+nis-map=$4,cn=NIS Server,cn=plugins,cn=config 
-objectClass: extensibleObject 
-nis-domain: $3 
-nis-map: $4 
-nis-base: automountmapname=$4,cn=nis,cn=automount,$basedn 
-nis-filter: (objectclass=*) 
-nis-key-format: %{automountKey} 
-nis-value-format: %{automountInformation}        
-EOF 
-ldapadd -x -h $3 -D "cn=directory manager" -w secret -f /tmp/amap.ldif 
- 
-IFS=$'\n' 
-for line in $(cat /dev/shm/nis-map.$4); do  
-        IFS=" " 
-        key=$(echo "$line" | awk '{print $1}') 
-        info=$(echo "$line" | sed -e "s#^$key[ \t]*##") 
-        ipa automountkey-add nis $4 --key="$key" --info="$info" 
-done]]></programlisting>		
+ipa automountlocation-add $1
+
+# 2 is the nis domain, 3 is the nis master server, 4 is the map name
+ypcat -k -d $2 -h $3 $4 > /dev/shm/nis-map.$4 2>&1
+
+ipa automountmap-add $1 $4
+
+basedn=$(ipa env basedn|tr -d '[:space:]'|cut -f2 -d:)
+cat > /tmp/amap.ldif <<EOF
+dn: nis-domain=nisdomain.example.com+nis-map=$4,cn=NIS Server,cn=plugins,cn=config
+objectClass: extensibleObject
+nis-domain: $3
+nis-map: $4
+nis-base: automountmapname=$4,cn=nis,cn=automount,$basedn
+nis-filter: (objectclass=*)
+nis-key-format: %{automountKey}
+nis-value-format: %{automountInformation}
+EOF
+ldapadd -x -h $3 -D "cn=directory manager" -w secret -f /tmp/amap.ldif
+
+IFS=$'\n'
+for line in $(cat /dev/shm/nis-map.$4); do
+        IFS=" "
+        key=$(echo "$line" | awk '{print $1}')
+        info=$(echo "$line" | sed -e "s#^$key[ \t]*##")
+        ipa automountkey-add nis $4 --key="$key" --info="$info"
+done]]></programlisting>
 			<para>
 				This can be run for a given NIS domain:
 			</para>
@@ -705,7 +705,7 @@ passwordStorageScheme: crypt</screen>
 
 			<note><title>NOTE</title>
 				<para>
-					Changing the password storage scheme only applies the scheme to new passwords; it does not retroactively change the encryption method used for existing passwords. 
+					Changing the password storage scheme only applies the scheme to new passwords; it does not retroactively change the encryption method used for existing passwords.
 				</para>
 				<para>
 					If weak crypto is required for password hashes, it is better to change the setting as early as possible so that more user passwords use the weaker password hash.

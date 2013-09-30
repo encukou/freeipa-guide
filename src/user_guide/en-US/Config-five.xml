@@ -12,7 +12,7 @@
 			 <orderedlist>
 				 <listitem>
 					<para>
-						Configure <command>sudo</command> to look to LDAP for the <filename>sudoers</filename> file. 
+						Configure <command>sudo</command> to look to LDAP for the <filename>sudoers</filename> file.
 <programlisting>vim /etc/nsswitch.conf
 
 sudoers:  files ldap
@@ -20,7 +20,7 @@ sudoers_debug: 1</programlisting>
 
 					</para>
 					 <para>
-						Leaving the <option>files</option> option in place allows <command>sudo</command> to check its local configuration before checking the LDAP-based &IPA; configuration. 
+						Leaving the <option>files</option> option in place allows <command>sudo</command> to check its local configuration before checking the LDAP-based &IPA; configuration.
 					</para>
 
 							<note><title>TIP</title>
@@ -36,7 +36,7 @@ sudoers_debug: 1</programlisting>
 					 <orderedlist>
 						<listitem>
 							<para>
-								Add the following line immediately after the <parameter>ipa_server</parameter> entry in the <filename>/etc/sssd/sssd.conf</filename> file: 
+								Add the following line immediately after the <parameter>ipa_server</parameter> entry in the <filename>/etc/sssd/sssd.conf</filename> file:
 <programlisting>ldap_netgroup_search_base&nbsp;=&nbsp;cn=ng,cn=compat,dc=example,dc=com</programlisting>
 
 							</para>
@@ -44,7 +44,7 @@ sudoers_debug: 1</programlisting>
 						</listitem>
 						 <listitem>
 							<para>
-								Restart the SSSD daemon: 
+								Restart the SSSD daemon:
 <screen># service sssd restart</screen>
 
 							</para>
@@ -71,7 +71,7 @@ uri ldap://ipaserver.example.com ldap://backup.example.com:3890
 sudoers_base ou=SUDOers,dc=example,dc=com</programlisting>
 							</para>
 							<para>
-								Multiple LDAP servers can be configured in a space-separated list, and other options (like SSL and non-standard ports) can be used with the LDAP URL. 
+								Multiple LDAP servers can be configured in a space-separated list, and other options (like SSL and non-standard ports) can be used with the LDAP URL.
 								The <command>sudo</command> LDAP configuration is covered in the <command>sudo</command> manpages, <ulink url="http://www.sudo.ws/sudo/man/1.8.2/sudoers.ldap.man.html" />.
 							</para>
 							<important><title>IMPORTANT</title>
@@ -81,8 +81,8 @@ sudoers_base ou=SUDOers,dc=example,dc=com</programlisting>
 							</important>
 							<note><title>NOTE</title>
 								<para>
-									The <filename>/etc/nslcd.conf</filename> file is created by the <package>nss-pam-ldapd</package> package. However, if 
-									<package>nss-pam-ldapd</package> is not installed, then the <filename>/etc/nslcd.conf</filename> file can be created manually and 
+									The <filename>/etc/nslcd.conf</filename> file is created by the <package>nss-pam-ldapd</package> package. However, if
+									<package>nss-pam-ldapd</package> is not installed, then the <filename>/etc/nslcd.conf</filename> file can be created manually and
 									the <command>sudo</command> configuration works fine.
 								</para>
 							</note>
@@ -102,7 +102,7 @@ uri ldap://ipaserver.example.com ldap://backup.example.com:3890
 </programlisting>
 							</para>
 							<para>
-								Multiple LDAP servers can be configured in a space-separated list, and other options (like SSL and non-standard ports) can be used with the LDAP URL. 
+								Multiple LDAP servers can be configured in a space-separated list, and other options (like SSL and non-standard ports) can be used with the LDAP URL.
 								The <command>sudo</command> LDAP configuration is covered in the <command>sudo</command> manpages, <ulink url="http://www.sudo.ws/sudo/man/1.8.2/sudoers.ldap.man.html" />.
 							</para>
 							<important><title>IMPORTANT</title>
@@ -128,7 +128,7 @@ uri ldap://ipaserver.example.com ldap://backup.example.com:3890
 sudoers_base ou=SUDOers,dc=example,dc=com</programlisting>
 							</para>
 							<para>
-								Multiple LDAP servers can be configured in a space-separated list, and other options (like SSL and non-standard ports) can be used with the LDAP URL. 
+								Multiple LDAP servers can be configured in a space-separated list, and other options (like SSL and non-standard ports) can be used with the LDAP URL.
 								The <command>sudo</command> LDAP configuration is covered in the <command>sudo</command> manpages, <ulink url="http://www.sudo.ws/sudo/man/1.8.2/sudoers.ldap.man.html" />.
 							</para>
 							<important><title>IMPORTANT</title>
@@ -161,7 +161,7 @@ sudoers_base ou=SUDOers,dc=example,dc=com</programlisting>
 
 			</orderedlist>
 		</section>
-		
+
 		 <section id="Configuring_Automount-Configuring_autofs_on_Linux">
 			<title>Configuring autofs</title>
 			<orderedlist>
@@ -169,7 +169,7 @@ sudoers_base ou=SUDOers,dc=example,dc=com</programlisting>
 					<para>
 						Edit the <filename>/etc/sysconfig/autofs</filename> file to specify the schema attributes that autofs searches for:
 					</para>
-					 
+
 <programlisting>#
 # Other common LDAP naming
 #
@@ -190,7 +190,7 @@ VALUE_ATTRIBUTE="automountInformation"
 					<para>
 						Alternatively, explicitly set which LDAP server to use and the base DN for LDAP searches:
 					</para>
-					 
+
 <programlisting>LDAP_URI="ldap://ipa.example.com"
 SEARCH_BASE="cn=<replaceable>location</replaceable>,cn=automount,dc=example,dc=com"
 </programlisting>
@@ -204,7 +204,7 @@ SEARCH_BASE="cn=<replaceable>location</replaceable>,cn=automount,dc=example,dc=c
 				</listitem>
 				<listitem>
 					<para>
-						Edit the <filename>/etc/autofs_ldap_auth.conf</filename> file so that autofs allows client authentication with the &IPA; LDAP server. Change <parameter>authrequired</parameter> to 
+						Edit the <filename>/etc/autofs_ldap_auth.conf</filename> file so that autofs allows client authentication with the &IPA; LDAP server. Change <parameter>authrequired</parameter> to
 						yes and set the principal to the Kerberos host principal:
 					</para>
 <programlisting language="XML"><![CDATA[<autofs_ldap_sasl_conf
@@ -212,7 +212,7 @@ SEARCH_BASE="cn=<replaceable>location</replaceable>,cn=automount,dc=example,dc=c
      tlsrequired="no"
      authrequired="yes"
      authtype="GSSAPI"
-     clientprinc="host/server.example.com@EXAMPLE COM" 
+     clientprinc="host/server.example.com@EXAMPLE COM"
      />]]></programlisting>
 				     <para>
 					     If necessary, run <command>klist -k</command> to get the exact host principal information.
@@ -243,24 +243,24 @@ SEARCH_BASE="cn=<replaceable>location</replaceable>,cn=automount,dc=example,dc=c
 		</orderedlist>
 		<note><title>TIP</title>
 			<para>
-				If there are problems with automount, then cross-reference the automount attempts with the &DSF; access logs for the &IPA; instance, which will show the attempted access, user, and search base. 
+				If there are problems with automount, then cross-reference the automount attempts with the &DSF; access logs for the &IPA; instance, which will show the attempted access, user, and search base.
 			</para>
 			<para>
 				It is also simple to run automount in the foreground with debug logging on.
 <screen>automount -f -d</screen>
 				This prints the debug log information directly, without having to cross-check the LDAP access log with automount's log.
 			</para>
-		</note>	
+		</note>
 
 		</section>
 
-	<section id="nfs"><title>Setting up NFS</title>		
+	<section id="nfs"><title>Setting up NFS</title>
 		<section id="krb-nfs-server"><title>Setting up a Kerberized NFS Server</title>
-			<!-- 
+			<!--
 			http://bre.klaki.net/blog/2011/08/26/
 			https://help.ubuntu.com/community/SettingUpNFSHowTo
 			-->
-			<orderedlist>				
+			<orderedlist>
 				<listitem>
 					<para>
 						If the NFS host machine has not been added as a client to the &IPA; domain, then create the host entry.
@@ -345,7 +345,7 @@ Domain = example.com</screen>
 						Edit the <filename>/etc/exports</filename> file and add the Kerberos information:
 					</para>
 					 <para>
-						
+
 <programlisting>/export  *(rw,sec=sys:krb5:krb5i:krb5p)
 </programlisting>
 
@@ -427,7 +427,7 @@ Domain = example.com</screen>
 
 allow_weak_crypto = true</screen>
 				</listitem>
-				
+
 				<listitem>
 					<para>
 						Edit the NFS common configuration to enable client-side secure NFS, by uncommenting the <command>SECURE_NFS</command> line.
@@ -458,7 +458,7 @@ Domain = example.com</screen>
 # mount -av</screen>
 				</listitem>
 			</orderedlist>
-						
+
 		</section>
 	</section>
 

@@ -4,7 +4,7 @@
 <appendix id="tools-reference">
 	<title>&IPA; Tools Reference</title>
 	<para>
-		&PROD; provides a variety of command-line tools that can be used to manage &IPA; servers and clients, 
+		&PROD; provides a variety of command-line tools that can be used to manage &IPA; servers and clients,
 		allowing an extensive range of functionality that can be managed remotely, scheduled, or scripted.
 	</para>
 
@@ -12,7 +12,7 @@
 		<para>
 			The &IPA; command-line tools are run as any other utilities in a shell. If there are special characters
 			in the command &mdash; such as angle brackets (> and &lt;), ampersands (&amp;), asterisks (*), and pipes (|)
-			&mdash; the characters must be escaped. Otherwise, the command fails because the shell cannot properly parse the 
+			&mdash; the characters must be escaped. Otherwise, the command fails because the shell cannot properly parse the
 			unescaped characters.
 		</para>
 	</section>
@@ -20,13 +20,13 @@
 
 	<section id="ipa"><title>ipa</title>
 		<para>
-			The primary &PROD; command-line tool is the <command>ipa</command> command. This command has several 
-			dozen subcommands, grouped by configuration areas, to give specific control over different areas of the 
-			&IPA; domain configuration. These subcommands are really plug-ins, that are implemented and called through 
+			The primary &PROD; command-line tool is the <command>ipa</command> command. This command has several
+			dozen subcommands, grouped by configuration areas, to give specific control over different areas of the
+			&IPA; domain configuration. These subcommands are really plug-ins, that are implemented and called through
 			the <command>ipa</command> command.
 		</para>
 		<para>
-			One crucial feature of the <command>ipa</command> command is that it is <emphasis>pluggable</emphasis>. 
+			One crucial feature of the <command>ipa</command> command is that it is <emphasis>pluggable</emphasis>.
 			Custom behavior can be defined for the &IPA; domain through custom <command>ipa</command> subcommands.
 		</para>
 			<section id="ipa-location"><title>Location</title>
@@ -78,9 +78,9 @@
 					</arg>
 				</cmdsynopsis>
 
-				
+
 					<para>
-						The <command>ipa</command> command is essentially 
+						The <command>ipa</command> command is essentially
 						a big plug-in container. It supports dozens of subcommands; these subcommands are actually plug-ins which manage specific types of objects in &PROD;.
 					</para>
 					<para>
@@ -89,7 +89,7 @@
 <screen>ipa <replaceable>objectType-operation objectName --option=value</replaceable></screen>
 					<para>
 
-					For example, adding a user is done using the 
+					For example, adding a user is done using the
 					<command>user-add</command> subcommand:
 				</para>
 <screen>ipa user-add <replaceable>entryName options</replaceable></screen>
@@ -97,7 +97,7 @@
 			<para>
 				All topic or command areas follow a consistent pattern for how entries are managed.
 			</para>
-			
+
 			<section id="tools-command-adding"><title>Adding, Editing, and Deleting Entries with ipa</title>
 				<para>
 					New entries are added using an <emphasis>*-add</emphasis> command. For example:
@@ -133,7 +133,7 @@ Added user "jsmith"
 					With no search criterion, every entry of that type is displayed.
 				</para>
 				<para>
-					Searches (any <command>*-find</command> command) have certain limits imposed as part of the server configuration, specifically how many entries are returned (size limits) and how long a search will run (time limits). This is covered in <xref linkend="search-limits" />. 
+					Searches (any <command>*-find</command> command) have certain limits imposed as part of the server configuration, specifically how many entries are returned (size limits) and how long a search will run (time limits). This is covered in <xref linkend="search-limits" />.
 				Part of the server configuration is setting global defaults for size and time limits on searches. While these limits are always enforced in the web UI, they can be overridden with any <command>*-find</command> command with the <option>--sizelimit</option> and <option>--timelimit</option> options.
 				For example, if the default time limit is 60 seconds and a search is going to take longer, the time limit can be increased to 120 seconds:
 			</para>
@@ -167,7 +167,7 @@ Added user "jsmith"
 				</para>
 				<screen>ipa <replaceable>command entryName --options=values</replaceable></screen>
 				<para>
-					With a few types of entries, however, not only the entry name itself needs to be specified; the entry's <emphasis>parent</emphasis> must also be specified. This is the case with <command>automount</command> commands, for example. With automount, the location must be included whenever a new key or map is created. 
+					With a few types of entries, however, not only the entry name itself needs to be specified; the entry's <emphasis>parent</emphasis> must also be specified. This is the case with <command>automount</command> commands, for example. With automount, the location must be included whenever a new key or map is created.
 				</para>
 				<para>
 					The parent entry name is given first, and then the child entry name. For example, for automount, the location is given first, and then the map or key entry name.
@@ -175,17 +175,17 @@ Added user "jsmith"
 <screen>ipa <replaceable>command parentEntryName childEntryName --childOptions=childValues</replaceable></screen>
 				</section>
 			</section>
-					
+
 			<section id="ipa-topics"><title>Help Topics</title>
-				
+
 		<para>
-			All of the <command>ipa</command> plug-ins (subcommands) are loosely organized in groups, based on the configuration area that they relate to. 
-			These groups are called <emphasis>topics</emphasis>, and the <command>ipa</command> help information can be called 
+			All of the <command>ipa</command> plug-ins (subcommands) are loosely organized in groups, based on the configuration area that they relate to.
+			These groups are called <emphasis>topics</emphasis>, and the <command>ipa</command> help information can be called
 			for each topic group.
 		</para>
 <screen>$ ipa help <replaceable>topicName</replaceable></screen>
 		<para>
-			For example, to view the description of how &IPA; handles automount and a list of all 
+			For example, to view the description of how &IPA; handles automount and a list of all
 			commands for managing automount configuration, view the help topic for <emphasis>automount</emphasis>:
 		</para>
 <screen>$ ipa help automount</screen>
@@ -381,18 +381,18 @@ Added user "jsmith"
   							</row>
   						</tbody>
   					</tgroup>
-				</informaltable>	
+				</informaltable>
 			</section>
 
-		
-				
+
+
 			<section id="ipa-global-options"><title>Global Options</title>
 				<para>
 					Global options are available to every subcommand.
 				</para>
 				<informaltable>
 					<tgroup cols="3">
-						
+
 						<thead>
 							<row>
 								<entry>
@@ -409,7 +409,7 @@ Added user "jsmith"
 						<tbody>
 							<row>
 								<entry>
-									-h 
+									-h
 								</entry>
 								<entry>
 									--help
@@ -438,7 +438,7 @@ Added user "jsmith"
 									Loads the server configuration from a different file instead of <filename>default.conf</filename>.
 								</entry>
 							</row>
-							
+
 							<row>
 								<entry>
 									-d
@@ -450,10 +450,10 @@ Added user "jsmith"
 									Uses debug logging when running the command.
 								</entry>
 							</row>
-							
+
 							<row>
 								<entry>
-									-v 
+									-v
 								</entry>
 								<entry>
 									--verbose
@@ -486,7 +486,7 @@ Added user "jsmith"
 							</row>
 							<row>
 								<entry>
-									-f 
+									-f
 								</entry>
 								<entry>
 									--no-fallback
@@ -515,7 +515,7 @@ Added user "jsmith"
 									<emphasis>For find and show commands.</emphasis> Returns the raw, LDIF-formatted LDAP entry instead of the friendly-formatted versions.
 								</entry>
 							</row>
-							
+
 							<row>
 								<entry>
 								</entry>
@@ -541,16 +541,16 @@ Added user "jsmith"
 				</informaltable>
 			</section>
 
-			
+
 
 
 			<section id="tools-using-setattr-addattr"><title>Managing Attributes with --setattr, --addattr, and --delattr</title>
 
 				<para>
-					All identities and configuration in &PROD; are stored as LDAP entries, with standard attribute-value assertions (AVAs). Whether an entry is created through the UI or the CLI, there are certain attributes which are required and others which are available, depending on the default and custom object classes for that entry type. 
+					All identities and configuration in &PROD; are stored as LDAP entries, with standard attribute-value assertions (AVAs). Whether an entry is created through the UI or the CLI, there are certain attributes which are required and others which are available, depending on the default and custom object classes for that entry type.
 				</para>
 				<para>
-					For the most common attributes, the <command>ipa</command> use specified command-line arguments to set values. For example, adding a mail attribute to a user can be done with the <option>--mail</option> argument; enabling dynamic updates for a DNS zone can be done with the <option>--allow-dynupdate</option> option with zone commands; and a map key for an automount map is given in the <option>--key</option> option. 
+					For the most common attributes, the <command>ipa</command> use specified command-line arguments to set values. For example, adding a mail attribute to a user can be done with the <option>--mail</option> argument; enabling dynamic updates for a DNS zone can be done with the <option>--allow-dynupdate</option> option with zone commands; and a map key for an automount map is given in the <option>--key</option> option.
 				</para>
 				<para>
 					However, entries can also allow attributes that may not have command-line (or UI) options for setting them. Partially, this is because the underlying LDAP schema is very rich, particularly for user entries, with many possible allowed attributes. Additionally, &PROD; allows schema extensions for users and groups, and those custom schema elements are not necessarily reflected in the UI or command-line tools.
@@ -563,10 +563,10 @@ Added user "jsmith"
 				</para>
 <screen>--setattr=<replaceable>attribute=value</replaceable></screen>
 				<para>
-					The <option>--setattr</option> option sets one value for the given attribute; any existing values are overwritten, even for multi-valued attributes. 
+					The <option>--setattr</option> option sets one value for the given attribute; any existing values are overwritten, even for multi-valued attributes.
 				</para>
 				<para>
-					The <option>--addattr</option> option adds a new value for an attribute; for a multi-valued attribute, it adds the new value while preserving any existing values. 
+					The <option>--addattr</option> option adds a new value for an attribute; for a multi-valued attribute, it adds the new value while preserving any existing values.
 				</para>
 				<para>
 					Both <option>--setattr</option> option and <option>--addattr</option> can be used multiple times in the same command invocation. For example:
@@ -601,7 +601,7 @@ Added user "jsmith"
 						<tbody>
 							<row>
 								<entry>
-									0 
+									0
 								</entry>
 								<entry>
 									An error occurred.
@@ -628,11 +628,11 @@ Added user "jsmith"
 				</informaltable>
 			</section>
 
-				
+
 
 			<section id="ipa-commands"><title>Commands</title>
 
-				
+
 						<table><title>dnsrecord* Commands</title>
 							<tgroup cols="2">
 								<thead>
@@ -665,7 +665,7 @@ dnsrecord-del
 								</row>
 									<row>
 										<entry>
-dnsrecord-find        
+dnsrecord-find
 									</entry>
 									<entry>
 										Searches for a DNS zone which matches the filter.
@@ -673,17 +673,17 @@ dnsrecord-find
 								</row>
 									<row>
 										<entry>
-dnsrecord-mod          
-									
+dnsrecord-mod
+
 									</entry>
 									<entry>
-										Edits the configuration of an existing DNS domain. 
+										Edits the configuration of an existing DNS domain.
 									</entry>
 								</row>
 									<row>
 										<entry>
 
-dnsrecord-show      
+dnsrecord-show
 									</entry>
 									<entry>
 										Lists the details for any or all DNS zones, depending on the filter
@@ -692,7 +692,7 @@ dnsrecord-show
 							</tbody>
 						</tgroup>
 					</table>
-			
+
 						<table><title>dnszone-* Commands</title>
 							<tgroup cols="2">
 								<thead>
@@ -725,7 +725,7 @@ dnszone-del
 								</row>
 									<row>
 										<entry>
-dnszone-find        
+dnszone-find
 									</entry>
 									<entry>
 										Searches for a DNS zone which matches the filter.
@@ -733,17 +733,17 @@ dnszone-find
 								</row>
 									<row>
 										<entry>
-dnszone-mod          
-									
+dnszone-mod
+
 									</entry>
 									<entry>
-										Edits the configuration of an existing DNS domain. 
+										Edits the configuration of an existing DNS domain.
 									</entry>
 								</row>
 									<row>
 										<entry>
 
-dnszone-show      
+dnszone-show
 									</entry>
 									<entry>
 										Lists the details for any or all DNS zones, depending on the filter
@@ -751,7 +751,7 @@ dnszone-show
 								</row>
 									<row>
 										<entry>
-dnszone-disable             
+dnszone-disable
 									</entry>
 									<entry>
 										Disables a DNS zone, which removes it from being used but does not delete the zone or its configuration.
@@ -759,7 +759,7 @@ dnszone-disable
 								</row>
 									<row>
 										<entry>
-dnszone-enable          
+dnszone-enable
 									</entry>
 									<entry>
 										Enables an existing DNS zone, which restores it to the &IPA; domain with its previous configuration intact.
@@ -977,7 +977,7 @@ user-find                      Search for users.
 user-mod                       Modify a user.
 user-show                      Display information about a user.
 user-unlock                    Unlock a user account
-									
+
 								</entry>
 								<entry>
 									Location
@@ -992,7 +992,7 @@ user-unlock                    Unlock a user account
 					<para>
 						info
 					</para>
-					
+
 
 					<section id="ipa-automount-syntax"><title>Syntax</title>
 						<cmdsynopsis>
@@ -1041,7 +1041,7 @@ automountmap-find              Search for an automount map.
 automountmap-mod               Modify an automount map.
 automountmap-show              Display an automount map.
 
-									
+
 									</entry>
 									<entry>
 										Location
@@ -1051,7 +1051,7 @@ automountmap-show              Display an automount map.
 						</tgroup>
 					</informaltable>
 				</section>
-						
+
 				<section id="ipa-automount-options"><title>Options</title>
 					<informaltable>
 						<tgroup cols="2">
@@ -1092,7 +1092,7 @@ automountmap-show              Display an automount map.
 					<para>
 						info
 					</para>
-					
+
 
 					<section id="ipa-automountmap-syntax"><title>Syntax</title>
 						<cmdsynopsis>
@@ -1141,7 +1141,7 @@ automountmap-find              Search for an automount map.
 automountmap-mod               Modify an automount map.
 automountmap-show              Display an automount map.
 
-									
+
 									</entry>
 									<entry>
 										Location
@@ -1151,7 +1151,7 @@ automountmap-show              Display an automount map.
 						</tgroup>
 					</informaltable>
 				</section>
-						
+
 				<section id="ipa-automountmap-options"><title>Options</title>
 					<informaltable>
 						<tgroup cols="2">
@@ -1192,7 +1192,7 @@ automountmap-show              Display an automount map.
 					<para>
 						info
 					</para>
-					
+
 
 					<section id="ipa-automountkey-syntax"><title>Syntax</title>
 						<cmdsynopsis>
@@ -1241,7 +1241,7 @@ automountmap-find              Search for an automount map.
 automountmap-mod               Modify an automount map.
 automountmap-show              Display an automount map.
 
-									
+
 									</entry>
 									<entry>
 										Location
@@ -1251,7 +1251,7 @@ automountmap-show              Display an automount map.
 						</tgroup>
 					</informaltable>
 				</section>
-						
+
 				<section id="ipa-automountkey-options"><title>Options</title>
 					<informaltable>
 						<tgroup cols="2">
@@ -1285,20 +1285,20 @@ automountmap-show              Display an automount map.
 							</tbody>
 						</tgroup>
 					</informaltable>
-				</section>			
+				</section>
 			</section>
 		</section>
 
 		<section id="ipa-dns"><title>ipa DNS Commands</title>
 			<para>
 				There are a collection of commands used to add and manage DNS zones and DNS records.
-			</para>	
+			</para>
 
 				<section id="ipa-command-dnszone-add"><title>ipa dnszone-add</title>
 					<para>
 						Creates a new DNS zone in the &IPA; server.
 					</para>
-					
+
 
 					<section id="ipa-dnszone-add-syntax"><title>Syntax</title>
 						<cmdsynopsis>
@@ -1316,35 +1316,35 @@ automountmap-show              Display an automount map.
 								<arg choice="opt">
 									--name-from-ip=<replaceable>IPaddress</replaceable>
 								</arg>
-								
+
 								<arg choice="opt">
 									--admin-email=<replaceable>email</replaceable>
 								</arg>
-								
+
 								<arg choice="opt">
 									--serial=<replaceable>#</replaceable>
 								</arg>
-								
+
 								<arg choice="opt">
 									--refresh=<replaceable>#</replaceable>
 								</arg>
-								
+
 								<arg choice="opt">
 									--retry=<replaceable>#</replaceable>
 								</arg>
-								
+
 								<arg choice="opt">
 									--expire=<replaceable>#</replaceable>
 								</arg>
-								
+
 								<arg choice="opt">
 									--minimum=<replaceable>#</replaceable>
 								</arg>
-								
+
 								<arg choice="opt">
 									--ttl=<replaceable>#</replaceable>
 								</arg>
-								
+
 								<arg choice="opt">
 									--class=<replaceable>name</replaceable>
 								</arg>
@@ -1374,7 +1374,7 @@ automountmap-show              Display an automount map.
 								</arg>
 						</cmdsynopsis>
 					</section>
-						
+
 				<section id="ipa-dnszone-add-options"><title>Options</title>
 					<informaltable>
 						<tgroup cols="2">
@@ -1389,8 +1389,8 @@ automountmap-show              Display an automount map.
 								</row>
 							</thead>
 							<tbody>
-								
-								<row><entry> 
+
+								<row><entry>
 									<emphasis>zoneName</emphasis>
 								</entry><entry>Sets the name of the new zone. This is required.</entry></row>
 								<row><entry>
@@ -1403,35 +1403,35 @@ automountmap-show              Display an automount map.
 								<row><entry>
 									--name-from-ip=<emphasis>IPaddress</emphasis>
 								</entry><entry>Gives an IP address for the DNS zone to use to create a reverse zone name.</entry></row>
-								
+
 								<row><entry>
 									--admin-email=<emphasis>email</emphasis>
 								</entry><entry>Gives the email address of the DNS domain administrator.</entry></row>
-								
+
 								<row><entry>
 									--serial=<emphasis>#</emphasis>
 								</entry><entry>Sets the serial number to use for the DNS start of authority (SOA) record.</entry></row>
-								
+
 								<row><entry>
 									--refresh=<emphasis>#</emphasis>
 								</entry><entry>Sets the time interval to use to check for updated SOA records.</entry></row>
-								
+
 								<row><entry>
 									--retry=<emphasis>#</emphasis>
 								</entry><entry>Sets the time to wait before retrying a failed name resolution attempt.</entry></row>
-								
+
 								<row><entry>
 									--expire=<emphasis>#</emphasis>
 								</entry><entry>Sets the time to hold successful resolution attempts in the cache before they expire.</entry></row>
-								
+
 								<row><entry>
 									--minimum=<emphasis>#</emphasis>
 								</entry><entry>Sets the time to hold negative or failed resolution attempts in the cache.</entry></row>
-								
+
 								<row><entry>
 									--ttl=<emphasis>#</emphasis>
 								</entry><entry>Sets how long to hold SOA records in the cache.</entry></row>
-								
+
 								<row><entry>
 									--class=<emphasis>name</emphasis>
 								</entry><entry>Sets a SOA record class for zone entries.</entry></row>
@@ -1490,7 +1490,7 @@ automountmap-show              Display an automount map.
 							</tbody>
 						</tgroup>
 					</informaltable>
-				</section>			
+				</section>
 			</section>
 
 				<section id="ipa-command-dnsrecord-add"><title>ipa dnsrecord-add</title>
@@ -1500,7 +1500,7 @@ automountmap-show              Display an automount map.
 					<para>
 						Each resource record type has its own set of options, based on the required information to configure the record.
 					</para>
-					
+
 
 					<section id="ipa-dnsrecord-syntax"><title>Syntax</title>
 						<cmdsynopsis>
@@ -1517,7 +1517,7 @@ automountmap-show              Display an automount map.
 						</cmdsynopsis>
 					</section>
 
-						
+
 				<section id="ipa-dnsrecord-options"><title>Options</title>
 					<informaltable>
 						<tgroup cols="2">
@@ -1544,7 +1544,7 @@ automountmap-show              Display an automount map.
 										--ttl=<emphasis>number</emphasis>
 									</entry>
 									<entry>
-										Sets the time to live for the record. 
+										Sets the time to live for the record.
 									</entry>
 								</row>
 								<row>
@@ -1589,7 +1589,7 @@ automountmap-show              Display an automount map.
 										--a-rec=<emphasis>ARECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of A records. 
+										Passes a comma-separated list of A records.
 									</entry>
 								</row>
 								<row>
@@ -1626,7 +1626,7 @@ automountmap-show              Display an automount map.
 										--a6-rec=<emphasis>A6RECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of A6 records. 
+										Passes a comma-separated list of A6 records.
 									</entry>
 								</row>
 								<row>
@@ -1640,7 +1640,7 @@ automountmap-show              Display an automount map.
 							</tbody>
 						</tgroup>
 
-						
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -1665,7 +1665,7 @@ automountmap-show              Display an automount map.
 										--aaaa-rec=<emphasis>AAAARECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of AAAA (IPv6) records. 
+										Passes a comma-separated list of AAAA (IPv6) records.
 									</entry>
 								</row>
 								<row>
@@ -1679,7 +1679,7 @@ automountmap-show              Display an automount map.
 							</tbody>
 						</tgroup>
 
-						
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -1704,7 +1704,7 @@ automountmap-show              Display an automount map.
 										--afsdb-rec=<emphasis>AFSDBRECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of AFSDB records. 
+										Passes a comma-separated list of AFSDB records.
 									</entry>
 								</row>
 								<row>
@@ -1725,9 +1725,9 @@ automountmap-show              Display an automount map.
 								</row>
 							</tbody>
 						</tgroup>
-						
 
-						
+
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -1752,7 +1752,7 @@ automountmap-show              Display an automount map.
 										--cert-rec=<emphasis>CERTRECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of CERT records. 
+										Passes a comma-separated list of CERT records.
 									</entry>
 								</row>
 								<row>
@@ -1790,7 +1790,7 @@ automountmap-show              Display an automount map.
 							</tbody>
 						</tgroup>
 
-						
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -1815,7 +1815,7 @@ automountmap-show              Display an automount map.
 										--cname-rec=<emphasis>CNAMERECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of CNAME records. 
+										Passes a comma-separated list of CNAME records.
 									</entry>
 								</row>
 								<row>
@@ -1829,7 +1829,7 @@ automountmap-show              Display an automount map.
 							</tbody>
 						</tgroup>
 
-						
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -1854,7 +1854,7 @@ automountmap-show              Display an automount map.
 										--dname-rec=<emphasis>DNAMERECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of DNAME records. 
+										Passes a comma-separated list of DNAME records.
 									</entry>
 								</row>
 								<row>
@@ -1868,7 +1868,7 @@ automountmap-show              Display an automount map.
 							</tbody>
 						</tgroup>
 
-						
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -1893,7 +1893,7 @@ automountmap-show              Display an automount map.
 										--ds-rec=<emphasis>DSRECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of DNSSEC key records. 
+										Passes a comma-separated list of DNSSEC key records.
 									</entry>
 								</row>
 								<row>
@@ -1931,7 +1931,7 @@ automountmap-show              Display an automount map.
 							</tbody>
 						</tgroup>
 
-						
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -1956,7 +1956,7 @@ automountmap-show              Display an automount map.
 										--key-rec=<emphasis>KEYRECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of KEY records. 
+										Passes a comma-separated list of KEY records.
 									</entry>
 								</row>
 								<row>
@@ -1994,7 +1994,7 @@ automountmap-show              Display an automount map.
 							</tbody>
 						</tgroup>
 
-						
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -2019,7 +2019,7 @@ automountmap-show              Display an automount map.
 										--kx-rec=<emphasis>KXRECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of KX records. 
+										Passes a comma-separated list of KX records.
 									</entry>
 								</row>
 								<row>
@@ -2042,7 +2042,7 @@ automountmap-show              Display an automount map.
 						</tgroup>
 
 
-						
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -2067,7 +2067,7 @@ automountmap-show              Display an automount map.
 										--loc-rec=<emphasis>LOCRECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of location information records. 
+										Passes a comma-separated list of location information records.
 									</entry>
 								</row>
 								<row>
@@ -2169,7 +2169,7 @@ automountmap-show              Display an automount map.
 							</tbody>
 						</tgroup>
 
-						
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -2194,7 +2194,7 @@ automountmap-show              Display an automount map.
 										--mx-rec=<emphasis>MXRECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of MX records. 
+										Passes a comma-separated list of MX records.
 									</entry>
 								</row>
 								<row>
@@ -2216,7 +2216,7 @@ automountmap-show              Display an automount map.
 							</tbody>
 						</tgroup>
 
-						
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -2241,7 +2241,7 @@ automountmap-show              Display an automount map.
 										--naptr-rec=<emphasis>NAPTRRECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of pointer records. 
+										Passes a comma-separated list of pointer records.
 									</entry>
 								</row>
 								<row>
@@ -2295,7 +2295,7 @@ automountmap-show              Display an automount map.
 							</tbody>
 						</tgroup>
 
-						
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -2320,7 +2320,7 @@ automountmap-show              Display an automount map.
 										--ns-rec=<emphasis>NSRECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of NS records. 
+										Passes a comma-separated list of NS records.
 									</entry>
 								</row>
 								<row>
@@ -2334,7 +2334,7 @@ automountmap-show              Display an automount map.
 							</tbody>
 						</tgroup>
 
-						
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -2359,7 +2359,7 @@ automountmap-show              Display an automount map.
 										--nsec-rec=<emphasis>NSECRECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of NSEC key records. 
+										Passes a comma-separated list of NSEC key records.
 									</entry>
 								</row>
 								<row>
@@ -2380,7 +2380,7 @@ automountmap-show              Display an automount map.
 								</row>
 							</tbody>
 						</tgroup>
-						
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -2405,7 +2405,7 @@ automountmap-show              Display an automount map.
 										--ptr-rec=<emphasis>PTRRECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of PTR records. 
+										Passes a comma-separated list of PTR records.
 									</entry>
 								</row>
 								<row>
@@ -2419,7 +2419,7 @@ automountmap-show              Display an automount map.
 							</tbody>
 						</tgroup>
 
-						
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -2444,7 +2444,7 @@ automountmap-show              Display an automount map.
 										--rrsig-rec=<emphasis>RRSIGRECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of RRSIG key records. 
+										Passes a comma-separated list of RRSIG key records.
 									</entry>
 								</row>
 								<row>
@@ -2521,7 +2521,7 @@ automountmap-show              Display an automount map.
 								</row>
 							</tbody>
 						</tgroup>
-						
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -2546,7 +2546,7 @@ automountmap-show              Display an automount map.
 										--sig-rec=<emphasis>SIGRECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of SIG key records. 
+										Passes a comma-separated list of SIG key records.
 									</entry>
 								</row>
 								<row>
@@ -2648,7 +2648,7 @@ automountmap-show              Display an automount map.
 										--srv-rec=<emphasis>SRVRECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of SRV records. 
+										Passes a comma-separated list of SRV records.
 									</entry>
 								</row>
 								<row>
@@ -2685,7 +2685,7 @@ automountmap-show              Display an automount map.
 								</row>
 							</tbody>
 						</tgroup>
-						
+
 						<tgroup cols="2">
 							<colspec colnum="1" colname="col1" />
 							<colspec colnum="2" colname="col2" />
@@ -2710,7 +2710,7 @@ automountmap-show              Display an automount map.
 										--sshfp-rec=<emphasis>SSHFPRECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of SSH fingerprint records. 
+										Passes a comma-separated list of SSH fingerprint records.
 									</entry>
 								</row>
 								<row>
@@ -2763,7 +2763,7 @@ automountmap-show              Display an automount map.
 										--txt-rec=<emphasis>TXTRECORD</emphasis>
 									</entry>
 									<entry>
-										Passes a comma-separated list of TXT records. 
+										Passes a comma-separated list of TXT records.
 									</entry>
 								</row>
 								<row>
@@ -2777,7 +2777,7 @@ automountmap-show              Display an automount map.
 							</tbody>
 						</tgroup>
 					</informaltable>
-				</section>			
+				</section>
 			</section>
 		</section>
 
@@ -2785,7 +2785,7 @@ automountmap-show              Display an automount map.
 					<para>
 						This is a collection of subcommands which manage the client, or host, configuration within the &IPA; domain.
 					</para>
-					
+
 				<section id="ipa-host-add"><title>ipa host-add</title>
 					<para>
 						Adds a new &IPA; client machine to the domain manually. This is done as part of the enrollment process.
@@ -2799,7 +2799,7 @@ automountmap-show              Display an automount map.
 							<arg choice="opt">
 								--desc="<replaceable>description</replaceable>"
 							</arg>
-							
+
 							<arg choice="opt">
 								--locality="<replaceable>cityName</replaceable>"
 							</arg>
@@ -2860,7 +2860,7 @@ automountmap-show              Display an automount map.
 							<row><entry>
 								--desc="<emphasis>description</emphasis>"
 							</entry><entry>Gives a text description of the host.</entry></row>
-							
+
 							<row><entry>
 								--locality="<emphasis>cityName</emphasis>"
 							</entry><entry>Gives the geographical location, usually a city, where the host machine is.</entry></row>
@@ -2901,27 +2901,27 @@ automountmap-show              Display an automount map.
 
 	<section id="server-tools"><title>Server Scripts</title>
 		<para>
-			These are scripts that are used to manage the &IPA; server configuration. These scripts do not manage &IPA; domain entries; they manage the configuration of the server itself. This means that 
+			These are scripts that are used to manage the &IPA; server configuration. These scripts do not manage &IPA; domain entries; they manage the configuration of the server itself. This means that
 			these scripts are run as system administrative users rather than domain administrative users.
 		</para>
 
-		
+
 			<section id="ipa-tool"><title>A Quick Summary of Configuration Scripts</title>
 				<para>
-					There are two basic categories of command-line scripts that &PROD; has available. 
+					There are two basic categories of command-line scripts that &PROD; has available.
 				</para>
 				<para>
-					The first is a selection of independent configuration scripts which are used to set up machines that operate within the domain. 
-				       	Most of these scripts are used to add servers and clients to the &IPA; domain, such as the <command>ipa-server-install</command>, 
-					<command>ipa-client-install</command>, and <command>ipa-replica-install</command> scripts. 
+					The first is a selection of independent configuration scripts which are used to set up machines that operate within the domain.
+					Most of these scripts are used to add servers and clients to the &IPA; domain, such as the <command>ipa-server-install</command>,
+					<command>ipa-client-install</command>, and <command>ipa-replica-install</command> scripts.
 				</para>
 				<para>
-					Some scripts are also available to enable services within the &IPA; server, such as adding CA services to a replica or enabling DNS. 
-					Several services can be configured when a server or replica is installed, but few of those services are required. If a server is configured 
+					Some scripts are also available to enable services within the &IPA; server, such as adding CA services to a replica or enabling DNS.
+					Several services can be configured when a server or replica is installed, but few of those services are required. If a server is configured
 					without a service like DNS, that service can be enabled later using a specific configuration script, such as <command>ipa-dns-install</command>.
 				</para>
 				<para>
-					Then there are scripts that are simply used to manage &IPA; domain. These scripts can be used to create or delete keytabs and certificates for any service or host within the domain, to set management rules for hosts and services (<emphasis>managed by</emphasis> settings), 
+					Then there are scripts that are simply used to manage &IPA; domain. These scripts can be used to create or delete keytabs and certificates for any service or host within the domain, to set management rules for hosts and services (<emphasis>managed by</emphasis> settings),
 				</para>
 				<para>
 					Then there are a handful of scripts which are strictly internal, like <command>ipa-join</command>, meaning they are called by other management scripts but are not invoked by administrators directly.
@@ -2941,7 +2941,7 @@ automountmap-show              Display an automount map.
 						<tbody>
 							<row>
 								<entry>
-ipa-ca-install									
+ipa-ca-install
 								</entry>
 								<entry>
 									Installs a Dogtag CA on a replica which previously did not have a CA installed.
@@ -3146,7 +3146,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-compat-manage-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="2">
@@ -3182,7 +3182,7 @@ ipa-ca-install
 				</informaltable>
 			</section>
 		</section>
-	
+
 		<section id="ipa-compliance" condition="reviewing"><title>ipa-compliance</title>
 			<para>
 				Description
@@ -3233,7 +3233,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-compliance-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="2">
@@ -3269,7 +3269,7 @@ ipa-ca-install
 				</informaltable>
 			</section>
 		</section>
-	
+
 		<section id="ipa-dns-install" condition="reviewing"><title>ipa-dns-install</title>
 			<para>
 				Description
@@ -3320,7 +3320,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-dns-install-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="2">
@@ -3356,7 +3356,7 @@ ipa-ca-install
 				</informaltable>
 			</section>
 		</section>
-	
+
 		<section id="ipa-host-net-manage" condition="reviewing"><title>ipa-host-net-manage</title>
 			<para>
 				Description
@@ -3407,7 +3407,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-host-net-manage-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="2">
@@ -3445,7 +3445,7 @@ ipa-ca-install
 		</section>
 
 
-	
+
 		<section id="ipa-ldap-updater" condition="reviewing"><title>ipa-ldap-updater</title>
 			<para>
 				Description
@@ -3496,7 +3496,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-ldap-updater-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="2">
@@ -3532,7 +3532,7 @@ ipa-ca-install
 				</informaltable>
 			</section>
 		</section>
-	
+
 		<section id="ipa-nis-manage" condition="reviewing"><title>ipa-nis-manage</title>
 			<para>
 				Description
@@ -3583,7 +3583,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-nis-manage-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="2">
@@ -3619,21 +3619,21 @@ ipa-ca-install
 				</informaltable>
 			</section>
 		</section>
-	
+
 		<section id="ipa-replica-install"><title>ipa-replica-install</title>
 			<para>
-				Uses a configuration file based on an existing &IPA; server to create a replica, or copy, of that server. Once the replica is created, 
-				it functions as an equal participant and mirror of the original &IPA; server within the &IPA; domain. Any changes made on the server or 
+				Uses a configuration file based on an existing &IPA; server to create a replica, or copy, of that server. Once the replica is created,
+				it functions as an equal participant and mirror of the original &IPA; server within the &IPA; domain. Any changes made on the server or
 				any other replica are automatically propagated over to the other replicas and server.
 			</para>
 			<para>
-				A replica is created using a file that contains all of the configuration for the &IPA; server. This initial file is created by running the 
-				<command>ipa-replica-prepare</command> on the &IPA; server. Then the file is copied over to the replica machine, and the 
+				A replica is created using a file that contains all of the configuration for the &IPA; server. This initial file is created by running the
+				<command>ipa-replica-prepare</command> on the &IPA; server. Then the file is copied over to the replica machine, and the
 				<command>ipa-replica-install</command> script is run.
 			</para>
 			<para>
-				As with the server and client install scripts, any replica arguments which require a parameter value (such as the Directory Manager password) will be prompted for 
-				during installation, unless the argument is passed with the command. Parameters with Boolean values (like configuring DNS) will assume that the default 
+				As with the server and client install scripts, any replica arguments which require a parameter value (such as the Directory Manager password) will be prompted for
+				during installation, unless the argument is passed with the command. Parameters with Boolean values (like configuring DNS) will assume that the default
 				value should be used unless the argument is passed with the command.
 			</para>
 			<section id="ipa-replica-install-location"><title>Location</title>
@@ -3682,7 +3682,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-replica-install-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="3">
@@ -3714,7 +3714,7 @@ ipa-ca-install
 								<entry>
 								</entry>
 								<entry>
-									--setup-ca 
+									--setup-ca
 								</entry>
 								<entry>
 									Sets up a &FCRTS; certificate authority. Otherwise, no CA is configured for the replica.
@@ -3822,7 +3822,7 @@ ipa-ca-install
  	    --forwarder
 								</entry>
 								<entry>
-									Gives a comma-separated list of IP addresses for DNS forwarders. 
+									Gives a comma-separated list of IP addresses for DNS forwarders.
 								</entry>
 							</row>
 							<row>
@@ -3870,7 +3870,7 @@ ipa-ca-install
 								<entry>
 								</entry>
 								<entry>
-									--no-dns-sshfp 
+									--no-dns-sshfp
 								</entry>
 								<entry>
 									Configures the client to not configure DNS SSHFP records.
@@ -3884,7 +3884,7 @@ ipa-ca-install
 								</entry>
 								<entry>
 									<para>
-										Disables checks for the replica's connection to the &IPA; domain. If this is not used, then the default value is true, which checks that the replica can connect to the Kerberos realm. 
+										Disables checks for the replica's connection to the &IPA; domain. If this is not used, then the default value is true, which checks that the replica can connect to the Kerberos realm.
 									</para>
 									<para>
 										This can be useful if the replica is unable to reach the &DS; or the CA used by the original &IPA; server, such as the server is offline or the server's firewall is blocking access on the required ports (<xref linkend="prereq-ports" />).
@@ -3958,7 +3958,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-replica-manage-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="2">
@@ -3994,28 +3994,28 @@ ipa-ca-install
 				</informaltable>
 			</section>
 		</section>
-	
+
 		<section id="ipa-replica-prepare"><title>ipa-replica-prepare</title>
 			<para>
-				Creates a file that can be used to create a copy, or <emphasis>replica</emphasis>, of the &IPA; server. 
+				Creates a file that can be used to create a copy, or <emphasis>replica</emphasis>, of the &IPA; server.
 			</para>
 			<para>
-				Each replica initialization file is unique to the replica machine because the configuration is based, in part, 
-				on the IP address and hostname of the replica machine. This host-specific configuration is especially critical for 
-				setting up services like Kerberos which use SSL because SSL certificates are created based on the hostname. 
+				Each replica initialization file is unique to the replica machine because the configuration is based, in part,
+				on the IP address and hostname of the replica machine. This host-specific configuration is especially critical for
+				setting up services like Kerberos which use SSL because SSL certificates are created based on the hostname.
 			</para>
 			<para>
-				When the replica file is created, the prep script 
-				requires the hostname and, optionally, accepts the IP address. 
+				When the replica file is created, the prep script
+				requires the hostname and, optionally, accepts the IP address.
 			</para>
 			<para>
-				Once the configuration file is created on the server using the <command>ipa-replica-prepare</command> command, 
-				then the replica file is copied over to the replica machine and the replica is configured using the 
+				Once the configuration file is created on the server using the <command>ipa-replica-prepare</command> command,
+				then the replica file is copied over to the replica machine and the replica is configured using the
 				<command>ipa-replica-install</command> command.
 			</para>
 			<note><title>NOTE</title>
 				<para>
-					If DNS is managed by &IPA;, then use either the <option>--ip-address</option> option or configure DNS forwarders and allow reverse DNS lookups. 
+					If DNS is managed by &IPA;, then use either the <option>--ip-address</option> option or configure DNS forwarders and allow reverse DNS lookups.
 				</para>
 			</note>
 			<section id="ipa-replica-prepare-location"><title>Location</title>
@@ -4076,7 +4076,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-replica-prepare-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="2">
@@ -4136,7 +4136,7 @@ ipa-ca-install
 				</informaltable>
 			</section>
 		</section>
-	
+
 		<section id="ipa-server-certinstall" condition="reviewing"><title>ipa-server-certinstall</title>
 			<para>
 				Description
@@ -4187,7 +4187,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-server-certinstall-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="2">
@@ -4223,7 +4223,7 @@ ipa-ca-install
 				</informaltable>
 			</section>
 		</section>
-	
+
 		<section id="ipa-server-install"><title>ipa-server-install</title>
 			<para>
 				Configures all of the services used by the &IPA; server for the &IPA; domain:
@@ -4266,7 +4266,7 @@ ipa-ca-install
 				</listitem>
 			</itemizedlist>
 			<para>
-				This script can be run interactively, which prompts for many of the server values, or information can be passed directly to the script so that the server can be configured without human intervention. 
+				This script can be run interactively, which prompts for many of the server values, or information can be passed directly to the script so that the server can be configured without human intervention.
 			</para>
 			<para>
 				The &IPA; server configuration is very flexible. The setup script allows some customization to services like DNS, NTP, certificate issuance, and access control in &IPA; so that the server can be suited to the network environment.
@@ -4401,7 +4401,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-server-install-options"><title>Options</title>
 				<informaltable>
 				<tgroup cols="3">
@@ -4467,7 +4467,7 @@ ipa-ca-install
 								The name of the LDAP server domain to use for the &IPA; domain. This is usually based on the &IPA; server's hostname.
 							</entry>
 						</row>
-						
+
 						<row>
 							<entry>
 								-p <emphasis>directory_manager_password</emphasis>
@@ -4701,7 +4701,7 @@ ipa-ca-install
 								Does <emphasis>not</emphasis> configure the NTP service for the &IPA; server. This is normally done by default.
 								<note><title>NOTE</title>
 									<para>
-										If the &IPA; server is running as a virtual guest, it should not run an NTP service. 
+										If the &IPA; server is running as a virtual guest, it should not run an NTP service.
 									</para>
 								</note>
 							</entry>
@@ -4820,7 +4820,7 @@ ipa-ca-install
 				</informaltable>
 			</section>
 		</section>
-	
+
 		<section id="ipa-ugradeconfig" condition="reviewing"><title>ipa-upgradeconfig</title>
 			<para>
 				Description
@@ -4871,7 +4871,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-upgradeconfig-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="2">
@@ -4907,7 +4907,7 @@ ipa-ca-install
 				</informaltable>
 			</section>
 		</section>
-	
+
 		<section id="ipactl" condition="reviewing"><title>ipactl</title>
 			<para>
 				Description
@@ -4958,7 +4958,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipactl-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="2">
@@ -5004,7 +5004,7 @@ ipa-ca-install
 
 		<section id="ipa-client-install"><title>ipa-client-install</title>
 			<para>
-				Configures a client machine. This script uses the local SSSD service to connect to the &IPA; server during the setup process. It is also possible to 
+				Configures a client machine. This script uses the local SSSD service to connect to the &IPA; server during the setup process. It is also possible to
 				connect to the server through PAM/NSS using LDAP.
 			</para>
 			<para>
@@ -5085,7 +5085,7 @@ ipa-ca-install
 						--no-sshd
 					</arg>
 					<arg choice="opt">
-						--no-dns-sshfp 
+						--no-dns-sshfp
 					</arg>
 					<arg choice="opt">
 						--on-master
@@ -5119,7 +5119,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-client-install-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="3">
@@ -5156,10 +5156,10 @@ ipa-ca-install
 								<entry>
               Tells SSSD to update DNS with the IP
               address of this client.
-	      
-									
+
+
 								</entry>
-								
+
 							</row>
 							<row>
 	     <entry>
@@ -5204,7 +5204,7 @@ ipa-ca-install
       </row>
 							<row>
 								<entry>
-									--no-dns-sshfp 
+									--no-dns-sshfp
 								</entry>
 								<entry>
 								</entry>
@@ -5347,9 +5347,9 @@ ipa-ca-install
 									Configures the OpenSSH client for the &IPA; client to trust any domain DNS SSHFP records.
 								</entry>
 							</row>
-      
-      
-      
+
+
+
       <row>
 								<entry>
 									--unattended
@@ -5373,9 +5373,9 @@ ipa-ca-install
               Removes the &IPA; client software and configuration to restore the machine to a pre-&IPA; state.
 	      </entry>
       </row>
-      
-      
-      
+
+
+
       <row>
 								<entry>
 	     --password=<emphasis>password</emphasis>
@@ -5399,17 +5399,17 @@ ipa-ca-install
 									Prompts for the password.
 									</entry>
       </row>
-      
-      
-      
-      
-      
+
+
+
+
+
 						</tbody>
 					</tgroup>
 				</informaltable>
 			</section>
 		</section>
-	
+
 		<section id="ipa-getkeytab" condition="reviewing"><title>ipa-getkeytab</title>
 			<para>
 				Description
@@ -5460,7 +5460,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-getkeytab-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="2">
@@ -5496,7 +5496,7 @@ ipa-ca-install
 				</informaltable>
 			</section>
 		</section>
-	
+
 		<section id="ipa-join" condition="reviewing"><title>ipa-join</title>
 			<para>
 				Description
@@ -5547,7 +5547,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-join-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="2">
@@ -5583,7 +5583,7 @@ ipa-ca-install
 				</informaltable>
 			</section>
 		</section>
-	
+
 		<section id="ipa-rmkeytab" condition="reviewing"><title>ipa-rmkeytab</title>
 			<para>
 				Description
@@ -5634,7 +5634,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-rmkeytab-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="2">
@@ -5727,7 +5727,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="getcert-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="2">
@@ -5814,7 +5814,7 @@ ipa-ca-install
 					</arg>
 				</cmdsynopsis>
 			</section>
-					
+
 			<section id="ipa-getcert-options"><title>Options</title>
 				<informaltable>
 					<tgroup cols="2">

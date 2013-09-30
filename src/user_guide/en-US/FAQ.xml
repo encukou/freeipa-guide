@@ -56,7 +56,7 @@
 		 <qandaentry>
 			<question>
 				<para>
-					Can I promote a replica to function as the master? 
+					Can I promote a replica to function as the master?
 				</para>
 
 			</question>
@@ -78,7 +78,7 @@
 			</question>
 			 <answer>
 				<para>
-					Active Directory has its own SRV records for Kerberos and LDAP. The <command>ipa-client-install</command> script can retrieve those records instead of any that have been added for the &IPA; domain. 
+					Active Directory has its own SRV records for Kerberos and LDAP. The <command>ipa-client-install</command> script can retrieve those records instead of any that have been added for the &IPA; domain.
 				</para>
 				<para>
 					When running <command>ipa-client-install</command>, manually enter the server information to ensure that the script uses the &IPA; SRV records instead of &AD; records. The <command>ipa-client-install</command> options are listed in the <command>ipa-client-install</command> manpage.

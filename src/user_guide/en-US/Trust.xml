@@ -5,31 +5,31 @@
 	<title>Identity: Integrating with Active Directory Through Cross-Realm Kerberos Trusts &TITLE_TPREVIEW;</title>
 	<para>
 		Kerberos allows the configuration of <emphasis>trusted realms</emphasis>. Each realm has its own
-		resources and users, yet the trust relationship allows users of any trusted realm to obtain tickets 
+		resources and users, yet the trust relationship allows users of any trusted realm to obtain tickets
 		and connect to machines or services in a peer realm as if they were members of that peer realm.
 	</para>
 	<para>
 		Because of differences in the way that Windows and Linux domains implement LDAP services, DNS
 		management, and even Kerberos realms, it is difficult to establish a direct trust between &AD;
 		and Linux domains manually. A trust relationship using &IPA; centrally defines and establishes
-		the Kerberos trust and DNS mappings so that &AD; users can access Linux hosts and services 
+		the Kerberos trust and DNS mappings so that &AD; users can access Linux hosts and services
 		completely transparently, using one set of credentials.
 	</para>
 
 	<section id="trust-defined"><title>The Meaning of "Trust"</title>
 		<para>
-			Kerberos has the ability to create a relationship between two otherwise separate realms. This is called 
+			Kerberos has the ability to create a relationship between two otherwise separate realms. This is called
 			a <emphasis>cross-realm trust</emphasis>. This is described in some detail in <ulink url="https://access.redhat.com/knowledge/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Managing_Smart_Cards/Setting_Up_Cross_Realm_Authentication.html">Managing Single Sign-On and Smart Cards</ulink>.
 			These realms create a shared ticket and key so a member of one realm is perceived as a member of
 			both realms. One realm <emphasis>trusts</emphasis> another.
 		</para>
 		<section id="trust-realms"><title>How Trust Works: Transparency Between Kerberos and DNS Realms</title>
 			<para>
-				Both &AD; and &PROD; manage a variety of core services: Kerberos, LDAP, DNS, certificate services. For these two disparate 
+				Both &AD; and &PROD; manage a variety of core services: Kerberos, LDAP, DNS, certificate services. For these two disparate
 				domains to be integrated transparently, all of these core services need to be able to interact cleanly with one another.
 			</para>
 			<para>
-				Those services can be broken into two major points of interaction: a Kerberos realm and a DNS domain. Certificate services, 
+				Those services can be broken into two major points of interaction: a Kerberos realm and a DNS domain. Certificate services,
 				LDAP entries, and other services can be managed independently for &AD; and &IPA;. The place where they interect is where
 				identities need to be authenticated (Kerberos) and a mechanism to route queries between domains (DNS).
 			</para>
@@ -70,7 +70,7 @@
 		<section id="comp-trust-dirs"><title>&AD; and &PROD; Directories</title>
 			<para>
 				One of the most common backends for user identities is &AD;, and many environments &mdash; even primarily Linux or heterogenous environments
-				&mdash; rely on &AD; for user management. In many environments, however, that means that an entirely different set of users must be defined 
+				&mdash; rely on &AD; for user management. In many environments, however, that means that an entirely different set of users must be defined
 				to access Linux systems.
 			</para>
 			<para>
@@ -100,14 +100,14 @@
 				</para>
 			</note>
 			<para>
-				A relationship is established between the &AD; environment and the &IPA; environment through a <emphasis>trust agreement</emphasis>, which 
+				A relationship is established between the &AD; environment and the &IPA; environment through a <emphasis>trust agreement</emphasis>, which
 				identifies the involved domains and the settings for the trust environment.
 			</para>
 		</section>
 
 		<section id="comp-trust-dns"><title>DNS Domains</title>
 			<para>
-				Both &AD; and &PROD; can define DNS services, and those DNS domains must interact cleanly with each other. There are two 
+				Both &AD; and &PROD; can define DNS services, and those DNS domains must interact cleanly with each other. There are two
 				potential DNS configurations:
 			</para>
 			<itemizedlist>
@@ -133,8 +133,8 @@
 			</important>
 			<formalpara><title>Separate DNS Domains</title>
 				<para>
-					In this case, there are two entirely different namespaces, such as <command>ipaexample.com</command> and 
-					<command>adexample.com</command>. For these domains to communicate, they must be configured as conditional 
+					In this case, there are two entirely different namespaces, such as <command>ipaexample.com</command> and
+					<command>adexample.com</command>. For these domains to communicate, they must be configured as conditional
 					forwarders of each other's domain.
 				</para>
 			</formalpara>
@@ -147,7 +147,7 @@
 			</figure>
 			<formalpara><title>&PROD; as a Subdomain</title>
 				<para>
-					In this case, &PROD; is a namespace within the larger &AD; space, such as <command>linux.example.com</command> and 
+					In this case, &PROD; is a namespace within the larger &AD; space, such as <command>linux.example.com</command> and
 					<command>example.com</command>. &IPA; can be configured to send all requests to the &AD; domain (a forward-only policy)
 					or it can send queries first to &AD; and then attempt to resolve them itself (a foward-first policy).
 				</para>
@@ -163,10 +163,10 @@
 
 		<section id="comp-trust-krb"><title>Kerberos Realms, Authentication, and Authorization</title>
 			<para>
-			Group information in &AD; is stored in a list of identifiers in each Kerberos ticket for 
+			Group information in &AD; is stored in a list of identifiers in each Kerberos ticket for
 			&AD; users in a special dataset called <emphasis>privileged access certificates</emphasis>
 			or MS-PAC. The group information in the PAC has to be mapped to the &AD; groups and then
-			to the corresponding &IPA; groups to help determine access. A PAC is essentially an account usability 
+			to the corresponding &IPA; groups to help determine access. A PAC is essentially an account usability
 			extension.
 		</para>
 		<para>
@@ -175,11 +175,11 @@
 		</para>
 
 			<para>
-				Microsoft uses a special authorization structure called <emphasis>privileged access certificates</emphasis> 
+				Microsoft uses a special authorization structure called <emphasis>privileged access certificates</emphasis>
 				or MS-PAC. A PAC is embedded in a Kerberos ticket as a way of identifying the entity to other Windows clients and servers in the Windows domain.
 			</para>
 			<para>
-				On &IPA; resources, if an &AD; user requests a ticket for a service, then &IPA; 
+				On &IPA; resources, if an &AD; user requests a ticket for a service, then &IPA;
 				forwards the request
 				to &AD; to retrieve the user information. The PAC information sent back by &AD;
 				is embedded in the Kerberos ticket.
@@ -193,10 +193,10 @@
 				&IPA; (through SSSD, as &IPAA; client), extracts the &AD; group <emphasis>security
 				identifiers</emphasis> (SIDs) from the PAC. &IPA; then compares the &AD; SIDs in the PAC
 				to the group SIDs configured as members in &IPA; groups. If the &AD; group is
-				a member of &IPAA; group, then the &IPA; group SID is added to the PAC, and the 
-				Kerberos ticket is updated with the new PAC. 
+				a member of &IPAA; group, then the &IPA; group SID is added to the PAC, and the
+				Kerberos ticket is updated with the new PAC.
 			</para>
-			
+
 			<figure id="fig.trust-components2"><title>&IPA;, SSSD, and &AD;</title>
 				<mediaobject>
 					<imageobject>
@@ -205,7 +205,7 @@
 				</mediaobject>
 			</figure>
 			<para>
-				That new ticket is then used to generate a service ticket for the user, and 
+				That new ticket is then used to generate a service ticket for the user, and
 				the user is granted access to the &IPA;-hosted services.
 				according to their access rules. Additionally, the &IPA; group information in the
 				SSSD user cache is updated to include the mapped &IPA; groups for the &AD; user.
@@ -214,36 +214,36 @@
 				SSSD stores multiple TGTs and tickets for each user, as new services are accessed.
 			</para>
 			<para>
-				A simpler way of saying this is that &AD; supplies a list of groups for 
-				each user, based on an identifier for the group. &IPA; compares that list of 
+				A simpler way of saying this is that &AD; supplies a list of groups for
+				each user, based on an identifier for the group. &IPA; compares that list of
 				&AD; groups to memberships in &IPA; groups (where each group member is identified
 				by that SID, rather than by a name or DN). If the &AD; groups to which the user
 				belongs are known to the &IPA; domain, then the user is recognized by the &IPA;
 				domain.
 			</para>
 			<para>
-				<emphasis role="bold">The crucial factor to realize in this is that &AD; users 
+				<emphasis role="bold">The crucial factor to realize in this is that &AD; users
 					are recognized to the &IPA; domain not by their &AD; user entry, but
 					by their &AD; group memberships.</emphasis>
 				In a sense, &AD; <emphasis>users</emphasis> are not trusted by the &IPA; domain
 				&mdash; &AD; <emphasis>groups</emphasis> are.
 			</para>
 			<para>
-				But this method of mapping &AD; group SIDs to &IPA; group members means that 
+				But this method of mapping &AD; group SIDs to &IPA; group members means that
 				group structure in &IPA; is important. &AD; groups have different attributes
 				than Linux groups and, therefore, different attributes than &IPA; groups. Most
 				critically, &AD; groups are not POSIX groups, while &IPA; groups are.
 			</para>
 			<para>
-				&IPA; has introduced an intermediary, non-POSIX group type, <emphasis>external groups</emphasis>, which 
-				allow entities outside &IPA; or a Linux system to be added as member. That external group can then be 
+				&IPA; has introduced an intermediary, non-POSIX group type, <emphasis>external groups</emphasis>, which
+				allow entities outside &IPA; or a Linux system to be added as member. That external group can then be
 				added to a standard &IPA; (POSIX) group as a member.
 			</para>
 			<para>
 				When &AD; groups are added to &IPAA; group, they can be idenfitied by
 				their SID or by name, in the formats <emphasis>DOMAIN\group_name</emphasis> or
-				<emphasis>group_name@domain</emphasis>. &IPA; then resolves the group name to 
-				the SID and stores the SID as the group member entry, to be compared to any 
+				<emphasis>group_name@domain</emphasis>. &IPA; then resolves the group name to
+				the SID and stores the SID as the group member entry, to be compared to any
 				offered user PAC.
 			</para>
 			<para>
@@ -255,7 +255,7 @@
 				</para>
 			</important>
 			<para>
-				All sessions in a trust environment are ultimately secured with Kerberos tickets, but users have different 
+				All sessions in a trust environment are ultimately secured with Kerberos tickets, but users have different
 				login options:
 			</para>
 			<itemizedlist>
@@ -285,9 +285,9 @@
 				Trusts and synchronization are fundamentally different approaches to integrating &IPAA; domain and &AD; domain. The structure of trust domains (outlined in <xref linkend="trust-realms" />), the complexity of group assignments, the location of user and group entries, and other factors all influence which solution is most effective for a given environment.
 			</para>
 			<para>
-				Synchronization has a certain simplicity in its overall topology and setup, and 
-				it has a relatively small administrative footprint. However, it is much more 
-				limited in how it handles directory data, its ability to map entries, its 
+				Synchronization has a certain simplicity in its overall topology and setup, and
+				it has a relatively small administrative footprint. However, it is much more
+				limited in how it handles directory data, its ability to map entries, its
 				overall performance, and its security.
 			</para>
 			<table id="tab.summary-sync-trust"><title>Positives and Negatives of Using Sync</title>
@@ -456,11 +456,11 @@
 				</para>
 			</note>
 		</section>
-	
+
 		<section id="trust-ipa-features"><title>&AD; Users and &IPA; Features: sudo and Host-Based Access Control Policies</title>
 			<para>
-				&AD; users <emphasis>cannot</emphasis> be added directly to &IPAA; group as a member. 
-				This means that policies and configuration in &IPA; which rely on group associations &mdash; such as host-based access control rules and sudo policies &mdash; must be configured in a kind of daisy-chain. 
+				&AD; users <emphasis>cannot</emphasis> be added directly to &IPAA; group as a member.
+				This means that policies and configuration in &IPA; which rely on group associations &mdash; such as host-based access control rules and sudo policies &mdash; must be configured in a kind of daisy-chain.
 			</para>
 			<para>
 				The &AD; user is added to an &AD; group, then that &AD; group is added to &IPAA; external group, which is added as a member to a POSIX group. The sudo, host-based access controls, and other policies are applied against that POSIX group and, ultimately, through nesting memberships applied to the &AD; user when accessing &IPA; domain resources.
@@ -478,11 +478,11 @@
 				</para>
 			</note>
 		</section>
-			
+
 		<section id="sid-issues"><title>Potential Issues with Group Mapping and SIDs</title>
 			<formalpara><title>Losing Kerberos Tickets</title>
 				<para>
-					Running any command to obtain a SID from the Samba service &mdash; such as 
+					Running any command to obtain a SID from the Samba service &mdash; such as
 					<command>net getlocalsid</command> or <command>net getdomainsid</command> &mdash;
 				       	kills any existing admin ticket in the Kerberos cache.
 				</para>
@@ -496,7 +496,7 @@
 		<formalpara><title>Cannot Display (Remote) &AD; Group Memberships for an &AD; User</title>
 			<para>
 				For Linux system users, local group associations can be shown for a user
-				using the <command>id</command> command. However, &AD; group memberships are not 
+				using the <command>id</command> command. However, &AD; group memberships are not
 				displayed with <command>id</command> for &AD; users, even though they
 				are with Samba tools.
 			</para>
@@ -533,17 +533,17 @@ uid=1921801107(jsmith@adexample.com) gid=1921801107(jsmith@adexample.com) groups
 				Trust relationships are unidirectional. &AD; users exist only within the &AD; domain and are limited to what resources within the &IPA; domain they can access. <emphasis role="bold">&AD; users are not administrators for &IPA; because they do not exist within &IPA;.</emphasis>
 			</para>
 			<para>
-				&AD; users, then, cannot use any &IPA; administrative tools, including the web UI 
+				&AD; users, then, cannot use any &IPA; administrative tools, including the web UI
 				and command-line tools.
 			</para>
 		</section>
-		
+
 	</section>
 
 	<section id="trust-requirements"><title>Environment and Machine Requirements to Set Up Trusts</title>
 		<para>
-			Make sure that both the &AD; and &IPA; servers, machines, and environments meet the 
-			requirements and settings in this section <emphasis>before</emphasis> configuring 
+			Make sure that both the &AD; and &IPA; servers, machines, and environments meet the
+			requirements and settings in this section <emphasis>before</emphasis> configuring
 			a trust agreement.
 		</para>
 		<section id="trust-req-domain-names"><title>Domain and Realm Names</title>
@@ -563,7 +563,7 @@ uid=1921801107(jsmith@adexample.com) gid=1921801107(jsmith@adexample.com) groups
 			<para>
 				Both the &AD; server and the &IPA; server must be configured to run their own respective DNS services.
 			</para>
-			
+
 		</section>
 
 		<section id="trust-req-ports"><title>Firewalls and Ports</title>
@@ -602,7 +602,7 @@ uid=1921801107(jsmith@adexample.com) gid=1921801107(jsmith@adexample.com) groups
 							TCP
 							</entry>
 						</row>
-								
+
 					<row>
 						<entry>
 							Kerberos
@@ -639,7 +639,7 @@ uid=1921801107(jsmith@adexample.com) gid=1921801107(jsmith@adexample.com) groups
 								UDP
 						</entry>
 							</row>
-						
+
 					</tbody>
 				</tgroup>
 			</table>
@@ -686,7 +686,7 @@ uid=1921801107(jsmith@adexample.com) gid=1921801107(jsmith@adexample.com) groups
 				</listitem>
 				<listitem>
 					<para>
-						Restart the <command>iptables</command> service: 
+						Restart the <command>iptables</command> service:
 					</para>
 		<screen>[root@ipaserver ]# service iptables restart</screen>
 					</listitem>
@@ -717,7 +717,7 @@ COMMIT</screen>
 
 		<section id="trust-name-formats"><title>Supported Username Formats</title>
 			<para>
-				Username mapping is performed in the local SSSD client. A Python regular expression is used by SSSD to identify the username and the domain to which it belongs. 
+				Username mapping is performed in the local SSSD client. A Python regular expression is used by SSSD to identify the username and the domain to which it belongs.
 			</para>
 			<para>
 				By default in SSSD, the username format is defined in the form <emphasis>name@domain</emphasis>. This uses the regular expression:
@@ -962,9 +962,9 @@ adding new entry "cn=sidgen,cn=ipa-sidgen-task,cn=tasks,cn=config"</screen>
 			<screen>ipa trust-add --type=<replaceable>type ad_domain_name</replaceable> --admin <replaceable>ad_admin_username</replaceable> --password</screen>
 			<para>
 				For example:
-			</para>	
+			</para>
 <screen>[root@ipaserver ~]# ipa trust-add --type=ad adexample.com --admin Administrator --password
-Active directory domain administrator's password: 
+Active directory domain administrator's password:
 ------------------------------------------------------
 Added Active Directory trust for realm "adexample.com"
 ------------------------------------------------------
@@ -985,11 +985,11 @@ Added Active Directory trust for realm "adexample.com"
 			</para>
 			<screen>[root@ipaserver ]# kvno host/ipaserver.ipaexample.com@IPA.DOMAIN </screen>
 			<para>
-				Then, request service tickets for services within the &AD; domain. 
+				Then, request service tickets for services within the &AD; domain.
 			</para>
 			<screen>[root@ipaserver ]# kvno cifs/adserver.adexample.com@AD.DOMAIN </screen>
 			<para>
-				If the &AD; service ticket is succcessfully granted, then there will be a cross-realm TGT listed with all of the other requested tickets. This will have the name <command>krbtgt/</command><emphasis>AD.DOMAIN@IPA.DOMAIN</emphasis>. 
+				If the &AD; service ticket is succcessfully granted, then there will be a cross-realm TGT listed with all of the other requested tickets. This will have the name <command>krbtgt/</command><emphasis>AD.DOMAIN@IPA.DOMAIN</emphasis>.
 			</para>
 <screen>[root@ipaserver ]# klist
 Ticket cache: FILE:/tmp/krb5cc_0
@@ -1115,7 +1115,7 @@ ldap_tls_cacert = /etc/ipa/ca.crt
 
 	<section id="trust-diff-dns-domains"><title>Setting up Trust with &IPA; and &AD; in Different DNS Domains</title>
 	<orderedlist>
-	
+
 			<listitem>
 				<para>
 					Stop the Windows firewall service.
@@ -1126,7 +1126,7 @@ ldap_tls_cacert = /etc/ipa/ca.crt
 					Stop <command>iptables</command> and <command>ip6tables</command> on the &IPA; server.
 				</para>
 				<screen>[root@ipaserver ]# service iptables stop</screen>
-			</listitem>	
+			</listitem>
 		<listitem>
 			<para>
 				Install the required trust packages, updated Samba4 packages, and LDAP-DNS packages for &IPA; DNS management.
@@ -1195,7 +1195,7 @@ ldap_tls_cacert = /etc/ipa/ca.crt
 						</listitem>
 					</orderedlist>
 					<para>
-						Alternatively, use the <command>dnscmd</command> command-line utility to add the forwarder entry: 
+						Alternatively, use the <command>dnscmd</command> command-line utility to add the forwarder entry:
 					</para>
 <screen>> dnscmd 127.0.0.1 /ZoneAdd IPAEXAMPLE.COM /Forwarder 255.255.255.0</screen>
 				</listitem>
@@ -1314,9 +1314,9 @@ adding new entry "cn=sidgen,cn=ipa-sidgen-task,cn=tasks,cn=config"</screen>
 			<screen>ipa trust-add --type=<replaceable>type ad_domain_name</replaceable> --admin <replaceable>ad_admin_username</replaceable> --password</screen>
 			<para>
 				For example:
-			</para>	
+			</para>
 <screen>[root@ipaserver ~]# ipa trust-add --type=ad adexample.com --admin Administrator --password
-Active directory domain administrator's password: 
+Active directory domain administrator's password:
 ------------------------------------------------------
 Added Active Directory trust for realm "adexample.com"
 ------------------------------------------------------
@@ -1337,11 +1337,11 @@ Added Active Directory trust for realm "adexample.com"
 			</para>
 			<screen>[root@ipaserver ]# kvno host/ipaserver.ipaexample.com@IPA.DOMAIN </screen>
 			<para>
-				Then, request service tickets for services within the &AD; domain. 
+				Then, request service tickets for services within the &AD; domain.
 			</para>
 			<screen>[root@ipaserver ]# kvno cifs/adserver.adexample.com@AD.DOMAIN </screen>
 			<para>
-				If the &AD; service ticket is succcessfully granted, then there will be a cross-realm TGT listed with all of the other requested tickets. This will have the name <command>krbtgt/</command><emphasis>AD.DOMAIN@IPA.DOMAIN</emphasis>. 
+				If the &AD; service ticket is succcessfully granted, then there will be a cross-realm TGT listed with all of the other requested tickets. This will have the name <command>krbtgt/</command><emphasis>AD.DOMAIN@IPA.DOMAIN</emphasis>.
 			</para>
 <screen>[root@ipaserver ]# klist
 Ticket cache: FILE:/tmp/krb5cc_0
@@ -1451,7 +1451,7 @@ ldap_tls_cacert = /etc/ipa/ca.crt
 				</listitem>
 			</orderedlist>
 		</listitem>
-		
+
 		<listitem>
 			<para>
 				Restart the <command>iptables</command> and <command>ip6tables</command> services on the &IPA; server.
@@ -1466,7 +1466,7 @@ ldap_tls_cacert = /etc/ipa/ca.crt
 	</orderedlist>
 </section>
 
-	<section id="trust-groups"><title>Creating &IPA; Groups for &AD; Users</title> 
+	<section id="trust-groups"><title>Creating &IPA; Groups for &AD; Users</title>
 		<para>
 			User groups are required to set access permissions, host-based access control, sudo rules, and other controls on &IPA; users. These groups are what grant access to &IPA; domain resources, as well as restricting access.
 		</para>
@@ -1477,8 +1477,8 @@ ldap_tls_cacert = /etc/ipa/ca.crt
 		<para>
 			As described in <xref linkend="comp-trust-krb" />, &AD; users are added to the &IPA; domain in a kind
 			of daisy chain. They are added to a group on the &AD; side, then that group is added
-			to &IPAA; external group (meaning, a non-POSIX group), and then that external group is 
-			added to a local POSIX group as a member. 
+			to &IPAA; external group (meaning, a non-POSIX group), and then that external group is
+			added to a local POSIX group as a member.
 			The &IPA; POSIX group can then be used for user/role management of &AD; users.
 		</para>
 		<orderedlist>
@@ -1500,7 +1500,7 @@ Added group "ad_users_external"
 				</listitem>
 				<listitem>
 					<para>
-						Create the <emphasis>POSIX</emphasis> group for actually administering the &IPA; policies. 
+						Create the <emphasis>POSIX</emphasis> group for actually administering the &IPA; policies.
 					</para>
 <screen>[root@ipaserver ~]# ipa group-add --desc='AD users' ad_users
 ----------------------
@@ -1515,8 +1515,8 @@ Added group "ad_users"
 						Add the &AD; group to the &IPA; external group as an external member. The &AD; group is identified by the name <emphasis>DOMAIN\group_name</emphasis>. The group name is then mapped to the &AD; SID for the group. For example:
 					</para>
 <screen>[root@ipaserver ~]# ipa group-add-member ad_users_external --external "AD\Domain Users"
- [member user]: 
- [member group]: 
+ [member user]:
+ [member group]:
   Group name: ad_users_external
   Description: AD users external map
   External member: S-1-5-21-3655990580-1375374850-1633065477-513 SID_DOM_GROUP (2)
@@ -1535,7 +1535,7 @@ Number of members added 1
   Member groups: ad_users_external
 -------------------------
 Number of members added 1
--------------------------</screen>				
+-------------------------</screen>
 				</listitem>
 			</orderedlist>
 		</section>

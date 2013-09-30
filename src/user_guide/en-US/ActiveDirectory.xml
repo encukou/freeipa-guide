@@ -21,22 +21,22 @@
 			A similar process can be used to share data between the &IPA; domain and a Microsoft Active Directory domain. This is <emphasis>synchronization</emphasis>.
 		</para>
 			<para>
-				Synchronization is the process of copying data back and forth between Active Directory and &PROD;. 
+				Synchronization is the process of copying data back and forth between Active Directory and &PROD;.
 			</para>
 			<para>
-				Synchronization is defined in an <emphasis>agreement</emphasis> between &IPAA; server and an &AD; domain controller. The sync agreement defines all of the information 
-				required to identify sync-able user entries (like the subtree to synchronize and requisite object classes in the user entries) as well as defining how account 
+				Synchronization is defined in an <emphasis>agreement</emphasis> between &IPAA; server and an &AD; domain controller. The sync agreement defines all of the information
+				required to identify sync-able user entries (like the subtree to synchronize and requisite object classes in the user entries) as well as defining how account
 				attributes are handled. The sync agreements are created with default values which can be tweaked to meet the needs of a specific domain.
 				When two servers are involved in synchronization, they are called <emphasis>peers</emphasis>.
 			</para>
 			<para>
-				Synchronization is most commonly <emphasis>bi-directional</emphasis>. Information is sent back and forth between the &IPA; domain and the Windows domain in a process that is very 
-				similar to how &IPA; servers and replicas share information among themselves. It is possible to configure 
+				Synchronization is most commonly <emphasis>bi-directional</emphasis>. Information is sent back and forth between the &IPA; domain and the Windows domain in a process that is very
+				similar to how &IPA; servers and replicas share information among themselves. It is possible to configure
 				synchronization &mdash; or certain data areas &mdash; to only sync one way. That is <emphasis>uni-directional</emphasis> synchronization.
 			</para>
 			<para>
-				To prevent the risk of data conflicts, synchronization is configured between 
-				one &PROD; server and one &AD; domain controller. The &PROD; server propagates changes back to the &IPA; domain, while the domain controller propagates changes back to the Windows domain. 
+				To prevent the risk of data conflicts, synchronization is configured between
+				one &PROD; server and one &AD; domain controller. The &PROD; server propagates changes back to the &IPA; domain, while the domain controller propagates changes back to the Windows domain.
 			</para>
 			<para>
 				There are some key features to &IPA; synchronization:
@@ -72,7 +72,7 @@
 						While modifications are bi-directional (going both from &AD; to &IPA; and from &IPA; to &AD;), creating or adding accounts are only uni-directional, from &AD; to &PROD;. New accounts created in &AD; are synchronized over to &IPA; automatically. However, user accounts created in &IPA; must also be created in &AD; before they will be synchronized.
 					</para>
 				</listitem>
-				
+
 				<listitem>
 					<para>
 						Account lock information is synchronized by default, so a user account which is disabled in one domain is disabled in the other.
@@ -80,25 +80,25 @@
 				</listitem>
 				<listitem>
 					 <para>
-						Password synchronization changes take effect immediately. 
+						Password synchronization changes take effect immediately.
 					</para>
 				</listitem>
 			</itemizedlist>
 			<para>
-				When &AD; users are synchronized over to &IPA;, certain attributes (including Kerberos and POSIX attributes) will have IPA attributes 
-				are automatically added to the user entries. These attributes are used by &IPA; within its domain. They are not synchronized back over the 
+				When &AD; users are synchronized over to &IPA;, certain attributes (including Kerberos and POSIX attributes) will have IPA attributes
+				are automatically added to the user entries. These attributes are used by &IPA; within its domain. They are not synchronized back over the
 				corresponding &AD; user entry.
 			</para>
 			<para>
 				Some of the data in synchronization can be modified as part of the synchronization process. For examples, certain attributes can be automatically added to &AD; user accounts
-				when they are synced over to the &IPA; domain. These attribute changes are defined as part of the synchronization agreement and are 
+				when they are synced over to the &IPA; domain. These attribute changes are defined as part of the synchronization agreement and are
 				described in <xref linkend="Modifying_Synchronization_Agreements" />.
 			</para>
 	</section>
 	<section id="about-sync-schema"><title>About Synchronized Attributes</title>
 
 			<para>
-				&PROD; synchronizes a subset of user attributes between &IPA; and &AD; user entries. Any other attributes present in the entry, either in &PROD; 
+				&PROD; synchronizes a subset of user attributes between &IPA; and &AD; user entries. Any other attributes present in the entry, either in &PROD;
 				or in &AD;, are ignored by synchronization.
 			</para>
 				<note><title>NOTE</title>
@@ -107,7 +107,7 @@
 					</para>
 				</note>
 				<para>
-					Although there are significant schema differences between the &AD; LDAP schema and the &DSF; LDAP schema used by &PROD;, there are many attributes 
+					Although there are significant schema differences between the &AD; LDAP schema and the &DSF; LDAP schema used by &PROD;, there are many attributes
 					that are the same. These attributes are simply synchronized between the &AD; and &IPA; user entries, with no changes to the attribute name or value format.
 				</para>
 				<itemizedlist id="Synchronizing_Users-User_Schema_That_Are_the_Same">
@@ -119,135 +119,135 @@
 						</listitem>
 						<listitem>
 							<para>
-								physicalDeliveryOfficeName 
+								physicalDeliveryOfficeName
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								description 
+								description
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								postOfficeBox 
+								postOfficeBox
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								destinationIndicator 
+								destinationIndicator
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								postalAddress 
+								postalAddress
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								facsimileTelephoneNumber 
+								facsimileTelephoneNumber
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								postalCode 
+								postalCode
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								givenname 
+								givenname
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								registeredAddress 
+								registeredAddress
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								homePhone 
+								homePhone
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								sn 
+								sn
 							</para>
 						</listitem>
 						<listitem>
-							<para>	homePostalAddress 
-							</para>
-						</listitem>
-						<listitem>
-							<para>
-								st 
-							</para>
-						</listitem>
-						<listitem>
-							<para>initials 
+							<para>	homePostalAddress
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								street 
+								st
+							</para>
+						</listitem>
+						<listitem>
+							<para>initials
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								l 
+								street
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								telephoneNumber 
+								l
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								mail 
+								telephoneNumber
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								teletexTerminalIdentifier 
+								mail
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								mobile 
+								teletexTerminalIdentifier
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								telexNumber 
+								mobile
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								o 
+								telexNumber
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								title 
+								o
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								ou 
+								title
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								usercertificate 
+								ou
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								pager 
+								usercertificate
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								x121Address 
+								pager
+							</para>
+						</listitem>
+						<listitem>
+							<para>
+								x121Address
 							</para>
 						</listitem>
 				</itemizedlist>
@@ -263,7 +263,7 @@
 								 &PROD;
 							</entry>
 							<entry>
-								 Active Directory 
+								 Active Directory
 							</entry>
 						</row>
 					</thead>
@@ -273,112 +273,112 @@
 								cn<footnote><para>The <parameter>cn</parameter> is mapped directly (<parameter>cn</parameter> to <parameter>cn</parameter>) when syncing from &PROD; to &AD;. When syncing from &AD; <parameter>cn</parameter> is mapped from the <parameter>name</parameter> attribute in &AD; to the <parameter>cn</parameter> attribute in &PROD;.</para></footnote>
 							</entry>
 							<entry>
-								name 
+								name
 							</entry>
 						</row>
-						
+
 						<row>
 							<entry>
-								nsAccountLock  
+								nsAccountLock
 							</entry>
 							<entry>
-								userAccountControl 
-							</entry>
-						</row>
-						<row>
-							<entry>
-								ntUserDomainId 
-							</entry>
-							<entry>
-								sAMAccountName 
+								userAccountControl
 							</entry>
 						</row>
 						<row>
 							<entry>
-								ntUserHomeDir 
+								ntUserDomainId
 							</entry>
 							<entry>
-								homeDirectory 
-							</entry>
-						</row>
-						<row>
-							<entry>
-								ntUserScriptPath 
-							</entry>
-							<entry>
-								scriptPath 
+								sAMAccountName
 							</entry>
 						</row>
 						<row>
 							<entry>
-								ntUserLastLogon 
+								ntUserHomeDir
 							</entry>
 							<entry>
-								lastLogon 
-							</entry>
-						</row>
-						<row>
-							<entry>
-								ntUserLastLogoff 
-							</entry>
-							<entry>
-								lastLogoff 
+								homeDirectory
 							</entry>
 						</row>
 						<row>
 							<entry>
-								ntUserAcctExpires 
+								ntUserScriptPath
 							</entry>
 							<entry>
-								accountExpires 
-							</entry>
-						</row>
-						<row>
-							<entry>
-								ntUserCodePage 
-							</entry>
-							<entry>
-								codePage 
+								scriptPath
 							</entry>
 						</row>
 						<row>
 							<entry>
-								ntUserLogonHours 
+								ntUserLastLogon
 							</entry>
 							<entry>
-								logonHours 
-							</entry>
-						</row>
-						<row>
-							<entry>
-								ntUserMaxStorage 
-							</entry>
-							<entry>
-								maxStorage 
+								lastLogon
 							</entry>
 						</row>
 						<row>
 							<entry>
-								ntUserProfile 
+								ntUserLastLogoff
 							</entry>
 							<entry>
-								profilePath 
-							</entry>
-						</row>
-						<row>
-							<entry>
-								ntUserParms 
-							</entry>
-							<entry>
-								userParameters 
+								lastLogoff
 							</entry>
 						</row>
 						<row>
 							<entry>
-								ntUserWorkstations 
+								ntUserAcctExpires
 							</entry>
 							<entry>
-								userWorkstations 
+								accountExpires
+							</entry>
+						</row>
+						<row>
+							<entry>
+								ntUserCodePage
+							</entry>
+							<entry>
+								codePage
+							</entry>
+						</row>
+						<row>
+							<entry>
+								ntUserLogonHours
+							</entry>
+							<entry>
+								logonHours
+							</entry>
+						</row>
+						<row>
+							<entry>
+								ntUserMaxStorage
+							</entry>
+							<entry>
+								maxStorage
+							</entry>
+						</row>
+						<row>
+							<entry>
+								ntUserProfile
+							</entry>
+							<entry>
+								profilePath
+							</entry>
+						</row>
+						<row>
+							<entry>
+								ntUserParms
+							</entry>
+							<entry>
+								userParameters
+							</entry>
+						</row>
+						<row>
+							<entry>
+								ntUserWorkstations
+							</entry>
+							<entry>
+								userWorkstations
 							</entry>
 						</row>
 					</tbody>
@@ -389,7 +389,7 @@
 	<indexterm><primary>schema</primary><secondary>differences between &PROD; and Active Directory</secondary></indexterm>
 	<indexterm><primary>Active Directory</primary><secondary>schema differences between &PROD;</secondary></indexterm>
 		<para>
-			Even though attributes may be successfully synced between &AD; and &IPA;, there may still be differences in how &AD; and &PROD; define the underlying 
+			Even though attributes may be successfully synced between &AD; and &IPA;, there may still be differences in how &AD; and &PROD; define the underlying
 			X.500 object classes. This could lead to differences in how the data are handled in the different LDAP services.
 		</para>
 		<para>
@@ -403,21 +403,21 @@
 				<tertiary>cn</tertiary>
 			</indexterm>
 			<para>
-				In &DSF;, the <parameter>cn</parameter> attribute can be multi-valued, while in Active Directory 
-				this attribute must have only a single value. When the &PROD; <parameter>cn</parameter> attribute is 
+				In &DSF;, the <parameter>cn</parameter> attribute can be multi-valued, while in Active Directory
+				this attribute must have only a single value. When the &PROD; <parameter>cn</parameter> attribute is
 				synchronized, then, only one value is sent to the Active Directory peer.
 			</para>
 			<para>
-				What this means for synchronization is that,potentially, if a <parameter>cn</parameter> value is added 
-				to an Active Directory entry and that value is not one of the values for <parameter>cn</parameter> 
-				in &PROD;, then all of the &PROD; <parameter>cn</parameter> values are overwritten with the single 
+				What this means for synchronization is that,potentially, if a <parameter>cn</parameter> value is added
+				to an Active Directory entry and that value is not one of the values for <parameter>cn</parameter>
+				in &PROD;, then all of the &PROD; <parameter>cn</parameter> values are overwritten with the single
 				Active Directory value.
 			</para>
 			<para>
-				One other important difference is that Active Directory uses the <parameter>cn</parameter> attribute 
-				as its naming attribute, where &PROD; uses <parameter>uid</parameter>. This means that there 
-				is the potential to rename the entry entirely (and accidentally) if the <parameter>cn</parameter> attribute is edited 
-				in the &PROD;. If that <parameter>cn</parameter> change is written over to the Active Directory entry, 
+				One other important difference is that Active Directory uses the <parameter>cn</parameter> attribute
+				as its naming attribute, where &PROD; uses <parameter>uid</parameter>. This means that there
+				is the potential to rename the entry entirely (and accidentally) if the <parameter>cn</parameter> attribute is edited
+				in the &PROD;. If that <parameter>cn</parameter> change is written over to the Active Directory entry,
 				then the entry is renamed, and the new named entry is written back over to &PROD;.
 			</para>
 		</section>
@@ -430,32 +430,32 @@
 				<itemizedlist>
 					<listitem>
 						<para>
-							In &DSF;, <parameter>streetAddress</parameter> is an alias for <parameter>street</parameter>. Active Directory also has the <parameter>street</parameter> attribute, but it is a separate attribute that can hold an independent value, not an alias for <parameter>streetAddress</parameter>. 
+							In &DSF;, <parameter>streetAddress</parameter> is an alias for <parameter>street</parameter>. Active Directory also has the <parameter>street</parameter> attribute, but it is a separate attribute that can hold an independent value, not an alias for <parameter>streetAddress</parameter>.
 						</para>
 					</listitem>
 
 					<listitem>
 						<para>
-							Active Directory defines both <parameter>streetAddress</parameter> and <parameter>street</parameter> as single-valued attributes, while &DSF; defines <parameter>street</parameter> as a multi-valued attribute, as specified in RFC 4519. 
+							Active Directory defines both <parameter>streetAddress</parameter> and <parameter>street</parameter> as single-valued attributes, while &DSF; defines <parameter>street</parameter> as a multi-valued attribute, as specified in RFC 4519.
 						</para>
 					</listitem>
 				</itemizedlist>
 				<para>
-					Because of the different ways that &DSF; and Active Directory handle <parameter>streetAddress</parameter> and 
-					<parameter>street</parameter> attributes, there are two rules to follow when setting address attributes in Active 
+					Because of the different ways that &DSF; and Active Directory handle <parameter>streetAddress</parameter> and
+					<parameter>street</parameter> attributes, there are two rules to follow when setting address attributes in Active
 					Directory and &PROD;:
 				</para>
 				<itemizedlist>
 					<listitem>
 						<para>
-							The synchronization process maps <parameter>streetAddress</parameter> in the &AD; entry to <parameter>street</parameter> in &PROD;. To avoid conflicts, the <parameter>street</parameter> attribute should not be used in Active Directory. 
+							The synchronization process maps <parameter>streetAddress</parameter> in the &AD; entry to <parameter>street</parameter> in &PROD;. To avoid conflicts, the <parameter>street</parameter> attribute should not be used in Active Directory.
 						</para>
 					</listitem>
 					<listitem>
 						<para>
-							Only one &PROD; <parameter>street</parameter> attribute value is synced to Active Directory. 
-							If the <parameter>streetAddress</parameter> attribute is changed in Active Directory and the 
-							new value does not already exist in &PROD;, then all <parameter>street</parameter> attribute 
+							Only one &PROD; <parameter>street</parameter> attribute value is synced to Active Directory.
+							If the <parameter>streetAddress</parameter> attribute is changed in Active Directory and the
+							new value does not already exist in &PROD;, then all <parameter>street</parameter> attribute
 							values in &PROD; are replaced with the new, single Active Directory value.
 						</para>
 					</listitem>
@@ -465,8 +465,8 @@
 				<title>Constraints on the initials Attribute</title>
 	<indexterm><primary>schema</primary><secondary>differences between &PROD; and Active Directory</secondary><tertiary>initials</tertiary></indexterm>
 				<para>
-					For the <parameter>initials</parameter> attribute, Active Directory imposes a maximum length constraint of six characters, 
-					but &DSF; does not have a length limit. If an <parameter>initials</parameter> attribute longer than six characters is added 
+					For the <parameter>initials</parameter> attribute, Active Directory imposes a maximum length constraint of six characters,
+					but &DSF; does not have a length limit. If an <parameter>initials</parameter> attribute longer than six characters is added
 					to &PROD;, the value is trimmed when it is synchronized with the Active Directory entry.
 				</para>
 			</section>
@@ -474,7 +474,7 @@
 				<title>Requiring the surname (sn) Attribute</title>
 				<indexterm><primary>schema</primary><secondary>differences between &PROD; and Active Directory</secondary><tertiary>sn</tertiary></indexterm>
 				<para>
-					&AD; allows <command>person</command> entries to be created without a surname attribute. However, RFC 4519 defines the <command>person</command> object class as requiring a surname attribute, and this is the definition used in &DS;. 
+					&AD; allows <command>person</command> entries to be created without a surname attribute. However, RFC 4519 defines the <command>person</command> object class as requiring a surname attribute, and this is the definition used in &DS;.
 				</para>
 				<para>
 					If an &AD; <command>person</command> entry is created without a surname attribute, that entry will not be synced over to &IPA; since it fails with an object class violation.
@@ -484,18 +484,18 @@
 
 				<section id="windows-rfc2307-attributes"><title>&AD; Entries and RFC 2307 Attributes</title>
 					<para>
-						Windows uses unique, random <emphasis>security IDs (SIDs)</emphasis> to identify users. These SIDs are assigned in blocks or ranges, identifying 
-						different system user types within the Windows domain. 
+						Windows uses unique, random <emphasis>security IDs (SIDs)</emphasis> to identify users. These SIDs are assigned in blocks or ranges, identifying
+						different system user types within the Windows domain.
 						When users are synchronized between &PROD; and &AD;, Windows SIDs for users are mapped to the Unix UIDs used by the &PROD; entry. Another way of saying this is that the Windows SID
 						is the only ID within the Windows entry which is used as an identifier in the corresponding Unix entry, and then it is used in a mapping.
 					</para>
 					<para>
 						When &AD; domains interact with Unix-style applications or domains, then the &AD; domain may use Services for Unix or IdM for Unix to enable
-						Unix-style <parameter>uidNumber</parameter> and <parameter>gidNumber</parameter> attributes. This allows Windows user entries to follow 
+						Unix-style <parameter>uidNumber</parameter> and <parameter>gidNumber</parameter> attributes. This allows Windows user entries to follow
 						the specifications for those attributes in <ulink url="http://www.faqs.org/rfcs/rfc2307.html">RFC 2307</ulink>.
 					</para>
 					<para>
-						However, the <parameter>uidNumber</parameter> and <parameter>gidNumber</parameter> attributes are not actually used as the <parameter>uidNumber</parameter> and <parameter>gidNumber</parameter> attributes for the &PROD; entry. The &PROD; <parameter>uidNumber</parameter> and <parameter>gidNumber</parameter> attributes are generated when the Windows user is synced over. 
+						However, the <parameter>uidNumber</parameter> and <parameter>gidNumber</parameter> attributes are not actually used as the <parameter>uidNumber</parameter> and <parameter>gidNumber</parameter> attributes for the &PROD; entry. The &PROD; <parameter>uidNumber</parameter> and <parameter>gidNumber</parameter> attributes are generated when the Windows user is synced over.
 					</para>
 					<note><title>NOTE</title>
 						<para>
@@ -509,12 +509,12 @@
 		 <section id="Setting_up_Active_Directory">
 			<title>Setting up &AD; for Synchronization</title>
 			 <para>
-				Synchronizing user accounts alone is enabled within &IPA;, so all that is necessary is to set up a sync agreement 
-				(<xref linkend="Creating_Synchronization_Agreements" />). On the Windows server, it is necessary to create the user 
+				Synchronizing user accounts alone is enabled within &IPA;, so all that is necessary is to set up a sync agreement
+				(<xref linkend="Creating_Synchronization_Agreements" />). On the Windows server, it is necessary to create the user
 				that the &IPA; server will use to connect to the Active Directory domain.
 			</para>
 			<para>
-				The process for creating a user in Active Directory is covered in the Windows server documentation at 
+				The process for creating a user in Active Directory is covered in the Windows server documentation at
 				<ulink url="http://technet.microsoft.com/en-us/library/cc732336.aspx" />. The new user account must have the proper permissions:
 			</para>
 			<itemizedlist>
@@ -533,11 +533,11 @@
 						groups. It is not necessary for the user to belong to the full <emphasis role="bold">Domain Admin</emphasis> group.
 					</para>
 				</listitem>
-			</itemizedlist>				
-			
+			</itemizedlist>
+
 
 		</section>
-	
+
 
 
 
@@ -556,7 +556,7 @@
 				<listitem>
 					<para>
 						Install the &IPA; CA certificate in the &AD; certificate database. This can be done using the Microsoft Management Console or the <ulink url="http://technet.microsoft.com/en-us/library/cc772898(WS.10).aspx#BKMK_install_cert">certutil utility</ulink>. For example:
-					</para> 
+					</para>
 <screen>certutil -installcert -v -config "ipaserver.example.com\Example Domain CA" c:\path\to\ca.crt</screen>
 					<para>
 						For more details, see the &AD; documentation.
@@ -626,7 +626,7 @@
 			<para>
 				Update the hash symlinks for the certificates.
 			</para>
-<screen>cacertdir_rehash /etc/openldap/cacerts/</screen>				
+<screen>cacertdir_rehash /etc/openldap/cacerts/</screen>
 		</listitem>
 		<listitem>
 			<para>
@@ -634,14 +634,14 @@
 			</para>
 <screen>TLS_CACERTDIR /etc/openldap/cacerts/
 TLS_REQCERT allow</screen>
-				</listitem>				
+				</listitem>
 			</orderedlist>
 		</section>
-	
+
 	 <section id="Creating_Synchronization_Agreements">
 		<title>Creating Synchronization Agreements</title>
 		 <para>
-			Synchronization agreements are created on the &IPA; server using the <command>ipa-replica-manage connect</command> command because it creates a 
+			Synchronization agreements are created on the &IPA; server using the <command>ipa-replica-manage connect</command> command because it creates a
 			<emphasis>connection</emphasis> to the &AD; domain. The options to create the synchronization agreement are listed in <xref linkend="tab.sync-agmt" />.
 		</para>
 		<orderedlist>
@@ -663,11 +663,11 @@ TLS_REQCERT allow</screen>
 				<para>
 					The <option>--binddn</option> and<option>--bindpwd</option> options give the username and password of the system account on the &AD; server that &IPA; will use to connect to the &AD; server.
 				</para>
-<screen>$ ipa-replica-manage connect --winsync 
-	--binddn cn=administrator,cn=users,dc=example,dc=com 
-	--bindpw Windows-secret 
-	--passsync secretpwd 
-	--cacert /etc/openldap/cacerts/windows.cer  
+<screen>$ ipa-replica-manage connect --winsync
+	--binddn cn=administrator,cn=users,dc=example,dc=com
+	--bindpw Windows-secret
+	--passsync secretpwd
+	--cacert /etc/openldap/cacerts/windows.cer
 	adserver.example.com -v</screen>
 			</listitem>
 			<listitem>
@@ -755,20 +755,20 @@ TLS_REQCERT allow</screen>
 		</table>
 
 	</section>
-	
+
 	 <section id="Modifying_Synchronization_Agreements">
 		<title>Changing the Behavior for Syncing User Account Attributes</title>
 		 <para>
-			When the sync agreement is created, it has certain default behaviors defined for how the synchronization process handled the 
-			user account attributes during synchronization. The types of behaviors are things like how to handle lockout attributes or how to handle 
+			When the sync agreement is created, it has certain default behaviors defined for how the synchronization process handled the
+			user account attributes during synchronization. The types of behaviors are things like how to handle lockout attributes or how to handle
 			different DN formats. This behavior can be changed by editing the synchronization agreement. The list of attribute-related parameters are in <xref linkend="tab.sync-agmt-attrs" />.
 		</para>
 		<para>
-			The sync agreement exists as a special plug-in entry in the LDAP server and each attribute behavior is set through an 
+			The sync agreement exists as a special plug-in entry in the LDAP server and each attribute behavior is set through an
 			LDAP attribute. To change the sync behavior, use the <command>ldapmodify</command> command to modify the LDAP server entry directly.
 		</para>
 		 <para>
-			For example, account lockout attributes are synchronized between &IPA; and &AD; by default, but this can be disabled by editing the 
+			For example, account lockout attributes are synchronized between &IPA; and &AD; by default, but this can be disabled by editing the
 			<parameter>ipaWinSyncAcctDisable</parameter> attribute. (Changing this means that if an account is disabled in &AD;, it is still active in &IPA; and vice versa.)
 		</para>
 <screen>[jsmith@ipaserver ~]$ ldapmodify -x -D "cn=directory manager" -w password
@@ -803,7 +803,7 @@ modifying entry "cn=ipa-winsync,cn=plugins,cn=config"
 							<emphasis role="bold">General User Account Parameters</emphasis>
 						</entry>
 					</row>
-					
+
 					<row>
 						<entry>
 							ipaWinSyncNewEntryFilter
@@ -815,7 +815,7 @@ modifying entry "cn=ipa-winsync,cn=plugins,cn=config"
 							The default is <command>(cn=ipaConfig)</command>.
 						</entry>
 					</row>
-					
+
 					<row>
 						<entry>
 							ipaWinSyncNewUserOCAttr
@@ -827,7 +827,7 @@ modifying entry "cn=ipa-winsync,cn=plugins,cn=config"
 							The default is <command>ipauserobjectclasses</command>.
 						</entry>
 					</row>
-					
+
 					<row>
 						<entry>
 							ipaWinSyncHomeDirAttr
@@ -860,9 +860,9 @@ modifying entry "cn=ipa-winsync,cn=plugins,cn=config"
 							ipaWinSyncUserFlatten
 						</entry>
 						<entry>
-							Sets whether to normalize the DN of &AD; entries to conform with the &IPA; directory structure. In &IPA;, all users are stored under the 
-							<command>cn=users,cn=accounts,$SUFFIX</command> entry, but &AD; can have more branches in its directory, which can result in DNs 
-							like <command>cn=John Smith,ou=Development,ou=Engineering,cn=users,dc=example,dc=com</command>. <emphasis>Flattening</emphasis> the DN 
+							Sets whether to normalize the DN of &AD; entries to conform with the &IPA; directory structure. In &IPA;, all users are stored under the
+							<command>cn=users,cn=accounts,$SUFFIX</command> entry, but &AD; can have more branches in its directory, which can result in DNs
+							like <command>cn=John Smith,ou=Development,ou=Engineering,cn=users,dc=example,dc=com</command>. <emphasis>Flattening</emphasis> the DN
 							discards any additional intervening organizational units in the &AD; DN and creating a simple DN on the &IPA; side.
 							<para>
 								Any <parameter>ou</parameter> attributes are stored in the &IPA; user entry.
@@ -883,13 +883,13 @@ modifying entry "cn=ipa-winsync,cn=plugins,cn=config"
 							true | false
 						</entry>
 					</row>
-					
+
 					<row>
 						<entry namest="col1" nameend="col2">
 							<emphasis role="bold">User Account Lock Parameters</emphasis>
 						</entry>
 					</row>
-					
+
 					<row>
 						<entry>
 							ipaWinSyncAcctDisable
@@ -906,7 +906,7 @@ modifying entry "cn=ipa-winsync,cn=plugins,cn=config"
 							</itemizedlist>
 						</entry>
 					</row>
-					
+
 					<row>
 						<entry>
 							ipaWinSyncInactivatedFilter
@@ -944,7 +944,7 @@ modifying entry "cn=ipa-winsync,cn=plugins,cn=config"
 						<entry>
 							The default is <command>ipaDefaultPrimaryGroup</command>.
 						</entry>
-					</row>	
+					</row>
 					<row>
 						<entry>
 							ipaWinSyncDefaultGroupFilter
@@ -956,13 +956,13 @@ modifying entry "cn=ipa-winsync,cn=plugins,cn=config"
 
 							The default is <command>(&amp;(gidNumber=*)(objectclass=posixGroup)(cn=</command><emphasis>groupAttr_value</emphasis><command>))</command>.
 						</entry>
-					</row>				
+					</row>
 					<row>
 						<entry namest="col1" nameend="col2">
 							<emphasis role="bold">Realm Parameters</emphasis>
 						</entry>
 					</row>
-					
+
 					<row>
 						<entry>
 							ipaWinSyncRealmAttr
@@ -973,7 +973,7 @@ modifying entry "cn=ipa-winsync,cn=plugins,cn=config"
 						<entry>
 							The default is <parameter>cn</parameter>.
 						</entry>
-					</row>	
+					</row>
 					<row>
 						<entry>
 							ipaWinSyncRealmFilter
@@ -989,16 +989,16 @@ modifying entry "cn=ipa-winsync,cn=plugins,cn=config"
 				</tbody>
 			</tgroup>
 		</table>
-		</section> 
+		</section>
 
 		<section id="changing-subtree"><title>Changing the Synchronized Windows Subtree</title>
 			 <para>
-				Creating a synchronization agreement automatically sets the two subtrees to use as the synchronized user database. In &IPA;, the 
-				default is <command>cn=users,cn=accounts,$SUFFIX</command>, and for &AD;, the default is <command>CN=Users,$SUFFIX</command>. 
+				Creating a synchronization agreement automatically sets the two subtrees to use as the synchronized user database. In &IPA;, the
+				default is <command>cn=users,cn=accounts,$SUFFIX</command>, and for &AD;, the default is <command>CN=Users,$SUFFIX</command>.
 			</para>
 			<para>
 				The value for the &AD; subtree can be set to a non-default value when the sync agreement is created by using the <option>--win-subtree</option> option.
-				After the agreement is created, the &AD; subtree can be changed by using the <command>ldapmodify</command> command to edit the 
+				After the agreement is created, the &AD; subtree can be changed by using the <command>ldapmodify</command> command to edit the
 				<parameter>nsds7WindowsReplicaSubtree</parameter> value in the sync agreement entry.
 			</para>
 			<orderedlist>
@@ -1057,12 +1057,12 @@ oneWaySync: fromWindows</screen>
 			</para>
 		</important>
 		</section>
-	
+
 	 <section id="Deleting_Synchronization_Agreements">
 		<title>Deleting Synchronization Agreements</title>
 		 <para>
-			Synchronization can be stopped by deleting the sync agreement which <emphasis>disconnects</emphasis> the &IPA; and &AD; servers. 
-			In the inverse of creating a sync agreement, deleting a sync agreement uses the <command>ipa-replica-manage disconnect</command> command and 
+			Synchronization can be stopped by deleting the sync agreement which <emphasis>disconnects</emphasis> the &IPA; and &AD; servers.
+			In the inverse of creating a sync agreement, deleting a sync agreement uses the <command>ipa-replica-manage disconnect</command> command and
 			then the hostname of the &AD; server.
 		</para>
 		<orderedlist>
@@ -1081,7 +1081,7 @@ oneWaySync: fromWindows</screen>
 		</orderedlist>
 
 	</section>
-	
+
 	 <section id="Troubleshooting_IPA_Servers-Winsync_Agreement_Failures">
 		<title>Winsync Agreement Failures</title>
 		 <formalpara id="Winsync_Agreement_Failures-Symptom">
@@ -1094,8 +1094,8 @@ oneWaySync: fromWindows</screen>
 			</para>
 		</formalpara>
 			 <para>
-				This can occur if the wrong &AD; CA certificate was specified when the agreement was created. This creates duplicate certificates in the 
-				&IPA; LDAP database (in the <filename>/etc/dirsrv/slapd-DOMAIN/</filename> directory) with the name <emphasis>Imported CA</emphasis>. 
+				This can occur if the wrong &AD; CA certificate was specified when the agreement was created. This creates duplicate certificates in the
+				&IPA; LDAP database (in the <filename>/etc/dirsrv/slapd-DOMAIN/</filename> directory) with the name <emphasis>Imported CA</emphasis>.
 				This can be checked using <command>certutil</command>:
 <screen>$ certutil -L -d /etc/dirsrv/slapd-DOMAIN/
 
@@ -1109,7 +1109,7 @@ Imported CA                                                  CT,,C</screen>
 
 			</para>
 			 <para>
-				To resolve this issue, clear the certificate database: 
+				To resolve this issue, clear the certificate database:
 <screen># certutil -d /etc/dirsrv/slapd-DOMAIN-NAME -D -n "Imported CA"</screen>
 
 			</para>
@@ -1123,7 +1123,7 @@ Imported CA                                                  CT,,C</screen>
 		</formalpara>
 <screen>"Windows PassSync entry exists, not resetting password"</screen>
 		 <para>
-			This is not an error. This message occurs when an exempt user, the Password Sync user, it not being changed. The Password Sync user is the operational user which is 
+			This is not an error. This message occurs when an exempt user, the Password Sync user, it not being changed. The Password Sync user is the operational user which is
 			used by the service to change the passwords in &IPA;.
 		</para>
 
@@ -1135,7 +1135,7 @@ Imported CA                                                  CT,,C</screen>
 			Password synchronization is configured separately from Windows Synchronization.
 		</para>
 		<section id="windows-pass-sync"><title>Setting up the Windows Server for Password Synchronization</title>
-			<para> 
+			<para>
 				Synchronizing passwords requires two things:
 				<itemizedlist>
 					<listitem>
@@ -1145,11 +1145,11 @@ Imported CA                                                  CT,,C</screen>
 					</listitem>
 					<listitem>
 						<para>
-							The Password Sync Service must be installed on <emphasis>each</emphasis> &AD; domain controller. 
+							The Password Sync Service must be installed on <emphasis>each</emphasis> &AD; domain controller.
 						</para>
 					</listitem>
 				</itemizedlist>
-				The Password Sync Service records password changes and synchronizes them, over 
+				The Password Sync Service records password changes and synchronizes them, over
 				a secure connection, to the &IPA; entry.
 			</para>
 			<note><title>TIP</title>
@@ -1194,13 +1194,13 @@ Imported CA                                                  CT,,C</screen>
 				</listitem>
 				<listitem>
 			<para>
-				If SSL is not already enabled, set up SSL on the &AD; server. Setting up LDAPS is explained in more detail in the 
+				If SSL is not already enabled, set up SSL on the &AD; server. Setting up LDAPS is explained in more detail in the
 				Microsoft knowledgebase at <ulink url="http://support.microsoft.com/kb/321051">http://support.microsoft.com/kb/321051</ulink>.
 			</para>
 			<orderedlist>
 				<listitem>
 						<para>
-							Install a certificate authority in the <guilabel>Windows Components</guilabel> section in 
+							Install a certificate authority in the <guilabel>Windows Components</guilabel> section in
 							<guilabel>Add/Remove Programs</guilabel>.
 						</para>
 					</listitem>
@@ -1211,7 +1211,7 @@ Imported CA                                                  CT,,C</screen>
 					</listitem>
 					<listitem>
 						<para>
-							Reboot the Active Directory server. If IIS web services are running, the CA certificate can be 
+							Reboot the Active Directory server. If IIS web services are running, the CA certificate can be
 							accessed by opening <command>http://</command><emphasis>servername</emphasis><command>/certsrv</command>.
 						</para>
 					</listitem>
@@ -1222,39 +1222,39 @@ Imported CA                                                  CT,,C</screen>
 						<orderedlist>
 							<listitem>
 								<para>
-									Create a certificate request <filename>.inf</filename>, using the 
-									fully-qualified domain name of the Active Directory as the certificate 
+									Create a certificate request <filename>.inf</filename>, using the
+									fully-qualified domain name of the Active Directory as the certificate
 									subject. For example:
-								</para> 
-<screen>;----------------- request.inf ----------------- 
+								</para>
+<screen>;----------------- request.inf -----------------
 
-[Version] 
+[Version]
 
-Signature="$Windows NT$ 
+Signature="$Windows NT$
 
 [NewRequest]
 
 Subject = "CN=ad.server.example.com, O=Engineering, L=Raleigh, S=North Carolina, C=US"
-KeySpec = 1 
-KeyLength = 2048 
-Exportable = TRUE 
-MachineKeySet = TRUE 
-SMIME = False 
-PrivateKeyArchive = FALSE 
-UserProtected = FALSE 
-UseExistingKeySet = FALSE 
-ProviderName = "Microsoft RSA SChannel Cryptographic Provider" 
+KeySpec = 1
+KeyLength = 2048
+Exportable = TRUE
+MachineKeySet = TRUE
+SMIME = False
+PrivateKeyArchive = FALSE
+UserProtected = FALSE
+UseExistingKeySet = FALSE
+ProviderName = "Microsoft RSA SChannel Cryptographic Provider"
 ProviderType = 12
-RequestType = PKCS10 
-KeyUsage = 0xa0 
+RequestType = PKCS10
+KeyUsage = 0xa0
 
-[EnhancedKeyUsageExtension] 
+[EnhancedKeyUsageExtension]
 
-OID=1.3.6.1.5.5.7.3.1 
+OID=1.3.6.1.5.5.7.3.1
 
 ;-----------------------------------------------</screen>
 								<para>
-									For more information on the <filename>.inf</filename> request file, see 
+									For more information on the <filename>.inf</filename> request file, see
 									the Microsoft documentation, such as <ulink url="http://technet.microsoft.com/en-us/library/cc783835.aspx" />.
 								</para>
 							</listitem>
@@ -1283,16 +1283,16 @@ OID=1.3.6.1.5.5.7.3.1
 						</listitem>
 						<listitem>
 							<para>
-								Make sure that the server certificate is present on the &AD; server. 
+								Make sure that the server certificate is present on the &AD; server.
 							</para>
 							<para>
-							In the <guimenu>File</guimenu> menu, click <guimenuitem>Add/Remove</guimenuitem>, 
+							In the <guimenu>File</guimenu> menu, click <guimenuitem>Add/Remove</guimenuitem>,
 								then click <guimenuitem>Certificates</guimenuitem> and <guimenuitem>Personal>Certificates</guimenuitem>.
 							</para>
 						</listitem>
 						<listitem>
 							<para>
-								Import the CA certificate from &DS; into Active Directory. Click 
+								Import the CA certificate from &DS; into Active Directory. Click
 								<guilabel>Trusted Root CA</guilabel>, then <guilabel>Import</guilabel>, and browse for the &DS; CA certificate.
 							</para>
 						</listitem>
@@ -1310,33 +1310,33 @@ OID=1.3.6.1.5.5.7.3.1
 
 		<section id="setting-up-pass-sync"><title>Setting up Password Synchronization</title>
 			<para>
-				Install the Password Sync Service on every domain controller in the &AD; domain in order to 
-				synchronize Windows passwords. 
+				Install the Password Sync Service on every domain controller in the &AD; domain in order to
+				synchronize Windows passwords.
 			</para>
 			<orderedlist>
-				
+
 			<listitem>
 				<para condition="redhat">
-					Download the <filename>PassSync.msi</filename> file from the &RHEL; channels, and save it to the Active Directory machine. 
+					Download the <filename>PassSync.msi</filename> file from the &RHEL; channels, and save it to the Active Directory machine.
 				</para>
 				<para condition="fedora">
-					Download the <filename>PassSync.msi</filename> file from the <ulink url="http://directory.fedoraproject.org/wiki/Download#Windows_Password_Synchronization">389 &DS; repos</ulink>, and save it to the Active Directory machine. 
+					Download the <filename>PassSync.msi</filename> file from the <ulink url="http://directory.fedoraproject.org/wiki/Download#Windows_Password_Synchronization">389 &DS; repos</ulink>, and save it to the Active Directory machine.
 				</para>
 			<note><title>NOTE</title>
 				<para>
-					There are two PassSync packages available, one for 32-bit Windows servers and one for 64-bit. Make sure 
+					There are two PassSync packages available, one for 32-bit Windows servers and one for 64-bit. Make sure
 					to select the appropriate packages for your Windows platform.
 				</para>
 			</note>
 			</listitem>
 			<listitem>
 				<para>
-					 Double-click the <filename>PassSync.msi</filename> file to install it. 
+					 Double-click the <filename>PassSync.msi</filename> file to install it.
 				</para>
 			</listitem>
 			<listitem>
 				<para>
-					 The <application>Password Sync Setup</application> window appears. Hit <guilabel>Next</guilabel> to begin installing. 
+					 The <application>Password Sync Setup</application> window appears. Hit <guilabel>Next</guilabel> to begin installing.
 				</para>
 			</listitem>
 			<listitem>
@@ -1378,7 +1378,7 @@ OID=1.3.6.1.5.5.7.3.1
 					</mediaobject>
 				</informalfigure>
 				<para>
-					 Hit <guibutton>Next</guibutton>, then <guibutton>Finish</guibutton> to install Password Sync. 
+					 Hit <guibutton>Next</guibutton>, then <guibutton>Finish</guibutton> to install Password Sync.
 				</para>
 			</listitem>
 			<listitem>
@@ -1401,41 +1401,41 @@ OID=1.3.6.1.5.5.7.3.1
 								Install the &IPA; CA certificate in the Password Sync database. For example:
 							</para>
 <screen condition="redhat">cd "C:\Program Files\Red Hat Directory Password Synchronization"
-	
+
 certutil.exe -d . -A -n "IPASERVER.EXAMPLE.COM IPA CA" -t CT,, -a -i ipaca.crt</screen>
 <screen condition="fedora">cd "C:\Program Files\389 Directory Password Synchronization"
-	
+
 certutil.exe -d . -A -n "IPASERVER.EXAMPLE.COM IPA CA" -t CT,, -a -i ipaca.crt</screen>
 						</listitem>
 					</orderedlist>
-								
+
 				</listitem>
 			<listitem>
 				<para>
-					 Reboot the Windows machine to start Password Sync. 
+					 Reboot the Windows machine to start Password Sync.
 				</para>
 				<note>
 					<title>NOTE</title>
 					<para>
-						The Windows machine must be rebooted. Without the rebooting, 
-						<filename>PasswordHook.dll</filename> is not enabled, and 
-						password synchronization will not function. 
+						The Windows machine must be rebooted. Without the rebooting,
+						<filename>PasswordHook.dll</filename> is not enabled, and
+						password synchronization will not function.
 					</para>
 				</note>
 			</listitem>
 		</orderedlist>
 		<para>
-			The first attempt to synchronize passwords, which happened when the Password Sync application 
-			is installed, will always fail because of the SSL connection between the &DS; and Active Directory sync peers. The tools to 
+			The first attempt to synchronize passwords, which happened when the Password Sync application
+			is installed, will always fail because of the SSL connection between the &DS; and Active Directory sync peers. The tools to
 			create the certificate and key databases is installed with the <filename>.msi</filename>.
 		</para>
 	</section>
 			<section id="password-sync"><title>Exempting &AD; Users from Password Synchronization</title>
 		<para>
-			The passwords in password change operations are still subject to the password policy settings, such as password expiration times. For example, in &IPA; every 
-			password change requires an immediate password reset. 
-			While normal user passwords need to be subject to password policies, administrative passwords should be exempt from any password rules. 
-			A list of user DNs can be set in the password synchronization configuration that are exempted from the password policy. 
+			The passwords in password change operations are still subject to the password policy settings, such as password expiration times. For example, in &IPA; every
+			password change requires an immediate password reset.
+			While normal user passwords need to be subject to password policies, administrative passwords should be exempt from any password rules.
+			A list of user DNs can be set in the password synchronization configuration that are exempted from the password policy.
 		</para>
 		<note><title>NOTE</title>
 			<para>
@@ -1454,7 +1454,7 @@ passSyncManagersDNs: uid=admin,cn=users,cn=accounts,dc=example,dc=com</screen>
 	</section>
 	</section>
 
- 
+
 
 </chapter>
 

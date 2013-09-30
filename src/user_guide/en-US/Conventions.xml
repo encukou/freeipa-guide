@@ -18,14 +18,14 @@
 			</para>
 				<para>
 					The LDAP tools used to edit the &IPA; directory services, such as <command>ldapmodify</command> and <command>ldapsearch</command>,
-					are from OpenLDAP. OpenLDAP tools use SASL connections by default. 
+					are from OpenLDAP. OpenLDAP tools use SASL connections by default.
 					To perform a simple bind using a username and password, use the <option>-x</option> argument to disable SASL.
 				</para>
 		</section>
 		<section id="guide-formatting"><title>Text Formatting and Styles</title>
 		<para>
-			Certain words are represented in different fonts, styles, and weights. Different character formatting is 
-			used to indicate the function or purpose of the phrase being highlighted. 
+			Certain words are represented in different fonts, styles, and weights. Different character formatting is
+			used to indicate the function or purpose of the phrase being highlighted.
 		</para>
 		<informaltable>
 			<tgroup cols="2">
@@ -53,8 +53,8 @@
 							<emphasis>Italicized text</emphasis>
 						</entry>
 						<entry>
-							Any text which is italicized is a variable, such as <emphasis>instance_name</emphasis> 
-							or <emphasis>hostname</emphasis>. Occasionally, this is also used to emphasize a new term 
+							Any text which is italicized is a variable, such as <emphasis>instance_name</emphasis>
+							or <emphasis>hostname</emphasis>. Occasionally, this is also used to emphasize a new term
 							or other phrase.
 						</entry>
 					</row>
@@ -63,8 +63,8 @@
 							<emphasis role="bold">Bolded text</emphasis>
 						</entry>
 						<entry>
-							Most phrases which are in bold are application names, such as <application>Cygwin</application>, 
-							or are fields or options in a user interface, such as a <guilabel>User Name Here:</guilabel> field 
+							Most phrases which are in bold are application names, such as <application>Cygwin</application>,
+							or are fields or options in a user interface, such as a <guilabel>User Name Here:</guilabel> field
 							or <guibutton>Save</guibutton> button. This can also indicate a file, package, or directory name, such as <filename>&SBIN;</filename>.
 						</entry>
 					</row>
@@ -77,14 +77,14 @@
 		<note>
 			<title>NOTE</title>
 			<para>
-				A note provides additional information that can help illustrate the behavior of the system or 
+				A note provides additional information that can help illustrate the behavior of the system or
 				provide more detail for a specific issue.
 			</para>
 		</note>
 		<important>
 			<title>IMPORTANT</title>
 			<para>
-				Important information is necessary, but possibly unexpected, such as a configuration 
+				Important information is necessary, but possibly unexpected, such as a configuration
 				change that will not persist after a reboot.
 			</para>
 		</important>

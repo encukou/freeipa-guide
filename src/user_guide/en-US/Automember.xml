@@ -7,7 +7,7 @@
 		Most of the policies and configuration within the &PROD; domain are based on <emphasis>groups</emphasis>. Settings from sudo rules to automount to access control are defined for groups, and then those settings are applied to group members.
 	</para>
 	<para>
-		Managing group membership is an important factor in managing users and hosts. 
+		Managing group membership is an important factor in managing users and hosts.
 		Creating <emphasis>automember groups</emphasis> defines rules to add users and hosts
 		to specified groups automatically, as soon as a new entry is added.
        </para>
@@ -17,23 +17,23 @@
 		       managing group membership in &PROD;. Groups are the core of most policy configuration.
 	       </para>
 	       <para>
-		       By default, hosts do not belong to any group when they are created; users are added to 
+		       By default, hosts do not belong to any group when they are created; users are added to
 		       the catchall <command>ipausers</command> group.
-		       Even if custom groups are configured and all policy configuration is in place, users and hosts 
-		       cannot take advantage of those policies until they are joined to groups. Of course, this can be 
-		       done manually, but it is both more efficient and more consistent if group 
+		       Even if custom groups are configured and all policy configuration is in place, users and hosts
+		       cannot take advantage of those policies until they are joined to groups. Of course, this can be
+		       done manually, but it is both more efficient and more consistent if group
 		       membership can be assigned automatically.
 	       </para>
 	       <para>
 		       This is done with <emphasis>automembership groups</emphasis>.
 	       </para>
 		<para>
-			Automembership is essentially an automatic, global entry filter that organizes entries, 
-			at least in part, based on specific criteria. An automember rule, then, is the way that 
-			that filter is specified. 
+			Automembership is essentially an automatic, global entry filter that organizes entries,
+			at least in part, based on specific criteria. An automember rule, then, is the way that
+			that filter is specified.
 		</para>
 		<para>
-			For example, there can be a lot of different, repeatable ways that to categorize 
+			For example, there can be a lot of different, repeatable ways that to categorize
 			identities within the IT and organizational environment:
 		</para>
 		<itemizedlist>
@@ -54,45 +54,45 @@
 			</listitem>
 		</itemizedlist>
 		<para>
-			Automembers provide a way to pre-sort those entries. That makes it easier to configure 
-			the actual behavior that you want to configure &mdash; like granting different sudo rules 
-			to different user types or machines on different subnets or have different automount 
+			Automembers provide a way to pre-sort those entries. That makes it easier to configure
+			the actual behavior that you want to configure &mdash; like granting different sudo rules
+			to different user types or machines on different subnets or have different automount
 			settings for different users.
 		</para>
 		<!-- bug 768084 will change this later -->
 		<note><title>NOTE</title>
 			<para>
-				Automembership only applies to <emphasis>new</emphasis> users or groups. 
-				Changing the configuration on an existing user or group does not 
+				Automembership only applies to <emphasis>new</emphasis> users or groups.
+				Changing the configuration on an existing user or group does not
 				affect group membership, either by adding or removing the user/host in the group.
 			</para>
 		</note>
 		<!-- end bug -->
 		<para>
-			Automembership is a flag or a target set on an existing user group or host group. An 
+			Automembership is a flag or a target set on an existing user group or host group. An
 			<emphasis>automembership rule</emphasis> is created as a policy. This is a sister
-			entry to the actual group entry and it signals that the given group is used for 
-			automatic group membership. 
+			entry to the actual group entry and it signals that the given group is used for
+			automatic group membership.
 		</para>
 		<para>
-			Once the rule is created &mdash; once the group is identified as being a target &mdash; 
-			then the next step is to define <emphasis>automember conditions</emphasis>. Conditions 
-			are regular expression filters that are used to identify group members. Conditions can 
-			be inclusive or exclusive, meaning that matching entries can be added or ignored 
-			based on those conditions. 
+			Once the rule is created &mdash; once the group is identified as being a target &mdash;
+			then the next step is to define <emphasis>automember conditions</emphasis>. Conditions
+			are regular expression filters that are used to identify group members. Conditions can
+			be inclusive or exclusive, meaning that matching entries can be added or ignored
+			based on those conditions.
 		</para>
 		<para>
-			There can be multiple conditions in a single rule. A user or host entry can 
+			There can be multiple conditions in a single rule. A user or host entry can
 			match multiple rules and be added to multiple groups.
 		</para>
 		<para>
-			Automembership is a way of imposing reliable order on user and host group entries 
+			Automembership is a way of imposing reliable order on user and host group entries
 			as they are created.
 		</para>
 		<para>
 			The key to using automember groups effectively is to plan your overall &PROD; structure
-			&mdash; the access control policies, sudo rules, host/service management rules, host 
-			groups, and user groups. 
+			&mdash; the access control policies, sudo rules, host/service management rules, host
+			groups, and user groups.
 		</para>
 		<para>
 			Once the structure is in place, then several things are clear:
@@ -221,7 +221,7 @@
 						Create the user group (<xref linkend="new-group-cmd" />) or host group (<xref linkend="creating-host-groups-cmd" />).
 					</para>
 				</listitem>
-				
+
 				<listitem>
 					<para>
 						Create the automember policy entry for the group. Use the <option>--type</option> to identify whether the target group is a user group (<command>group</command>) or a host group (<command>hostgroup</command>). This command has the format:
@@ -244,7 +244,7 @@
 								As with the automember rule, the condition must specify the type of group (<option>--type</option>) and the name of the target group (<emphasis>groupName</emphasis>).
 							</para>
 							<para>
-								The condition must also specify the attribute (the key) and any patterns for the attribute value. The <option>--key</option> is the attribute name that is the focus of the condition. Then, there is a regular expression pattern to identify matching values; matching entries can either be included (<option>--inclusive-regex</option>) or excluded (<option>--exclusive-regex</option>) from the group. Exclusion rules take precedence. 
+								The condition must also specify the attribute (the key) and any patterns for the attribute value. The <option>--key</option> is the attribute name that is the focus of the condition. Then, there is a regular expression pattern to identify matching values; matching entries can either be included (<option>--inclusive-regex</option>) or excluded (<option>--exclusive-regex</option>) from the group. Exclusion rules take precedence.
 							</para>
 							<para>
 								For example, to include all employees with Barbara Jensen as a manager, but excluding the temporary employees:
@@ -278,13 +278,13 @@
 		</note>
 		<formalpara><title>A Note on Creating Default Groups</title>
 			<para>
-				One common environment requirement is to have some sort of default group that users or hosts are added to. There are a couple of different ways to approach that. 
+				One common environment requirement is to have some sort of default group that users or hosts are added to. There are a couple of different ways to approach that.
 			</para>
 		</formalpara>
 		<itemizedlist>
 			<listitem>
 				<para>
-					All entries can be added to a single, global group regardless of what other groups they are also added to. 
+					All entries can be added to a single, global group regardless of what other groups they are also added to.
 				</para>
 			</listitem>
 			<listitem>
@@ -294,7 +294,7 @@
 			</listitem>
 		</itemizedlist>
 		<para>
-			These strategies are mutually exclusive. If an entry matches a global group, then it 
+			These strategies are mutually exclusive. If an entry matches a global group, then it
 			does match an automember group and would, therefore, not be added to the fallback group.
 		</para>
 		<section id="automember-allhosts"><title>Setting an All Users/Hosts Rule</title>

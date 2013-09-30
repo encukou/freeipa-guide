@@ -12,10 +12,10 @@
 
 		<formalpara><title>Automatic Group Membership for Users and Hosts</title>
 			<para>
-				Most of the policies configured in &PROD; are based on group membership, so 
-				managing group membership is critical as a part of managing the policies for 
-				both users and hosts. <emphasis>Automembership</emphasis> allows 
-				administrators to set up filters for new users and hosts so that they are 
+				Most of the policies configured in &PROD; are based on group membership, so
+				managing group membership is critical as a part of managing the policies for
+				both users and hosts. <emphasis>Automembership</emphasis> allows
+				administrators to set up filters for new users and hosts so that they are
 				assigned, automatically, to the appropriate user groups and host groups.
 				Automembership, including examples, is covered in <xref linkend="automember" />.
 			</para>
@@ -27,7 +27,7 @@
 		</formalpara>
 		<formalpara><title>Better Web UI Performance</title>
 			<para>
-				A number of performance and usability changes have been made in 
+				A number of performance and usability changes have been made in
 				&IPA; 2.2, including improved session handling and adding support for Services4Unix Proxy. Along with overall better performance, these changes have introduced two new features for the web UI:
 				<itemizedlist>
 					<listitem>
@@ -45,30 +45,30 @@
 		</formalpara>
 		<formalpara><title>Enhanced DNS Resource Record Support</title>
 			<para>
-				The way that &IPA; handles DNS resource records has been improved to make it 
-				easier to create and edit records. The UI and CLI tooling have both been enhanced 
-				to provide type-specific options for common resource record types. For more information, see 
+				The way that &IPA; handles DNS resource records has been improved to make it
+				easier to create and edit records. The UI and CLI tooling have both been enhanced
+				to provide type-specific options for common resource record types. For more information, see
 				<xref linkend="managing-dnsrecord-entries" />.
 			</para>
 		</formalpara>
 		<formalpara><title>SSH Key Management (Tech Preview)</title>
 			<para>
-				OpenSSH uses <emphasis>public-private key pairs</emphasis> to authenticate hosts. 
+				OpenSSH uses <emphasis>public-private key pairs</emphasis> to authenticate hosts.
 				The machine then stores user and host public keys in a central file, such as the
 			<filename>known_hosts</filename> file.
-			Clients can simple check that central key file and then grant access automatically 
-			to approved users and hosts. However, since all of those files are created locally, 
-			it can be difficult to maintain host and user key files across an entire enterprise. 
-			The System Security Services Daemon (SSSD) can be configured to cache and retrieve 
-			SSH keys so that applications and services only have to look in one location for keys. 
-			Because SSSD can use &PROD; as one of its identity information providers, &PROD; 
-			provides a universal and centralized repository of keys. For more information, see 
+			Clients can simple check that central key file and then grant access automatically
+			to approved users and hosts. However, since all of those files are created locally,
+			it can be difficult to maintain host and user key files across an entire enterprise.
+			The System Security Services Daemon (SSSD) can be configured to cache and retrieve
+			SSH keys so that applications and services only have to look in one location for keys.
+			Because SSSD can use &PROD; as one of its identity information providers, &PROD;
+			provides a universal and centralized repository of keys. For more information, see
 			<xref linkend="user-keys" />.
 			</para>
 		</formalpara>
-	</section>    
+	</section>
 
-	
+
 	<section id="upgrade-notes"><title>Upgrade Notes for &IPA; 2.2</title>
 		<itemizedlist>
 			<listitem>
@@ -140,16 +140,16 @@ KrbMethodK5Passwd on</screen>
 							<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=743680">Bugzilla 743680</ulink>
 						</entry>
 						<entry>
-							
+
 				<para>
 	    When &IPAA; server was installed with a custom hostname that was not resolvable, the
 	    <command>ipa-server-install</command> command failed to add a record to the static hostname lookup table in
 	    <filename>/etc/hosts</filename>, which prevented further configuration of Identity Management integrated
-	    services. 
+	    services.
     </para>
     <para>
 	    The record is now properly added to <filename>/etc/hosts</filename> when an IP address is passed as
-	    an CLI option and not interactively. 
+	    an CLI option and not interactively.
 	    			</para>
 						</entry>
 					</row>
@@ -158,7 +158,7 @@ KrbMethodK5Passwd on</screen>
 							<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=751776">Bugzilla 751776</ulink>
 						</entry>
 						<entry>
-							
+
 				<para>
 					If a zone entry contained an invalid record, the entire zone failed to load. None of the records in the DNS zone, including root records, were serviced.
 				</para>
@@ -182,12 +182,12 @@ KrbMethodK5Passwd on</screen>
 						</entry>
 						<entry>
 							The &IPA; server could not be installed on a machine with a dual NIC. When two DNS A records existed for the same hostname, the installer failed with this error:
-<screen>Server host name [server1.example.com]: 
+<screen>Server host name [server1.example.com]:
 
 Warning: skipping DNS resolution of host server1.example.com
 The domain name has been calculated based on the host name.
 
-Please confirm the domain name [example]: 
+Please confirm the domain name [example]:
 
 Unable to resolve IP address for host name
 Please provide the IP address to be used for this host name:</screen>
@@ -202,13 +202,13 @@ Please provide the IP address to be used for this host name:</screen>
 
 		<section><title>A Note on Internet Explorer Support on Windows</title>
 			<para>
-				The enhancements for Services4Unix Proxy support have made steps in adding support to use the &IPA; web UI on Internet Explorer on Windows. However, this is still 
-				a nascent feature. <emphasis role="bold">In &IPA; 2.2, Internet Explorer can be used for self-service management, such as resetting account details and changing 
+				The enhancements for Services4Unix Proxy support have made steps in adding support to use the &IPA; web UI on Internet Explorer on Windows. However, this is still
+				a nascent feature. <emphasis role="bold">In &IPA; 2.2, Internet Explorer can be used for self-service management, such as resetting account details and changing
 				passwords.</emphasis>
 			</para>
 			<para>
 				When using Internet Explorer to perform other tasks in the &IPA; web UI, there can be issues with UI performance and layout or some operations
-				may not be possible. 
+				may not be possible.
 			</para>
 			<para>
 				These are some of the known issues specifically for Internet Explorer and the web UI:
@@ -216,32 +216,32 @@ Please provide the IP address to be used for this host name:</screen>
 			<itemizedlist>
 				<listitem>
 					<para>
-While the browser window is not maximized or many users are logged into the WebUI, scrolling down a page to select a user may not work properly. As soon as the user's checkbox is selected, the scroll bar jumps back up without selecting the user. This error also occurs when a permission is added to a privilege. (<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=831299">Bugzilla 831299</ulink>) 
+While the browser window is not maximized or many users are logged into the WebUI, scrolling down a page to select a user may not work properly. As soon as the user's checkbox is selected, the scroll bar jumps back up without selecting the user. This error also occurs when a permission is added to a privilege. (<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=831299">Bugzilla 831299</ulink>)
 					</para>
 				</listitem>
 				<listitem>
 					<para>
-When attempting to edit a service, the edit page for that service may occasionally be blank, or show only labels for Principal or Service without showing their values. When adding a service, under certain conditions, the drop-down menu lists the available services and hosts but users are unable to select any of the entries. (<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=831227">Bugzilla 831227</ulink>) 
+When attempting to edit a service, the edit page for that service may occasionally be blank, or show only labels for Principal or Service without showing their values. When adding a service, under certain conditions, the drop-down menu lists the available services and hosts but users are unable to select any of the entries. (<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=831227">Bugzilla 831227</ulink>)
 					</para>
 				</listitem>
 				<listitem>
 					<para>
-When adding a permission of type subtree, the text area to specify the subtree is too small and non-resizable making it difficult to enter long subtree entries. (<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=830817">Bugzilla 830817</ulink>) 
+When adding a permission of type subtree, the text area to specify the subtree is too small and non-resizable making it difficult to enter long subtree entries. (<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=830817">Bugzilla 830817</ulink>)
 					</para>
 				</listitem>
 				<listitem>
 					<para>
-When adding a delegation, its attributes are separated by disproportionately large vertical spaces. (<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=829899">Bugzilla 829899</ulink>) 
+When adding a delegation, its attributes are separated by disproportionately large vertical spaces. (<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=829899">Bugzilla 829899</ulink>)
 					</para>
 				</listitem>
 				<listitem>
 					<para>
-When adding a member, the edge of the displayed window suggests it can be resized. However, resizing of the window does not work. When adding a sudo command to a sudo command group, the first group overlays with the column title. (<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=829746">Bugzilla 829746</ulink>) 
+When adding a member, the edge of the displayed window suggests it can be resized. However, resizing of the window does not work. When adding a sudo command to a sudo command group, the first group overlays with the column title. (<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=829746">Bugzilla 829746</ulink>)
 					</para>
 				</listitem>
 				<listitem>
 					<para>
-Adding a new DNS zone causes the window to be incorrectly rendered as text on the existing page. (<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=827583">Bugzilla 827583</ulink>) 
+Adding a new DNS zone causes the window to be incorrectly rendered as text on the existing page. (<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=827583">Bugzilla 827583</ulink>)
 					</para>
 				</listitem>
 			</itemizedlist>
@@ -318,7 +318,7 @@ Adding a new DNS zone causes the window to be incorrectly rendered as text on th
 							<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=742263">Bugzilla 742263</ulink>
 						</entry>
 						<entry>
-							The previous and next buttons were not displayed in the UI if the number of entries returned is 
+							The previous and next buttons were not displayed in the UI if the number of entries returned is
 					larger than the configured size limit.
 						</entry>
 						<entry>
@@ -336,7 +336,7 @@ Adding a new DNS zone causes the window to be incorrectly rendered as text on th
 	    <filename>/etc/hosts</filename> and enable further configuration of Identity Management integrated
 	    services. However, a record is not added to <filename>/etc/hosts</filename> when an IP address is passed as
 	    an CLI option and not interactively. Consequently, &IPA; server installation fails because integrated
-	    services that are being configured expect the &IPA; server hostname to be resolvable. 
+	    services that are being configured expect the &IPA; server hostname to be resolvable.
 						</entry>
 						<entry>
 							There are two ways to work around this issue:
@@ -359,8 +359,8 @@ Adding a new DNS zone causes the window to be incorrectly rendered as text on th
 							<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=743945">Bugzilla 743945</ulink>
 						</entry>
 						<entry>
-							Searches can be performed on attributes that are not displayed in the UI. This means that 
-					entries can be returned in a search that do not appear to match the given filter. This is especially 
+							Searches can be performed on attributes that are not displayed in the UI. This means that
+					entries can be returned in a search that do not appear to match the given filter. This is especially
 					common if the search information is very short, which increases the likelihood of a match.
 						</entry>
 						<entry>
@@ -422,7 +422,7 @@ Adding a new DNS zone causes the window to be incorrectly rendered as text on th
 						</entry>
 						<entry>
 							<para>
-								The <command>ipa-replica-manage</command> script manages both replication agreements between &IPA; servers and synchronization agreements between &IPAA; server and an &AD; server. 
+								The <command>ipa-replica-manage</command> script manages both replication agreements between &IPA; servers and synchronization agreements between &IPAA; server and an &AD; server.
 				</para>
 				<para>
 					The <option>force-sync</option>, <option>del</option>, and <option>re-initialize</option> subcommands with <command>ipa-replica-manage</command> do not work when managing sync agreements, so these operations fail when run against an &AD; server.
@@ -442,7 +442,7 @@ Adding a new DNS zone causes the window to be incorrectly rendered as text on th
 							<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=783502">Bugzilla 783502</ulink>
 						</entry>
 						<entry>
-							The Identity Management permission plug-in does not verify that the set of attributes specified for a new permission is relevant to the target object type that the permission allows access to. This means a user is able to create a permission which allows access to attributes that will never be present in the target object type because such attributes are not allowed in its object classes. You must ensure that the chosen set of attributes for which a new permission grants access to is relevant to the chosen target object type. 
+							The Identity Management permission plug-in does not verify that the set of attributes specified for a new permission is relevant to the target object type that the permission allows access to. This means a user is able to create a permission which allows access to attributes that will never be present in the target object type because such attributes are not allowed in its object classes. You must ensure that the chosen set of attributes for which a new permission grants access to is relevant to the chosen target object type.
 						</entry>
 					</row>
 					<row>
@@ -458,16 +458,16 @@ Adding a new DNS zone causes the window to be incorrectly rendered as text on th
 							<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=786629">Bugzilla 786629</ulink>
 						</entry>
 						<entry>
-							Because a permission does not provide write access to an entry, delegation does not work as expected. 
+							Because a permission does not provide write access to an entry, delegation does not work as expected.
 							<para>
-								The &DSF; distinguishes between access to entries and access to attributes. For example, an entry can be granted add or delete access, whereas an attribute can be granted read, search, and write access. 
+								The &DSF; distinguishes between access to entries and access to attributes. For example, an entry can be granted add or delete access, whereas an attribute can be granted read, search, and write access.
 							</para>
 						</entry>
 						<entry>
 							<para>
-								To grant write access to an entry, the list of writable attributes needs to be provided. The filter, subtree, and other options are used to target those entries which are writable. Attributes define which parts of those entries are writable. As a result, the list of attributes will be writable to members of the permission. 
+								To grant write access to an entry, the list of writable attributes needs to be provided. The filter, subtree, and other options are used to target those entries which are writable. Attributes define which parts of those entries are writable. As a result, the list of attributes will be writable to members of the permission.
 							</para>
-							
+
 						</entry>
 					</row>
 					<row>
@@ -478,9 +478,9 @@ Adding a new DNS zone causes the window to be incorrectly rendered as text on th
 							The <package>ipa-client</package> package does not install the <package>policycoreutils</package> package as its dependency, which may cause install or uninstall issues when using the <command>ipa-client-install</command> setup script.
 						</entry>
 						<entry>
-							Install the <package>policycoreutils</package> package manually: 
+							Install the <package>policycoreutils</package> package manually:
 <screen>~]# yum install policycoreutils</screen>
-							
+
 						</entry>
 					</row>
 					<row>
@@ -488,7 +488,7 @@ Adding a new DNS zone causes the window to be incorrectly rendered as text on th
 							<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=794882">Bugzilla 794882</ulink>
 						</entry>
 						<entry>
-							When adding members to netgroups, if a host that is not configured in &IPA; already, that host is considered to be an external host. This host can be controlled with netgroups, but the &IPA; domain has no knowledge of it. Currently, there is no way to use the <command>netgroup-find</command> command to search for external hosts. 
+							When adding members to netgroups, if a host that is not configured in &IPA; already, that host is considered to be an external host. This host can be controlled with netgroups, but the &IPA; domain has no knowledge of it. Currently, there is no way to use the <command>netgroup-find</command> command to search for external hosts.
 							<para>
 								When an external host is added to the netgroup coniguration, it is not automatically converted in the netgroup rule. <!-- ?? -->
 							</para>
@@ -518,7 +518,7 @@ Adding a new DNS zone causes the window to be incorrectly rendered as text on th
 							<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=812127">Bugzilla 812127</ulink>
 						</entry>
 						<entry>
-							&IPA; relies on the LDAP schema to know what type of data to expect in a given attribute. If, in certain situations (such as replication), attribute values that do not meet those expectations are inserted for an attribute, IPA will not be able to handle the entry, and LDAP tools must be used to manually clean up that entry. 
+							&IPA; relies on the LDAP schema to know what type of data to expect in a given attribute. If, in certain situations (such as replication), attribute values that do not meet those expectations are inserted for an attribute, IPA will not be able to handle the entry, and LDAP tools must be used to manually clean up that entry.
 						</entry>
 					</row>
 					<row>
@@ -547,7 +547,7 @@ ipa: ERROR: sudo command with name "/usr/bin/x" already exists</screen>
 						</entry>
 						<entry>
 							If an invalid value is given for the <emphasis>Seconds Latitude</emphasis>
-					field in the configuration for a DNS location (LOC) record, the 
+					field in the configuration for a DNS location (LOC) record, the
 					server throws this error:
 <screen>[Tue May 01 09:44:59 2012] [error] ipa: ERROR: non-public: InvalidOperation: quantize result has too many digits for current context</screen>
 						</entry>
@@ -557,14 +557,14 @@ ipa: ERROR: sudo command with name "/usr/bin/x" already exists</screen>
 							<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=822350">Bugzilla 822350</ulink>
 						</entry>
 						<entry>
-							When a user is migrated from an LDAP directory, the user's entry in the LDAP directory does not contain Kerberos credentials needed for a Kerberos login. When the user visits the password migration page, Kerberos credentials are generated for the user and logging in with Kerberos authentication works as expected. 
+							When a user is migrated from an LDAP directory, the user's entry in the LDAP directory does not contain Kerberos credentials needed for a Kerberos login. When the user visits the password migration page, Kerberos credentials are generated for the user and logging in with Kerberos authentication works as expected.
 							<para>
 								However, Identity Management does not generate the credentials correctly if the migrated password does not follow the password policy set on the Identity Management server. Consequently, when the password migration is done and a user tries to log in with Kerberos authentication, the user is prompted to change the password. However, the password change itself is unsuccessful, so the user is unable to log into Kerberos.
 							</para>
 						</entry>
 						<entry>
-							An administrator can reset the password of a migrated user with the <command>ipa passwd</command> command. When reset, the user's Kerberos credentials are properly generated. 
-							
+							An administrator can reset the password of a migrated user with the <command>ipa passwd</command> command. When reset, the user's Kerberos credentials are properly generated.
+
 						</entry>
 					</row>
 					<row>
@@ -572,7 +572,7 @@ ipa: ERROR: sudo command with name "/usr/bin/x" already exists</screen>
 							<ulink url="https://bugzilla.redhat.com/show_bug.cgi?id=826731">Bugzilla 826731</ulink>
 						</entry>
 						<entry>
-							If configuring the CA fails, the entire server installation fails, but the 
+							If configuring the CA fails, the entire server installation fails, but the
 command output is unclear where or why the installation attempt failed. To troubleshoot installation failures, check the server installation log, <filename>/var/log/ipaserver-install.log</filename>, and the CA installation log, <filename>/var/log/pki-ca-install.log</filename>.
 						</entry>
 					</row>
@@ -596,8 +596,8 @@ command output is unclear where or why the installation attempt failed. To troub
 						</entry>
 						<entry>
 							When running the second step of the installation, use
-							the <option>--subject</option> option to give the subject 
-							nname of the certificate; by default, this is <command>O=</command><emphasis>REALM</emphasis>, and <emphasis>REALM</emphasis> is the name of the new &IPA; Kerberos realm. If a custom subject was used for the first stage of the installation, use its value instead. 
+							the <option>--subject</option> option to give the subject
+							nname of the certificate; by default, this is <command>O=</command><emphasis>REALM</emphasis>, and <emphasis>REALM</emphasis> is the name of the new &IPA; Kerberos realm. If a custom subject was used for the first stage of the installation, use its value instead.
 						</entry>
 					</row>
 				</tbody>

@@ -8,7 +8,7 @@
 			 native Linux tools. While centralized identity/policy/authorization software is hardly new, &PROD; is one of the only options that supports Linux/Unix domains.
 		 </para>
 		 <para>
-			&PROD; provides a unifying skin for standards-defined, common network services, including PAM, LDAP, Kerberos, DNS, NTP, and certificate services, and it allows &OS; systems to serve as the domain controllers. 
+			&PROD; provides a unifying skin for standards-defined, common network services, including PAM, LDAP, Kerberos, DNS, NTP, and certificate services, and it allows &OS; systems to serve as the domain controllers.
 		</para>
 		<para>
 			&PROD; defines a domain, with servers and clients who share centrally-managed services, like Kerberos and DNS. This chapter first explains what &PROD; is.
@@ -22,21 +22,21 @@
 			</para>
 			<section id="ipadefined"><title>A Working Definition for &PROD;</title>
 				<para>
-					Security information frequently relates to <emphasis>identities</emphasis> of users, machines, and services. Once the identity is verified, then 
+					Security information frequently relates to <emphasis>identities</emphasis> of users, machines, and services. Once the identity is verified, then
 					access to services and resources can be controlled.
 				</para>
 				<para>
-					For efficiency, risk management, and ease of administration, IT administrators try to manage identities as centrally as possible and to unite 
+					For efficiency, risk management, and ease of administration, IT administrators try to manage identities as centrally as possible and to unite
 					identity management with authentication and authorization policies. Historically, Linux environments have had a very difficult time establishing this centralized management.
-					There are a number of different protocols (such as NIS and Kerberos) which define domains, while other applications store data (such as LDAP) and still others manage access (such as sudo). 
+					There are a number of different protocols (such as NIS and Kerberos) which define domains, while other applications store data (such as LDAP) and still others manage access (such as sudo).
 					None of these applications talk to each other or use the same management tools.
 					Every application had to be administered separately and it had to be managed locally. The only way to get a consistent identity policy was to copy
 					configuration files around manually or to try to develop a proprietary application to manage identities and policies.
 				</para>
 			<para>
-				The goal of &PROD; is to simplify that administrative overhead. Users, machines, services, and polices are all configured in one place, using the same tools. Because &IPA; 
-				creates a domain, multiple machines can all use the same configuration and the same resources simply by joining the domain. Users only have to sign into services once, and administrators 
-				only have to manage a single user account. 
+				The goal of &PROD; is to simplify that administrative overhead. Users, machines, services, and polices are all configured in one place, using the same tools. Because &IPA;
+				creates a domain, multiple machines can all use the same configuration and the same resources simply by joining the domain. Users only have to sign into services once, and administrators
+				only have to manage a single user account.
 			</para>
 			<para>
 				&IPA; does three things:
@@ -79,12 +79,12 @@
 				The closest relative to &PROD; is a standard LDAP directory like &DSF;, but there are some intrinsic differences between what they do and what they're <emphasis>intended</emphasis> to do.
 			</para>
 			<para>
-				First, it helps to understand what a directory service is. A directory service is a collection of software, hardware, and processes that stores information. While directory services 
-				can be highly specific (for example, DNS is a directory service because it stores information on hostnames), a generic directory service can store and retrieve any kind of information. 
-				LDAP directories like &DSF; are generic directories. They have a flexible schema that supports entries for users, machines, network entities, physical equipment, and buildings, and 
-				that schema can be customized to define entries of almost anything. Because of its extensibility, LDAP servers like &DSF; are frequently used as backends that store data for 
-				other applications. &DSF; not only contains information, it organizes information. LDAP directories uses a hierarchical structure, a <emphasis>directory tree</emphasis>, that 
-				organize entries into root entries (suffixes), intermediate or container entries (subtrees or branches), and leaf entries (the actual data). Directory trees can be very complex, with a lot of branch points, or very simple (flat) with few branch points. 
+				First, it helps to understand what a directory service is. A directory service is a collection of software, hardware, and processes that stores information. While directory services
+				can be highly specific (for example, DNS is a directory service because it stores information on hostnames), a generic directory service can store and retrieve any kind of information.
+				LDAP directories like &DSF; are generic directories. They have a flexible schema that supports entries for users, machines, network entities, physical equipment, and buildings, and
+				that schema can be customized to define entries of almost anything. Because of its extensibility, LDAP servers like &DSF; are frequently used as backends that store data for
+				other applications. &DSF; not only contains information, it organizes information. LDAP directories uses a hierarchical structure, a <emphasis>directory tree</emphasis>, that
+				organize entries into root entries (suffixes), intermediate or container entries (subtrees or branches), and leaf entries (the actual data). Directory trees can be very complex, with a lot of branch points, or very simple (flat) with few branch points.
 			</para>
 			<para>
 				The primary feature of an LDAP directory is its generality. It can be made to fit into a variety of applications.
@@ -93,9 +93,9 @@
 				&PROD;, on the other hand, has a very specific purpose and fits a very specific application. It is not a general LDAP directory, it is not a backend, and it is not a general policy server. It is not generic.
 			</para>
 			<para>
-				&PROD; focuses on identities (user and machine) and policies that relate to those identities and their interactions. While it uses an LDAP backend to store its data, 
-				&IPA; has a highly-customized and specific set of schema that defines a particular set of identity-related entries and defines them in detail. It has a relatively flat and 
-				simple directory tree because it has only a handful of entry types and relationships that are relevant to its purpose. It has rules and limitations on 
+				&PROD; focuses on identities (user and machine) and policies that relate to those identities and their interactions. While it uses an LDAP backend to store its data,
+				&IPA; has a highly-customized and specific set of schema that defines a particular set of identity-related entries and defines them in detail. It has a relatively flat and
+				simple directory tree because it has only a handful of entry types and relationships that are relevant to its purpose. It has rules and limitations on
 				how the &IPA; server can be deployed because it can only be deployed for a specific purpose: managing identities.
 			</para>
 			<para>
@@ -193,7 +193,7 @@
 					Kerberos-based
 				</entry>
 			</row>
-			
+
 			<row>
 				<entry>
 					User Tools
@@ -212,8 +212,8 @@
 			<para>
 				LDAP directories like &DSF; have flexibility and adaptability which makes them a perfect backend to any number of applications. Its primary purpose is to store and retrieve data efficiently.
 			</para>
-			<para> 
-				&IPA; fills a very different niche. It is optimized to perform a single task very effectively. It stores user information and authentication and authorization policies, as well 
+			<para>
+				&IPA; fills a very different niche. It is optimized to perform a single task very effectively. It stores user information and authentication and authorization policies, as well
 				as other information related to access, like host information. Its single purpose is to manage identities.
 			</para>
 		</section>
@@ -223,10 +223,10 @@
 		 <section id="ipa-linux-services">
 			 <title>Bringing Linux Services Together</title>
 			 <para>
-				 &PROD; unifies disparate yet related Linux services into a single management environment. From there, it establishes a simple, easy way to bring host machines into the domain of those services. 
+				 &PROD; unifies disparate yet related Linux services into a single management environment. From there, it establishes a simple, easy way to bring host machines into the domain of those services.
 			 </para>
 			 <para>
-				 &IPAB; server is, at its core, an identity and authentication server. The primary &IPA; server, essentially a domain controller, uses a Kerberos server and KDC for authentication. An LDAP backend contains all of the domain information, including users, client machines, and domain configuration. 
+				 &IPAB; server is, at its core, an identity and authentication server. The primary &IPA; server, essentially a domain controller, uses a Kerberos server and KDC for authentication. An LDAP backend contains all of the domain information, including users, client machines, and domain configuration.
 			 </para>
 			 <figure id="fig.server1">
 				<title>The &IPA; Server: Unifying Services</title>
@@ -262,7 +262,7 @@
 			 <section id="Directory_Server">
 				<title>Data Storage: &DSF;</title>
 				 <para>
-					 &PROD; contains an internal &DSF; instance. All of the Kerberos information, user accounts, groups, services, policy information, DNS zone and host entries, and all other information in &IPA; is stored in this &DSF; instance. 
+					 &PROD; contains an internal &DSF; instance. All of the Kerberos information, user accounts, groups, services, policy information, DNS zone and host entries, and all other information in &IPA; is stored in this &DSF; instance.
 				 </para>
 				 <para>
 					 When multiple servers are configured, they can talk to each other because &DSF; supports <emphasis>multi-master replication</emphasis>. Agreements are automatically configured between the initial server and any additional <emphasis>replicas</emphasis> which are added to the domain.
@@ -274,7 +274,7 @@
 				 -->
 
 			</section>
-			
+
 			<section id="certificate-services"><title>Authentication: &FCRTS;</title>
 			<para>
 				Kerberos can use certificates along with keytabs for authentication, and some services require certificates for secure communication. &PROD; includes a certificate authority, through &FCRTS;, with the server. This CA issues certificates to the server, replicas, and hosts and services within the &IPA; domain.
@@ -298,10 +298,10 @@
 			 <section id="NTP">
 				<title>Management: NTP</title>
 				<para>
-					Many services require that servers and clients have the same system time, within a certain variance. For example, Kerberos tickets use time stamps to determine their validity. If the times between the server and client skew outside the allowed range, then any Kerberos tickets are invalidated. 
+					Many services require that servers and clients have the same system time, within a certain variance. For example, Kerberos tickets use time stamps to determine their validity. If the times between the server and client skew outside the allowed range, then any Kerberos tickets are invalidated.
 				</para>
 				<para>
-					Clocks are synchronized over a network using <emphasis>Network Time Protocol</emphasis> (NTP). A central server acts as an authoritative clock and all of the clients which reference that NTP server sync their times to match. 
+					Clocks are synchronized over a network using <emphasis>Network Time Protocol</emphasis> (NTP). A central server acts as an authoritative clock and all of the clients which reference that NTP server sync their times to match.
 				</para>
 				<para>
 					When the &IPA; server is the NTP server for the domain, all times and dates are synchronized before any other operations are performed. This allows all of the date-related services &mdash; including password expirations, ticket and certificate expirations, account lockout settings, and entry create dates &mdash; to function as expected.
@@ -314,17 +314,17 @@
 
 			<section id="service-interactions"><title>Relationships Between Servers and Clients</title>
 			<para>
-				&PROD; itself defines a <emphasis>domain</emphasis>, a group of machines that have shared configuration, policies, and identity stores. This shared configuration allows the machines (and 
-				users) within the domain to be aware of each other and operate together. This awareness can be used to enable cross-platform compatibility, like unifying Windows and Linux systems, or to enable 
-				infrastructure-wide single sign-on. 
+				&PROD; itself defines a <emphasis>domain</emphasis>, a group of machines that have shared configuration, policies, and identity stores. This shared configuration allows the machines (and
+				users) within the domain to be aware of each other and operate together. This awareness can be used to enable cross-platform compatibility, like unifying Windows and Linux systems, or to enable
+				infrastructure-wide single sign-on.
 			</para>
 			<section id="ipa-servers-replicas"><title>About &IPA; Servers and Replicas</title>
 			<para>
-				&PROD; works by having identified servers which are the master stores of information for user and machine identities and domain-wide policies. These servers host domain-related services such as 
-				certificate authorities, NTP, Kerberos, SSH, and DNS. The server also acts as a central repository of identity and policy information. 
+				&PROD; works by having identified servers which are the master stores of information for user and machine identities and domain-wide policies. These servers host domain-related services such as
+				certificate authorities, NTP, Kerberos, SSH, and DNS. The server also acts as a central repository of identity and policy information.
 			</para>
 			<para>
-				Clients interact indirectly with &IPA; servers when they attempt to access domain resources, such as fileshares, services, remote machines, or authentication (through SSSD and Kerberos). 
+				Clients interact indirectly with &IPA; servers when they attempt to access domain resources, such as fileshares, services, remote machines, or authentication (through SSSD and Kerberos).
 			</para>
 			<para>
 				As said, &IPAA; server is a controller for a lot of associated services. While a number of those services are <emphasis>support</emphasis>, most of them are not <emphasis>required</emphasis>. For example, a server may have a CA, a DNS server, or an NTP server &mdash; or it can be installed without those services.
@@ -356,7 +356,7 @@
 				The replication topology essentially creates a cloud of &IPA; servers. One benefit of a server domain is automatic load balancing, using the SRV records in DNS. The SRV record priority sets the order that servers and replicas are contacted, while weight distributed the load between servers/replicas with the same priority. The server and replica DNS entries can be edited to change the load balancing, which is covered in <xref linkend="ex.srv-record" /> and <xref linkend="load-balancing" />.
 			</para>
 		</note>
-			
+
 		</section>
 
 		<section id="ipa-clients"><title>About &IPA; Clients</title>
@@ -380,7 +380,7 @@
 			<itemizedlist>
 				<listitem>
 					<para>
-						Store &IPA; information when the machine is offline. 
+						Store &IPA; information when the machine is offline.
 					</para>
 				</listitem>
 				<listitem>
@@ -395,7 +395,7 @@
 				</listitem>
 			</itemizedlist>
 			<para>
-				Information is stored either in an LDB database (similar to LDAP) or the local filesystem (as XML files), depending on the <emphasis>type</emphasis> of information. 
+				Information is stored either in an LDB database (similar to LDAP) or the local filesystem (as XML files), depending on the <emphasis>type</emphasis> of information.
 			</para>
 			<itemizedlist>
 				<listitem>
@@ -408,9 +408,9 @@
 						Policy information is more static than identity information, and it can include configuration for SELinux or sudo. These policies are set globally on the server and then are propagated to the clients. On the client, the policy information is stored in the filesystem in XML files which can be downloaded and converted into a native file for whatever service is being managed.
 					</para>
 				</listitem>
-			</itemizedlist>	
+			</itemizedlist>
 		 <para>
-			 A specific set of services on the &IPA; server interact with a subset of services and modules on the &IPA; client. A client is any machine (a <emphasis>host</emphasis>) which can retrieve a keytab or certificates from the &IPA; domain. 
+			 A specific set of services on the &IPA; server interact with a subset of services and modules on the &IPA; client. A client is any machine (a <emphasis>host</emphasis>) which can retrieve a keytab or certificates from the &IPA; domain.
 		</para>
 		 <figure id="fig.IPA_Architecture">
 			<title>Interactions Between &IPA; Services</title>
@@ -421,7 +421,7 @@
 
 			</mediaobject>
 		</figure>
-		
+
 			<para>
 				<xref linkend="fig.IPA_Architecture" /> shows that &OS; uses two native daemons to interact with the &IPA; server:
 			</para>
@@ -439,7 +439,7 @@
 			</itemizedlist>
 			 <para>
 				 When a &OS; client is added to the domain (<emphasis>enrolled</emphasis>), its SSSD and <systemitem>certmonger</systemitem> are configured
-				 to connect to the &IPA; server and the required Kerberos keytab and host certificates are created. (The host certificate is not used directly by &IPA;; 
+				 to connect to the &IPA; server and the required Kerberos keytab and host certificates are created. (The host certificate is not used directly by &IPA;;
 				 it may be used by other services, such as a web server.)
 			 </para>
 		 </section>

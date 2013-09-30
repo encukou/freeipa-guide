@@ -9,11 +9,11 @@
 
 	<section id="about-sudo"><title>About sudo and IPA</title>
 		 <para>
-			 The <command>sudo</command> command allows a system administrator to delegate authority to specific users to run specific commands as root or another specified user. <command>sudo</command> provides an audit trail of the commands and their arguments, so access can be tracked. 
+			 The <command>sudo</command> command allows a system administrator to delegate authority to specific users to run specific commands as root or another specified user. <command>sudo</command> provides an audit trail of the commands and their arguments, so access can be tracked.
 		 </para>
 		 <section id="abt-sudo2"><title>General sudo Configuration in &PROD;</title>
 			 <para>
-				 <command>sudo</command> uses a local configuration file, <filename>/etc/sudoers</filename>, which defines the commands and users with sudo access. While this file can be shared among machines, there's no native way to distribute <command>sudo</command> configuration files among machines. 
+				 <command>sudo</command> uses a local configuration file, <filename>/etc/sudoers</filename>, which defines the commands and users with sudo access. While this file can be shared among machines, there's no native way to distribute <command>sudo</command> configuration files among machines.
 			 </para>
 			 <para>
 				 &PROD; uses its centralized LDAP database to contain the <command>sudo</command> configuration, which makes it globally available to all domain hosts. &PROD; also has a specialized LDAP schema for <command>sudo</command> entries that allows a lot more flexible and simpler configuration. This schema adds two key features:
@@ -21,7 +21,7 @@
 			 <itemizedlist>
 				 <listitem>
 					 <para>
-						 The &PROD; schema supports host groups in addition to netgroups for <command>sudo</command>, while <command>sudo</command> only supports netgroups. 
+						 The &PROD; schema supports host groups in addition to netgroups for <command>sudo</command>, while <command>sudo</command> only supports netgroups.
 					 </para>
 					 <para>
 						 For every host group, &PROD; also creates a corresponding shadow netgroup. This allows &IPA; administrators to create <command>sudo</command> rules that reference host groups, while the local <command>sudo</command> command uses the corresponding netgroup.
@@ -34,13 +34,13 @@
 				 </listitem>
 			 </itemizedlist>
 			 <para>
-				 Because <command>sudo</command> does not support host groups and command groups, &PROD; translates the &IPA; <command>sudo</command> configuration into native <command>sudo</command> configuration when the <command>sudo</command> rules are created. 
+				 Because <command>sudo</command> does not support host groups and command groups, &PROD; translates the &IPA; <command>sudo</command> configuration into native <command>sudo</command> configuration when the <command>sudo</command> rules are created.
 			 </para>
 			 <para condition="five">
 				 Because the <command>sudo</command> information is not available anonymously over LDAP by default, &PROD; defines a default <command>sudo</command> user, <systemitem>uid=sudo,cn=sysaccounts,cn=etc,$SUFFIX</systemitem>, which can be set in the LDAP/<command>sudo</command> configuration file, <filename>/etc/ldap.conf</filename>.
 			 </para>
 			 <para condition="redhat">
-				 Because the <command>sudo</command> information is not available anonymously over LDAP by default, &PROD; defines a default <command>sudo</command> user, <systemitem>uid=sudo,cn=sysaccounts,cn=etc,$SUFFIX</systemitem>, which can be set in the LDAP/<command>sudo</command> configuration file, <filename>/etc/sud-ldap.conf</filename>. 
+				 Because the <command>sudo</command> information is not available anonymously over LDAP by default, &PROD; defines a default <command>sudo</command> user, <systemitem>uid=sudo,cn=sysaccounts,cn=etc,$SUFFIX</systemitem>, which can be set in the LDAP/<command>sudo</command> configuration file, <filename>/etc/sud-ldap.conf</filename>.
 			 </para>
 			 <para>
 				 Both <command>sudo</command> and &PROD; support user groups as part of the <command>sudo</command> configuration. User groups can be either Unix or non-POSIX groups. Creating non-POSIX groups can create some access issues because any users in the group inherit non-POSIX rights from the group. Having the choice between Unix and non-POSIX groups allows administrators the choice in group formatting and to avoid problems with inherited permissions or GID information.
@@ -52,7 +52,7 @@
 				 As <xref linkend="abt-sudo2" /> mentions, the LDAP schema used for sudo entries in &PROD; supports host group-style groups in addition to netgroups. Really, &PROD; creates two groups,
 				 a visible host group and a shadow netgroup. <command>sudo</command> itself only supports NIS-style netgroups for group formats.
 			 </para>
-			 <!-- 
+			 <!--
 			 work this in
 			 bz771765
 SUDO can use LDAP rules. It does this with its own internal LDAP lookup (it doesn't currently go through
@@ -66,7 +66,7 @@ command to locate the netgroups.
 
 we recently made changes to
 avoid needing to use the compat tree for netgroup lookups and can
-instead use FreeIPA's native, custom schema for netgroups. 
+instead use FreeIPA's native, custom schema for netgroups.
 
 			 -->
 			 <para>
@@ -78,14 +78,14 @@ instead use FreeIPA's native, custom schema for netgroups.
 				 In short, <command>sudo</command> configuration requires NIS-formatted netgroups. It does not require NIS.
 			 </para>
 			 <para>
-				 The &PROD; &DS; instance uses the standard LDAP schema for NIS objects, defined in RFC 2307. 
+				 The &PROD; &DS; instance uses the standard LDAP schema for NIS objects, defined in RFC 2307.
 			</para>
 		 </section>
 
 		 <section id="sudo-clients"><title>Supported sudo Clients</title>
 			 <para>
-				 Any system which is supported as an &IPA; client system can be configured as a <command>sudo</command> client in &IPA;. 
-			 </para>				 
+				 Any system which is supported as an &IPA; client system can be configured as a <command>sudo</command> client in &IPA;.
+			 </para>
 		 </section>
 	 </section>
 
@@ -135,7 +135,7 @@ instead use FreeIPA's native, custom schema for netgroups.
 					</listitem>
 					<listitem>
 						<para>
-							Click the <guilabel>Add and Edit</guilabel> button to go immediately to the edit pages for the command. 
+							Click the <guilabel>Add and Edit</guilabel> button to go immediately to the edit pages for the command.
 						</para>
 					</listitem>
 					<listitem>
@@ -145,7 +145,7 @@ instead use FreeIPA's native, custom schema for netgroups.
 					</listitem>
 					<listitem>
 						<para>
-							Click the checkbox by the groups for the command to join, and click the right arrows button, <guibutton>>></guibutton>, to move the group 
+							Click the checkbox by the groups for the command to join, and click the right arrows button, <guibutton>>></guibutton>, to move the group
 							to the selection box.
 						</para>
 					</listitem>
@@ -242,7 +242,7 @@ Added sudo command "/usr/bin/less"
 					</listitem>
 					<listitem>
 						<para>
-							Click the checkbox by the names of the commands to add, and click the right arrows button, <guibutton>>></guibutton>, to move the command 
+							Click the checkbox by the names of the commands to add, and click the right arrows button, <guibutton>>></guibutton>, to move the command
 							to the selection box.
 						</para>
 						<informalfigure>
@@ -353,12 +353,12 @@ Number of members added 1
 					<para>
 						Likewise, linebreaks that are ignored in the <filename>/etc/sudoers</filename> file are not allowed in the &PROD; configuration:
 					</para>
-<screen>env_keep = "COLORS DISPLAY EDITOR HOSTNAME HISTSIZE INPUTRC 
-            KDEDIR LESSSECURE LS_COLORS MAIL PATH PS1 PS2 
-            QTDIR USERNAME LANG LC_ADDRESS LC_CTYPE LC_COLLATE 
-            LC_IDENTIFICATION LC_MEASUREMENT LC_MESSAGES 
-            LC_MONETARY LC_NAME LC_NUMERIC LC_PAPER LC_TELEPHONE 
-            LC_TIME LC_ALL LANGUAGE LINGUAS _XKB_CHARSET 
+<screen>env_keep = "COLORS DISPLAY EDITOR HOSTNAME HISTSIZE INPUTRC
+            KDEDIR LESSSECURE LS_COLORS MAIL PATH PS1 PS2
+            QTDIR USERNAME LANG LC_ADDRESS LC_CTYPE LC_COLLATE
+            LC_IDENTIFICATION LC_MEASUREMENT LC_MESSAGES
+            LC_MONETARY LC_NAME LC_NUMERIC LC_PAPER LC_TELEPHONE
+            LC_TIME LC_ALL LANGUAGE LINGUAS _XKB_CHARSET
             XAUTHORITY"</screen>
 					<para>
 						To use multiple <filename>sudoers</filename> options in &PROD;, configure each one as a separate option setting, rather than all on one line, as is allowed in the <filename>/etc/sudoers</filename> file.
@@ -405,8 +405,8 @@ Number of members added 1
 							Click the <guilabel>Add and Edit</guilabel> button to go immediately to set the configuration for the rule.
 						</para>
 						<para>
-							There are a number of configuration areas for the rule. The most basic elements are set in the 
-							<guilabel>Who</guilabel>, <guilabel>Access This Host</guilabel>, and <guilabel>Run Commands</guilabel> areas; the others are optional 
+							There are a number of configuration areas for the rule. The most basic elements are set in the
+							<guilabel>Who</guilabel>, <guilabel>Access This Host</guilabel>, and <guilabel>Run Commands</guilabel> areas; the others are optional
 							and are used to refine the rule.
 						</para>
 					</listitem>
@@ -470,7 +470,7 @@ Number of members added 1
 							</listitem>
 							<listitem>
 								<para>
-									Click the checkbox by the users to add to the rule, and click the right arrows button, <guibutton>>></guibutton>, to move the users 
+									Click the checkbox by the users to add to the rule, and click the right arrows button, <guibutton>>></guibutton>, to move the users
 							to the selection box.
 								</para>
 								<informalfigure>
@@ -510,7 +510,7 @@ Number of members added 1
 							</listitem>
 							<listitem>
 								<para>
-									Click the checkbox by the hosts to include with the rule, and click the right arrows button, <guibutton>>></guibutton>, to move the hosts 
+									Click the checkbox by the hosts to include with the rule, and click the right arrows button, <guibutton>>></guibutton>, to move the hosts
 							to the selection box.
 								</para>
 								<informalfigure>
@@ -550,7 +550,7 @@ Number of members added 1
 							</listitem>
 							<listitem>
 								<para>
-									Click the checkbox by the commands or command groups to include with the rule, and click the right arrows button, <guibutton>>></guibutton>, to move the commands 
+									Click the checkbox by the commands or command groups to include with the rule, and click the right arrows button, <guibutton>>></guibutton>, to move the commands
 							to the selection box.
 								</para>
 								<informalfigure>
@@ -587,7 +587,7 @@ Number of members added 1
 							</listitem>
 							<listitem>
 								<para>
-									Click the checkbox by the users to run the command as, and click the right arrows button, <guibutton>>></guibutton>, to move the users 
+									Click the checkbox by the users to run the command as, and click the right arrows button, <guibutton>>></guibutton>, to move the users
 							to the selection box.
 								</para>
 								<informalfigure>
@@ -622,7 +622,7 @@ Number of members added 1
 	</para>
 	<para>
 		The first step is to add the initial rule entry.
-						</para>				
+						</para>
 <screen>$ ipa sudorule-add files-commands
 -----------------------------------
 Added sudo rule "files-commands"
@@ -630,10 +630,10 @@ Added sudo rule "files-commands"
   Rule name: files-commands
   Enabled: TRUE
 </screen>
-					
+
 						<para>
 							Next, add the commands to <emphasis>grant</emphasis> access to. This can be a single command, using <option>--sudocmd</option>, or a group of commands, using <option>--sudocmdgroups</option>.
-							
+
 <screen>$ ipa sudorule-add-allow-command --sudocmd "/usr/bin/vim" files-commands
   Rule name: files-commands
   Enabled: TRUE
@@ -690,7 +690,7 @@ Sudo Option: !authenticate
 Added option "!authenticate" to Sudo rule "readfiles"
 -----------------------------------------------------</screen>
 				</example>
-				
+
 						<note><title>NOTE</title>
 							<para>
 								As described in <xref linkend="about-sudo-options" />, do not use options with whitespace in the values. Rather than adding a list of options in one line, add a single option setting for each desired option.
@@ -715,7 +715,7 @@ $ ipa sudorule-add-runasgroup --groups=ITadmins readfiles</screen>
 
 				<example id="ex.sudo-external"><title>Referencing External Users or Hosts</title>
 					<para>
-						The "who" in a <command>sudo</command> rule can be &IPAA; user, but there are many logical and useful rules where one of the referents is a system user. Similarly, a rule may need to grant or deny access to a host machine on the network which is not an &IPA; client. 
+						The "who" in a <command>sudo</command> rule can be &IPAA; user, but there are many logical and useful rules where one of the referents is a system user. Similarly, a rule may need to grant or deny access to a host machine on the network which is not an &IPA; client.
 					</para>
 					<para>
 						In those cases, the <command>sudo</command> policy can refer to an <emphasis>external</emphasis> user or host &mdash; an identity created and stored outside of &IPA; (<xref linkend="about-external-sudo" />).
@@ -747,7 +747,7 @@ $ ipa sudorule-add-runasgroup --groups=ITadmins readfiles</screen>
 $ ipa sudorule-add-user --externaluser=ITAdmin readfiles
 $ ipa sudorule-add-runasuser --runasexternaluser=root readfiles</screen>
 				</example>
-					
+
 				<table id="tab.sudo-rules-cmds"><title>sudo Commands</title>
 					<tgroup cols="2">
 						<colspec colname="col1" colnum="1" />
@@ -803,7 +803,7 @@ $ ipa sudorule-add-runasuser --runasexternaluser=root readfiles</screen>
 									Sets a user to run the sudo commands as. This must be a specific user; to specify all users, modify the rule using <command>sudo-rule</command>.
 								</entry>
 							</row>
-							
+
 							<row>
 								<entry>
 									sudorule-add-allow-command
@@ -820,7 +820,7 @@ $ ipa sudorule-add-runasuser --runasexternaluser=root readfiles</screen>
 									Adds a command that users in the rule are explicitly <emphasis>denied</emphasis> sudo permission to run.
 								</entry>
 							</row>
-							
+
 							<row>
 								<entry>
 									sudorule-add-option
@@ -839,7 +839,7 @@ $ ipa sudorule-add-runasuser --runasexternaluser=root readfiles</screen>
 		 <para>
 			 Actually implementing <command>sudo</command> policies is more complicated than simply creating the rules in &IPA;. Those rules need to be applied to every local machine, which means that each system in the &IPA; domain has to be configured to refer to &IPA; (as an LDAP server) for its policies.
 		 </para>
-		 
+
 			 <para condition="redhat">
 				 This example specifically configures a &OS; 6 client for sudo rules. The configuration file in step <xref linkend="step.nslcd" /> is different, depending on the platform.
 			 </para>
@@ -868,8 +868,8 @@ $ ipa sudorule-add-runasuser --runasexternaluser=root readfiles</screen>
 						Using LDAP tools, set the password for the <command>sudo</command> user, <command>uid=sudo,cn=sysaccounts,cn=etc,dc=example,dc=com</command>. For example:
 					</para>
 <screen>$ ldappasswd -Y GSSAPI -S -h ipaserver.ipadocs.org uid=sudo,cn=sysaccounts,cn=etc,dc=example,dc=com
-    New password: 
-    Re-enter new password: 
+    New password:
+    Re-enter new password:
     Enter LDAP Password: </screen>
 				</listitem>
 				 <listitem>
@@ -890,14 +890,14 @@ $ ipa sudorule-add-runasuser --runasexternaluser=root readfiles</screen>
 					<orderedlist>
 						<listitem>
 					<para>
-						Configure <command>sudo</command> to look to LDAP for the <filename>sudoers</filename> file. 
+						Configure <command>sudo</command> to look to LDAP for the <filename>sudoers</filename> file.
 <programlisting>vim /etc/nsswitch.conf
 
 sudoers:  files ldap</programlisting>
 
 					</para>
 					 <para>
-						Leaving the <option>files</option> option in place allows <command>sudo</command> to check its local configuration before checking the LDAP-based &IPA; configuration. 
+						Leaving the <option>files</option> option in place allows <command>sudo</command> to check its local configuration before checking the LDAP-based &IPA; configuration.
 					</para>
 				</listitem>
 				 <listitem>
@@ -944,7 +944,7 @@ uri ldap://ipaserver.example.com ldap://backup.example.com:3890
 sudoers_base ou=SUDOers,dc=example,dc=com</programlisting>
 							</para>
 							<para>
-								Multiple LDAP servers can be configured in a space-separated list, and other options (like SSL and non-standard ports) can be used with the LDAP URL. 
+								Multiple LDAP servers can be configured in a space-separated list, and other options (like SSL and non-standard ports) can be used with the LDAP URL.
 								The <command>sudo</command> LDAP configuration is covered in the <command>sudo</command> manpages, <ulink url="http://www.sudo.ws/sudo/man/1.8.2/sudoers.ldap.man.html" />.
 							</para>
 							<important><title>IMPORTANT</title>
@@ -968,7 +968,7 @@ uri ldap://ipaserver.example.com ldap://backup.example.com:3890
 </programlisting>
 							</para>
 							<para>
-								Multiple LDAP servers can be configured in a space-separated list, and other options (like SSL and non-standard ports) can be used with the LDAP URL. 
+								Multiple LDAP servers can be configured in a space-separated list, and other options (like SSL and non-standard ports) can be used with the LDAP URL.
 								The <command>sudo</command> LDAP configuration is covered in the <command>sudo</command> manpages, <ulink url="http://www.sudo.ws/sudo/man/1.8.2/sudoers.ldap.man.html" />.
 							</para>
 							<important><title>IMPORTANT</title>
@@ -994,7 +994,7 @@ uri ldap://ipaserver.example.com ldap://backup.example.com:3890
 sudoers_base ou=SUDOers,dc=example,dc=com</programlisting>
 							</para>
 							<para>
-								Multiple LDAP servers can be configured in a space-separated list, and other options (like SSL and non-standard ports) can be used with the LDAP URL. 
+								Multiple LDAP servers can be configured in a space-separated list, and other options (like SSL and non-standard ports) can be used with the LDAP URL.
 								The <command>sudo</command> LDAP configuration is covered in the <command>sudo</command> manpages, <ulink url="http://www.sudo.ws/sudo/man/1.8.2/sudoers.ldap.man.html" />.
 							</para>
 							<important><title>IMPORTANT</title>
