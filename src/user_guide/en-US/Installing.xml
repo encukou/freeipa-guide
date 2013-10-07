@@ -1099,7 +1099,7 @@ Setup complete</programlisting>
 				</para>
 				<para>
 					There is an exception to the rule: A newer version of the replica can be installed as a part of the upgrade process. All other replicas have to be upgraded to the same version in a matter of days or weeks.
-					FreeIPA ​servers​ should not be run for a longer time period with different versions.
+					&IPA; servers should not be run for a longer time period with different versions.
 				</para>
 				<!--<important><title>IMPORTANT</title>
 					<para>
