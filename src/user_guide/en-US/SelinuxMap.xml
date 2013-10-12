@@ -421,9 +421,6 @@
 				A specific user or host can be removed from an SELinux map by using either the <command>selinuxusermap-remove-host</command> or <command>selinuxusermap-remove-user</command> command.
 			</para>
 			<example id="ex.selinux-remove"><title>Removing a User from an SELinux Map</title>
-				<para>
-					As with adding a user to a ion> value identifies the host-based access control rule to use for mapping. The access control rule must specify both users and hosts appropriately so that the SELinux map can construct the SELinux user, &IPA; user, and host triple.
-				</para>
 <screen>[jsmith@server ~]$ ipa selinuxusermap-remove-user --users=jsmith selinux1</screen>
 			</example>
 		</section>
