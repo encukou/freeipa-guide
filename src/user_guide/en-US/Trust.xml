@@ -2,12 +2,19 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 ]>
 <chapter id="active-directory-trust">
-	<title>Identity: Integrating with Active Directory Through Cross-Realm Kerberos Trusts &TITLE_TPREVIEW;</title>
-	<para>
-		Kerberos allows the configuration of <emphasis>trusted realms</emphasis>. Each realm has its own
-		resources and users, yet the trust relationship allows users of any trusted realm to obtain tickets
-		and connect to machines or services in a peer realm as if they were members of that peer realm.
-	</para>
+    <title>Identity: Integrating with Active Directory Through Cross-Realm Kerberos Trusts &TITLE_TPREVIEW;</title>
+    <para>
+        Active Directory is a Microsoft's implementation of LDAP, Kerberos,
+        SMB, and few other protocol families.  While there are many differences
+        in the way these protocol families are implemented, in its core
+        trusting one &AD; domain to another means establishing relationships
+        between the two domains on the Kerberos protocol level.  Kerberos
+        allows the configuration of <emphasis>trusted realms</emphasis>. Each
+        realm has its own resources and users, yet the trust relationship
+        allows users of any trusted realm to obtain tickets and connect to
+        machines or services in a peer realm as if they were members of that
+        peer realm.
+    </para>
 	<para>
 		Because of differences in the way that Windows and Linux domains implement LDAP services, DNS
 		management, and even Kerberos realms, it is difficult to establish a direct trust between &AD;
@@ -15,6 +22,18 @@
 		the Kerberos trust and DNS mappings so that &AD; users can access Linux hosts and services
 		completely transparently, using one set of credentials.
 	</para>
+    <para>
+        &AD; was implemented on top of existing domain membership as provided by SMB
+        protocol. In order to give short transition path for existing
+        deployments, many of the concepts from SMB protocol are used
+        internally by &AD;. Trust relationship is one of these; establishing
+        trust between two domains, in fact, requires execution of an SMB
+        command sequence that leads to creation of specialized accounts in LDAP
+        storage of domain controllers in both domains. When this step is
+        performed, resulting accounts can be used to perform Kerberos
+        authentication against the other domain and represent shared ticket and
+        key for Kerberos cross-realm trust.
+    </para>
 
 	<section id="trust-defined"><title>The Meaning of "Trust"</title>
 		<para>
@@ -45,13 +64,19 @@
 				</listitem>
 				<listitem>
 					<para>
-						Samba, to perform identity lookups on &AD; and retrieve user and group security identifiers (SIDs) for authorization information
-					</para>
+                        Samba, to perform SMB protocol operations against
+                        domain controllers in &AD; and represent points of
+                        communication that &AD; domain controllers expect to
+                        exist in another &AD; domain
+                    </para>
 				</listitem>
 				<listitem>
 					<para>
-						SSSD, to cache user, group, and ticket information for users and to map Kerberos and DNS domains
-					</para>
+                        SSSD, to query and cache user, group, and Kerberos
+                        ticket information for users from &AD;. SSSD also maps
+                        Security Identifiers of user and group objects on &AD;
+                        side to user and group identifiers on &IPA; side
+                    </para>
 				</listitem>
 				<listitem>
 					<para>
@@ -86,17 +111,36 @@
 				</mediaobject>
 			</figure>
 			<para>
-				Trusts, then, are essentially unidirectional. &AD; users can access &IPA; resources and services, but &IPA; users
-				cannot access &AD; resources. Trust allows Windows administrators and users to be able to access and manage Linux resources<footnote><para>Trusted users, however,
+                Trust relationship is unidirectional. &AD; users can access
+                &IPA; resources and services, but &IPA; users cannot access
+                &AD; resources. Trust allows Windows administrators and users
+                to be able to access and manage Linux
+                resources<footnote><para>Trusted users, however,
 					cannot manage &PROD; itself.</para></footnote>.
-			</para>
-			<para>
-				<emphasis role="bold">A trust relationship is established between a single &AD; domain and a single &IPA; domain.</emphasis>
-			</para>
+            </para>
+
+            <para>
+                It is worth to note that while a single trust relationship is
+                unidirectional, &IPA; technically establishes bidirectional
+                trust relationships with &AD; and internally uses &IPA; to &AD;
+                trust path to query &AD; users membership information from &AD;
+                domain controllers. However, to allow full access for &IPA;
+                users to &AD; resources, &IPA; needs to advance its
+                implementation of Global Catalog service as required by
+                &AD;-compliant domains.
+            </para>
+
+            <para>
+                &AD; may contain a number of subordinated domains. In this case
+                one &AD; domain is called <emphasis>forest root
+                domain</emphasis>. <emphasis role="bold">A trust
+                relationship is established between a single &AD; forest
+                root domain and a single &IPA; domain.</emphasis>
+            </para>
 			<note><title>NOTE</title>
 				<para>
 					No Windows machine can be a client of the &IPA; domain in a trust environment.
-					All Windows machines must be in the &AD; domain.
+					All Windows machines must be in an &AD; domain.
 				</para>
 			</note>
 			<para>
@@ -163,39 +207,74 @@
 
 		<section id="comp-trust-krb"><title>Kerberos Realms, Authentication, and Authorization</title>
 			<para>
-			Group information in &AD; is stored in a list of identifiers in each Kerberos ticket for
-			&AD; users in a special dataset called <emphasis>privileged access certificates</emphasis>
-			or MS-PAC. The group information in the PAC has to be mapped to the &AD; groups and then
-			to the corresponding &IPA; groups to help determine access. A PAC is essentially an account usability
-			extension.
-		</para>
-		<para>
-			Understanding the group mapping for trusts can help clarify how groups should be structured
-			in trust environments.
-		</para>
+                Each object in &AD; can be addressed using its
+                <emphasis>Security Identifier (SID)</emphasis>. Users, groups,
+                machine accounts, and other objects all have associated SIDs.
+                In some cases there could be more than one SID associated with
+                an object. For performance purposes information about SIDs of
+                related objects, including group membership, is stored in each
+                Kerberos ticket for &AD; users in a special dataset called
+                <emphasis>privileged access certificates</emphasis> or MS-PAC.
+                MS-PAC is issued as part of the Kerberos ticket and digitally
+                signed by the &AD; domain controller that issued the ticket.
+                Digital signature allows to verify authenticity of the
+                information and avoid requesting it over and over again from
+                &AD; domain controllers, making more efficient use of network
+                and computing resources.
+            </para>
 
-			<para>
-				Microsoft uses a special authorization structure called <emphasis>privileged access certificates</emphasis>
-				or MS-PAC. A PAC is embedded in a Kerberos ticket as a way of identifying the entity to other Windows clients and servers in the Windows domain.
+            <para>
+                Understanding the group mapping for trusts can help clarify how
+                groups should be structured in trust environments.
+            </para>
+
+            <para>
+                When an &AD; user requests a ticket for a service in &IPA;
+                domain, it presents a cross-realm ticket granting ticket (TGT)
+                issued to an &AD; user by an &AD; domain controller. This
+                ticket contains MS-PAC information, signed by the &AD; domain controller.
 			</para>
-			<para>
-				On &IPA; resources, if an &AD; user requests a ticket for a service, then &IPA;
-				forwards the request
-				to &AD; to retrieve the user information. The PAC information sent back by &AD;
-				is embedded in the Kerberos ticket.
-			</para>
+
+            <para>
+                &IPA; KDC, upon request to issue a ticket for a service in &IPA; domain,
+                verifies MS-PAC information in an &AD; user ticket. If it
+                contains any <emphasis>security identifier</emphasis> that
+                should be filtered out and not allowed to access &IPA; domain,
+                the request to obtain a service ticket is rejected.
+            </para>
+
+            <para>
+                If &IPA; KDC issues the ticket to the service in &IPA; domain,
+                &AD; security identifiers from MS-PAC are used to map an &AD;
+                user membership to &IPA; groups. If an &AD; SID is an
+                <emphasis>external member</emphasis> of &IPA; group, &IPA; KDC
+                will track down any POSIX group this group is included into and
+                will add its SID to MS-PAC structure.
+            </para>
+
+            <para>
+                Resulting ticket to the &IPA; service is digitally signed by
+                &IPA; KDC. Its MS-PAC information will contain SIDs of original
+                &AD; objects and &IPA; POSIX groups of which these objects are
+                external members. This ticket is then used by a software that
+                requested the ticket to connect to the actual &IPA; service.
+            </para>
+
+            <para>
+                When the connection request comes to &IPAA; client, &IPA;
+                (through SSSD, as &IPAA; client), extracts the &AD;
+                <emphasis>security identifiers</emphasis> from the PAC and maps
+                them to POSIX group and user identifiers.  The user is granted
+                access to the &IPA;-hosted services according to their access
+                rules. Additionally, the &IPA; group information in the SSSD
+                user cache is updated to include the mapped &IPA; groups for
+                the &AD; user.
+            </para>
 			<note><title>NOTE</title>
 				<para>
 					All Kerberos communication for both &AD; and &IPA; for trusts uses GSS-API.
 				</para>
 			</note>
-			<para>
-				&IPA; (through SSSD, as &IPAA; client), extracts the &AD; group <emphasis>security
-				identifiers</emphasis> (SIDs) from the PAC. &IPA; then compares the &AD; SIDs in the PAC
-				to the group SIDs configured as members in &IPA; groups. If the &AD; group is
-				a member of &IPAA; group, then the &IPA; group SID is added to the PAC, and the
-				Kerberos ticket is updated with the new PAC.
-			</para>
 
 			<figure id="fig.trust-components2"><title>&IPA;, SSSD, and &AD;</title>
 				<mediaobject>
@@ -204,15 +283,6 @@
 					</imageobject>
 				</mediaobject>
 			</figure>
-			<para>
-				That new ticket is then used to generate a service ticket for the user, and
-				the user is granted access to the &IPA;-hosted services.
-				according to their access rules. Additionally, the &IPA; group information in the
-				SSSD user cache is updated to include the mapped &IPA; groups for the &AD; user.
-			</para>
-			<para>
-				SSSD stores multiple TGTs and tickets for each user, as new services are accessed.
-			</para>
 			<para>
 				A simpler way of saying this is that &AD; supplies a list of groups for
 				each user, based on an identifier for the group. &IPA; compares that list of
@@ -224,36 +294,56 @@
 			<para>
 				<emphasis role="bold">The crucial factor to realize in this is that &AD; users
 					are recognized to the &IPA; domain not by their &AD; user entry, but
-					by their &AD; group memberships.</emphasis>
+					by their &IPA; group memberships.</emphasis>
 				In a sense, &AD; <emphasis>users</emphasis> are not trusted by the &IPA; domain
-				&mdash; &AD; <emphasis>groups</emphasis> are.
-			</para>
+				&mdash; &IPA; <emphasis>groups</emphasis> are.
+            </para>
+
+            <para>
+                Since in POSIX environment every running process should be
+                running under some user and have some group membership to
+                access files, it is important that every user of &IPA; services has
+                corresponding POSIX identifier and user belongs to some groups
+                which have POSIX identifiers. Each &AD; user, therefore, should
+                have membership in some POSIX group to be able to access files
+                and run processes in &IPA; domain.
+            </para>
+
+            <para>
+                Additionally, &AD; user entries are never stored in &IPA; LDAP
+                and cannot be addressed by a DN. Group members in &IPA; LDAP
+                always addressed by their DNs. This means &AD; users cannot be
+                directly added to &IPA; POSIX groups.
+            </para>
+
+            <para>
+                &IPA; LDAP schema supports nested group membership. Each &IPA;
+                group may include another &IPA; group as its member. When
+                membership information is processed by &IPA; KDC or SSSD,
+                nested groups are unrolled and whole set of members is
+                flattened.
+            </para>
+
+            <para>
+                &IPA; has introduced an intermediary, non-POSIX group type,
+                <emphasis>external groups</emphasis>, which allow entities
+                outside &IPA; or a Linux system to be added as a member. That
+                external group can then be added to a standard &IPA; (POSIX)
+                group as a member.
+            </para>
+
 			<para>
-				But this method of mapping &AD; group SIDs to &IPA; group members means that
-				group structure in &IPA; is important. &AD; groups have different attributes
-				than Linux groups and, therefore, different attributes than &IPA; groups. Most
-				critically, &AD; groups are not POSIX groups, while &IPA; groups are.
-			</para>
-			<para>
-				&IPA; has introduced an intermediary, non-POSIX group type, <emphasis>external groups</emphasis>, which
-				allow entities outside &IPA; or a Linux system to be added as member. That external group can then be
-				added to a standard &IPA; (POSIX) group as a member.
-			</para>
-			<para>
-				When &AD; groups are added to &IPAA; group, they can be idenfitied by
+				When &AD; objects are added to &IPAA; group, they can be identified by
 				their SID or by name, in the formats <emphasis>DOMAIN\group_name</emphasis> or
-				<emphasis>group_name@domain</emphasis>. &IPA; then resolves the group name to
+				<emphasis>group_name@domain</emphasis>. &IPA; then resolves the object name to
 				the SID and stores the SID as the group member entry, to be compared to any
 				offered user PAC.
-			</para>
+            </para>
+
 			<para>
 				Actually configuring groups for &AD; users is described in <xref linkend="trust-groups" />.
-			</para>
-			<important><title>IMPORTANT</title>
-				<para>
-					Both &AD; and &PROD; must be configured with integrated certificate services.
-				</para>
-			</important>
+            </para>
+
 			<para>
 				All sessions in a trust environment are ultimately secured with Kerberos tickets, but users have different
 				login options:
