@@ -322,6 +322,7 @@ automountInformation: auto.home
 					</para>
 <screen condition="five">[jsmith@server ~]$ ipa-getkeytab -s server.example.com -p nfs/nfs-server.example.com -k /etc/krb5.keytab -e des-cbc-crc</screen>
 <screen condition="redhat">[jsmith@server ~]$ ipa-getkeytab -s server.example.com -p nfs/nfs-server.example.com -k /etc/krb5.keytab</screen>
+<screen condition="fedora">[jsmith@server ~]$ ipa-getkeytab -s server.example.com -p nfs/nfs-server.example.com -k /etc/krb5.keytab</screen>
 					<para>
 						For a &OS; machine, that's all you need to do.
 					</para>
