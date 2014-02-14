@@ -1423,10 +1423,8 @@ comparetAndWaitEntries ou=people,o=ipaca not found, let's wait</screen>
 
 	</section>
 
-<!-- -out of date section
 	<section id="upgrading">
-		<title condition="redhat">Upgrading &PROD; to &RHEL; 6.4</title>
-		<title condition="fedora">Upgrading from &IPA; 2.1 to 2.2</title>
+		<title>Upgrading &IPA;</title>
 		<para>
 			&PROD; is generally updated whenever a system is upgraded to a new release. Upgrades should be transparent and do not require any user or administrative intervention.
 		</para>
@@ -1482,7 +1480,8 @@ comparetAndWaitEntries ou=people,o=ipaca not found, let's wait</screen>
 				</para>
 			</formalpara>
 		</section>
-
+		
+		<!-- -out of date section
 		<section id="ticket-delegation"><title>Removing Browser Configuration for Ticket Delegation (For Upgrading from 6.2)</title>
 			<para>
 				As part of establishing Kerberos authentication, a principal is given a <emphasis>ticket granting ticket</emphasis> (TGT). Whenever that principal attempts to contact a service or application within the Kerberos domain, the service checks for an active TGT and then requests its own service-specific ticket from the TGT for that principal to access that service. 
@@ -1598,7 +1597,7 @@ comparetAndWaitEntries ou=people,o=ipaca not found, let's wait</screen>
 			</listitem>
 		</orderedlist>
 		</section>
-	</section>
 	- END out of date section -->
+	</section>
 </chapter>
 
