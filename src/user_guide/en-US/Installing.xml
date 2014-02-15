@@ -818,7 +818,7 @@ Realm name:  EXAMPLE.COM</programlisting>
 
 			<section id="install-ca-options"><title>Using Different CA Configurations</title>
 				<para>
-					&PROD; uses an integrated certificate authority (CA) to create the certificates and keytabs used by users and hosts within the domain. There are three different ways that &IPA; incorporates the CA into the &IPA; server:
+					&PROD; uses an integrated certificate authority (CA) to create the certificates and keytabs used by users and hosts within the domain. There are two different ways that &IPA; incorporates the CA into the &IPA; server:
 				</para>
 				<itemizedlist>
 					<listitem>
@@ -837,28 +837,7 @@ Realm name:  EXAMPLE.COM</programlisting>
 							A &FCRTS; CA is still installed and configured as part of the &IPA; server installation, but its CA certificates are issued by the external CA rather than by itself.
 						</para>
 					</listitem>
-					<!-- removing self-signed
-					<listitem>
-						<para>
-							The &IPA; server can use self-signed certificates without installing a CA. This is 
-					done by using the <option>- -selfsign</option> option. When the &IPA; server uses a self-signed certificate, the setup process
-					is exactly the same as a normal installation, except that no &FCRTS; instance is created. There is still a <filename>cacert.p12</filename> file created that can be 
-					used by replicas, but the certificate services that the &IPA; server can perform are much more limited.
-						</para>
-					</listitem>
-					-->
 				</itemizedlist>
-				<!--
-				removing self signed
-				<example id="ex.selfsigned"><title>Using a Self-Signed Certificate</title>
-<programlisting language="Bash"># ipa-server-install -a secret12 - -hostname=ipaserver.example.com -r EXAMPLE.COM -p secret12 -n example.com -U - -selfsign</programlisting>
-				</example>
-				<note><title>NOTE</title>
-					<para>
-						A self-signed certificate should only be used for a testing or development environment.
-					</para>
-				</note>
-				-->
 				<para>
 					The &IPA; server can use a certificate issued by an external CA. This can be a corporate CA or a third-party CA like Verisign or Thawte. As with a normal
 					setup process, using an external CA still uses a &FCRTS; instance for the &IPA; server for issuing all of its client and replica certificates; the initial CA certificate is 
