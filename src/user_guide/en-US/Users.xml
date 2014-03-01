@@ -447,12 +447,22 @@ UID: 387115841</screen>
 			 <para>
 				Deleting a user account is permanent. The information cannot be recovered; a new account must be created.
 			</para>
-			 <note><title>NOTE</title>
+			<note><title>NOTE</title>
 				<para>
-					If all admin users are deleted, then you must use the Directory Manager account to create a new administrative user. 
+					The <command>ipa user-del</command> and <command>ipa group-remove-member</command> commands prevent the accidential deletion of the last user in the <emphasis role="bold">admins</emphasis> group.
 				</para>
 				<para>
-					Alternatively, any user who belongs in the group management role can also add a new admin user.
+					However, if all users from the <emphasis role="bold">admins</emphasis> group are removed in some way,
+					you can use the Directory Manager account to add another user to the group:
+				</para>
+				<screen>ldapmodify -x -D 'cn=directory manager' -W
+dn: cn=admins,cn=groups,cn=accounts,dc=example,dc=com
+changetype: modify
+add: member
+member: uid=youruser,cn=users,cn=accouns,dc=example,dc=com
+				</screen>
+				<para>
+					Once you have done this, you may use this account to re-create the <emphasis role="bold">admin</emphasis> user.
 				</para>
 			</note>
 			<section id="Deleting_IPA_Users-ui"><title>With the Web UI</title>
