@@ -11,8 +11,8 @@
 
 
 	 <productname condition="fedora">FreeIPA</productname>
-	 <productnumber condition="fedora">3.4</productnumber>
-	 <edition>1.0</edition>
+	 <productnumber condition="fedora">4.0</productnumber>
+	 <edition>git</edition>
 	 <pubsnumber>1</pubsnumber>
 	 <abstract>
 		<para>
