@@ -41,7 +41,7 @@
 				</listitem>
 				 <listitem>
 					<para>
-						It is possible to use an NFS file server that provides <filename>/home</filename> that can be made available to all machines in the domain and then automounted on the &IPA; server. 
+						It is possible to use an NFS file server that provides <filename>/home</filename> that can be made available to all machines in the domain and then automounted on the &IPA; server.
 					</para>
 					<para>
 						There are potential issues when using NFS, such as security issues related to granting root access to the NFS user, performance issues with loading the entire <filename>/home</filename> tree, and network performance issues for using remote servers for home directories.
@@ -86,7 +86,7 @@
 				</para>
 				<note><title>NOTE</title>
 					<para>
-						&IPA; does not require the <systemitem role="module">pam_oddjob_mkhomedir</systemitem> module or <systemitem role="module">pam_mkhomedir</systemitem> module. 
+						&IPA; does not require the <systemitem role="module">pam_oddjob_mkhomedir</systemitem> module or <systemitem role="module">pam_mkhomedir</systemitem> module.
 						This is because the <systemitem>*_mkhomedir</systemitem> module may try to create home directories even when the shared storage is not available. If the module is unable to create the home directory, then users can be blocked from logging into the &IPA; domain.
 					</para>
 					<para>
@@ -128,7 +128,7 @@
 						<para>
 							Create a new location for the user directory maps:
 						</para>
-						 
+
 <screen>$ ipa automountlocation-add userdirs
 Location: userdirs</screen>
 
@@ -137,7 +137,7 @@ Location: userdirs</screen>
 						<para>
 							Add a direct map to the new location's <filename>auto.direct</filename> file. In this example, the mount point is <filename>/share</filename>:
 						</para>
-						 
+
 <screen>$ ipa automountkey-add userdirs auto.direct --key=/share --info="-ro,soft, ipaserver.example.com:/home/share"
 
 Key: /share
@@ -161,7 +161,7 @@ Mount information: -ro,soft, ipaserver.example.com:/home/share</screen>
 			</para>
 			 <para>
 				&IPA; supports a wide range of username formats, based on this regular expression:
-			</para>	 
+			</para>
 <screen>[a-zA-Z0-9_.][a-zA-Z0-9_.-]{0,252}[a-zA-Z0-9_.$-]?</screen>
 			<note><title>TIP</title>
 				 <para>
@@ -225,14 +225,14 @@ Mount information: -ro,soft, ipaserver.example.com:/home/share</screen>
 
 		<section id="adding-users-cmd"><title>From the Command Line</title>
 		 <para>
-			New user entries are added with the <command>user-add</command> command. Attributes (listed in <xref linkend="tab.default-attrs" />) 
-			can be added to the entry with specific values or the command can be run with no arguments. 
+			New user entries are added with the <command>user-add</command> command. Attributes (listed in <xref linkend="tab.default-attrs" />)
+			can be added to the entry with specific values or the command can be run with no arguments.
 		</para>
 <screen>$ ipa user-add [<replaceable>username</replaceable>] [<replaceable>attributes</replaceable>]</screen>
 		<para>
-			When no arguments are used, the command prompts for the required user account information and uses the defaults for the 
+			When no arguments are used, the command prompts for the required user account information and uses the defaults for the
 			other attributes, with the defaults printed below. For example:
-		</para>	
+		</para>
 <screen>$ ipa user-add
 First name: John
 Last name: Smith
@@ -323,7 +323,7 @@ UID: 387115841</screen>
 
 		<section id="editing-users-cmd"><title>From the Command Line</title>
 		 <para>
-			The <command>user-mod</command> command edits user accounts by adding or changing attributes. At its most basic, the <command>user-mod</command> specifies the 
+			The <command>user-mod</command> command edits user accounts by adding or changing attributes. At its most basic, the <command>user-mod</command> specifies the
 			user account by login ID, the attribute to edit, and the new value:
 		</para>
 <screen>$ ipa user-mod <replaceable>loginID</replaceable> --<replaceable>attributeName=newValue</replaceable></screen>
@@ -340,7 +340,7 @@ UID: 387115841</screen>
 			<secondary>multi-valued attributes</secondary>
 		</indexterm>
 		<para>
-			&PROD; allows <emphasis>multi-valued</emphasis> attributes, based on attributes in LDAP that are allowed to have multiple values. For example, a person may have two email addresses, one for work and one for personal, that are both stored in the mail attribute. Managing multi-valued attributes can be done using the <option>--addattr</option> option. 
+			&PROD; allows <emphasis>multi-valued</emphasis> attributes, based on attributes in LDAP that are allowed to have multiple values. For example, a person may have two email addresses, one for work and one for personal, that are both stored in the mail attribute. Managing multi-valued attributes can be done using the <option>--addattr</option> option.
 		</para>
 		<para>
 			If an attribute allows multiple values &mdash; like mail &mdash; simply using the command-line argument will overwrite the value with the new value. This is also true for using <option>--setattr</option>. However, using <option>--addattr</option> will add a new attribute; for a multi-valued attribute, it adds the new value in addition to any existing values.
@@ -375,7 +375,7 @@ UID: 387115841</screen>
 		 <section id="Activating_and_Deactivating_User_Accounts">
 			<title>Activating and Deactivating User Accounts</title>
 			 <para>
-				User accounts can be <emphasis>deactivated</emphasis>. A deactivated user cannot log into &IPA; or its related services (like Kerberos) and 
+				User accounts can be <emphasis>deactivated</emphasis>. A deactivated user cannot log into &IPA; or its related services (like Kerberos) and
 				he cannot perform any tasks. However, the user account still exists within &PROD; and all of the associated information remains unchanged.
 			</para>
 			<note><title>NOTE</title>
@@ -440,8 +440,8 @@ UID: 387115841</screen>
 		 <section id="Deleting_IPA_Users">
 			<title>Deleting Users</title>
 			 <para>
-				Deleting a user account permanently removes the user entry and all its information from &IPA;, including group memberships and passwords. 
-				External configuration &mdash; like a system account and home directory &mdash; will still exist on any server or local machine where they were created, but 
+				Deleting a user account permanently removes the user entry and all its information from &IPA;, including group memberships and passwords.
+				External configuration &mdash; like a system account and home directory &mdash; will still exist on any server or local machine where they were created, but
 				they cannot be accessed through &IPA;.
 			</para>
 			 <para>
@@ -523,13 +523,13 @@ member: uid=youruser,cn=users,cn=accouns,dc=example,dc=com
 	<section id="user-keys">
 		<title>Managing Public SSH Keys for Users</title>
 		<para>
-			OpenSSH uses <emphasis>public-private key pairs</emphasis> to authenticate users. 
+			OpenSSH uses <emphasis>public-private key pairs</emphasis> to authenticate users.
 			A user attempts to access some network resource and presents its key pair. The first time
-			the user authenticates, the administrator on the target machine has to approve 
-			the request manually. The machine then stores the user's public key in an 
+			the user authenticates, the administrator on the target machine has to approve
+			the request manually. The machine then stores the user's public key in an
 			<filename>authorized_keys</filename> file.
 			Any time that the user attempts to access the resource again, the machine simply checks
-			its <filename>authorized_keys</filename> file and then grants access automatically 
+			its <filename>authorized_keys</filename> file and then grants access automatically
 			to approved users.
 		</para>
 		<para>
@@ -552,19 +552,19 @@ member: uid=youruser,cn=users,cn=accouns,dc=example,dc=com
 		</para>
 		<section id="user-keys-format"><title>About the SSH Key Format</title>
 			<para>
-				When keys are uploaded to the &IPA; entry, the key format can be either an 
-				<ulink url="http://openssh.com/txt/rfc4716.txt">OpenSSH-style key</ulink> 
+				When keys are uploaded to the &IPA; entry, the key format can be either an
+				<ulink url="http://openssh.com/txt/rfc4716.txt">OpenSSH-style key</ulink>
 				or a raw <ulink url="http://www.ietf.org/rfc/rfc4253.txt">RFC 4253-style blob</ulink>.
 				Any RFC 4253-style key is automatically converted into an OpenSSH-style key
 				before it is imported and saved into the &IPA; LDAP server.
 			</para>
 			<para>
-				The &IPA; server can identify the type of key, such as an RSA or DSA key, 
+				The &IPA; server can identify the type of key, such as an RSA or DSA key,
 				from the uploaded key blob. However, in a key file such as <filename>id_rsa.pub</filename>, a key entry is identified by its type, then the key itself, and then an additional comment or identifier. For example, for an RSA key associated with a specific hostname:
 		</para>
 <screen>"ssh-rsa ABCD1234...== ipaclient.example.com"</screen>
 			<para>
-				All three parts from the key file can be uploaded to and viewed for the 
+				All three parts from the key file can be uploaded to and viewed for the
 				user entry, or only the key itself can be uploaded.
 			</para>
 		</section>
@@ -602,7 +602,7 @@ The key's randomart image is:
 						Copy the public key from the key file. The full key entry has the form <emphasis>type key== comment</emphasis>. Only the <emphasis>key==</emphasis> is required, but the entire entry can be stored.
 					</para>
 <screen>[jsmith@server ~]$ cat  /home/jsmith/.ssh/id_rsa.pub
-						
+
 ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 				</listitem>
 				<listitem>
@@ -638,7 +638,7 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 					<para>
 						The UI opens a new link, <guilabel>New: key not set Show/Set key</guilabel>. Click the <guilabel>Show/Set key</guilabel> link.
 					</para>
-					
+
 					<informalfigure>
 						<mediaobject>
 							<imageobject>
@@ -651,7 +651,7 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 					<para>
 						Paste in the public key for the user, and click the <guibutton>Set</guibutton> button.
 					</para>
-					
+
 					<informalfigure>
 						<mediaobject>
 							<imageobject>
@@ -685,7 +685,7 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 				</mediaobject>
 			</figure>
 			<para condition="fedora">
-				After uploading the user keys, configure SSSD to use &PROD; as one of its identity domains and set up OpenSSH to use the SSSD tooling for managing user keys. 
+				After uploading the user keys, configure SSSD to use &PROD; as one of its identity domains and set up OpenSSH to use the SSSD tooling for managing user keys.
 			</para>
 			<para condition="redhat">
 				After uploading the user keys, configure SSSD to use &PROD; as one of its identity domains and set up OpenSSH to use the SSSD tooling for managing user keys. This is covered in the <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/openssh-sssd.html">&OS; Deployment Guide</ulink>.
@@ -704,7 +704,7 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 			</para>
 <screen>--sshpubkey="12345abcde==,key2==,key3=="</screen>
 			<para condition="fedora">
-				After uploading the user keys, configure SSSD to use &PROD; as one of its identity domains and set up OpenSSH to use the SSSD tooling for managing user keys. 
+				After uploading the user keys, configure SSSD to use &PROD; as one of its identity domains and set up OpenSSH to use the SSSD tooling for managing user keys.
 			</para>
 			<para condition="redhat">
 				After uploading the user keys, configure SSSD to use &PROD; as one of its identity domains and set up OpenSSH to use the SSSD tooling for managing user keys. This is covered in the <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/openssh-sssd.html">&OS; Deployment Guide</ulink>.
@@ -738,7 +738,7 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 					<para>
 						Click the <guilabel>Delete</guilabel> link by the fingerprint of the key to remove.
 					</para>
-					
+
 					<informalfigure>
 						<mediaobject>
 							<imageobject>
@@ -755,7 +755,7 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 			</orderedlist>
 
 			<para>
-				The command-line tools can be used to remove all keys. This is done by running <command>ipa user-mod</command> with the <option>--sshpubkey=</option> set to a blank value; this removes <emphasis>all</emphasis> public keys for the user. 
+				The command-line tools can be used to remove all keys. This is done by running <command>ipa user-mod</command> with the <option>--sshpubkey=</option> set to a blank value; this removes <emphasis>all</emphasis> public keys for the user.
 			For example:
 		</para>
 <screen>[jsmith@server ~]$ kinit admin
@@ -764,19 +764,19 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 	</section>
 
 		<section id="changing-pwds"><title>Changing Passwords</title>
-			
+
 				<para>
-					Password policies (<xref linkend="user-pwdpolicy" />) and minimal access restrictions can be 
+					Password policies (<xref linkend="user-pwdpolicy" />) and minimal access restrictions can be
 					applied to a password change operation:
 				</para>
 				<itemizedlist>
 					<listitem>
 						<para>
-							Regular, non-administrative users can change only their personal passwords, and all passwords are constrained by the &IPA; password policies. 
+							Regular, non-administrative users can change only their personal passwords, and all passwords are constrained by the &IPA; password policies.
 						</para>
 						<para>
-							This allows administrators to create intro passwords or to reset passwords easily, while still keeping the 
-							final password confidential. Since any password sent by an administrator to the user is temporary, there is 
+							This allows administrators to create intro passwords or to reset passwords easily, while still keeping the
+							final password confidential. Since any password sent by an administrator to the user is temporary, there is
 							little security risk.
 						</para>
 					</listitem>
@@ -787,7 +787,7 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 					</listitem>
 					<listitem>
 						<para>
-							Changing a password as the LDAP Directory Manager user, <emphasis>using LDAP tools</emphasis>, overrides any &IPA; password policies. 
+							Changing a password as the LDAP Directory Manager user, <emphasis>using LDAP tools</emphasis>, overrides any &IPA; password policies.
 						</para>
 					</listitem>
 				</itemizedlist>
@@ -800,7 +800,7 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 					</listitem>
 					<listitem>
 						<para>
-							Click the name of the user for whom to reset the password. All users can change their own password; only administrators or users with delegated permissions can 
+							Click the name of the user for whom to reset the password. All users can change their own password; only administrators or users with delegated permissions can
 							change other user's passwords.
 						</para>
 						<informalfigure>
@@ -845,7 +845,7 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 
 			<section id="pwd-reset-cmd"><title>From the Command Line</title>
 				<para>
-					Changing a password &mdash; your own or another user's &mdash; is done using the <command>user-mod</command> command, as with other 
+					Changing a password &mdash; your own or another user's &mdash; is done using the <command>user-mod</command> command, as with other
 					user account changes.
 				</para>
 <screen>[bjensen@ipaserver ~]$ kinit admin
@@ -855,7 +855,7 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 
 		<section id="user-unlock"><title>Unlocking User Accounts After Password Failures</title>
 			<para>
-				If a user attempts to log in and uses the wrong password a certain number of times, then that user account is locked. The exact number of failed attempts that locks and account and the duration of the lockout is defined as part of the password policy 
+				If a user attempts to log in and uses the wrong password a certain number of times, then that user account is locked. The exact number of failed attempts that locks and account and the duration of the lockout is defined as part of the password policy
 				(<xref linkend="Setting_Account-lockout_Policies" />).
 			</para>
 			<para>
@@ -867,7 +867,7 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 <screen>[bjensen@ipaserver ~]$ kinit admin
 [bjensen@ipaserver ~]$ ipa user-unlock jsmith</screen>
 		</section>
-	
+
 
 		<section id="user-private-groups"><title>Managing User Private Groups</title>
 			<!-- XXXXXXXXXXXXXXXXX FIX ME XXXXXXXXXXXXXXXXXXX
@@ -890,7 +890,7 @@ ssh-rsa AAAAB3NzaC1yc2E...tJG1PK2Mq++wQ== jsmith@example.com</screen>
 				User private groups are managed through the Managed Entries Plug-in in &DSF;. This plug-in can be disabled, which effectively disables private group creation for all new users.
 			</para>
 			<para>
-				This is done using the <command>ipa-managed-entries</command> command. 
+				This is done using the <command>ipa-managed-entries</command> command.
 			</para>
 			<orderedlist>
 				<listitem>
@@ -951,10 +951,10 @@ Disabling Plugin</screen>
 			 &IPAB; server must generate random UID and GID values and simultaneously ensure that replicas never generate the same UID or GID value. The need for unique UID and GID numbers might even cross &IPA; domains, if a single organization has multiple disparate domains.
 		</para>
 		<para>
-			The UID and GID numbers are divided into <emphasis>ranges</emphasis>. By keeping separate numeric ranges for individual servers and replicas, the chances are minimal that 
-			any numbers issued by one server or replica will duplicate those from another. Ranges are updated and shared intelligently between servers and replicas through the Dynamic 
-			Numeric Assignment (DNA) Plug-in, as part of the backend &DSF; instance for the domain. The same range is used for user IDs (<parameter>uidNumber</parameter>) and group IDs (<parameter>gidNumber</parameter>). 
-			A user and a group may have the same ID, but since the ID is set in different attributes, there is no conflict. Using the same ID number for both a user and a group 
+			The UID and GID numbers are divided into <emphasis>ranges</emphasis>. By keeping separate numeric ranges for individual servers and replicas, the chances are minimal that
+			any numbers issued by one server or replica will duplicate those from another. Ranges are updated and shared intelligently between servers and replicas through the Dynamic
+			Numeric Assignment (DNA) Plug-in, as part of the backend &DSF; instance for the domain. The same range is used for user IDs (<parameter>uidNumber</parameter>) and group IDs (<parameter>gidNumber</parameter>).
+			A user and a group may have the same ID, but since the ID is set in different attributes, there is no conflict. Using the same ID number for both a user and a group
 			also allows an administrator to configure user private groups, where a unique system group is created for each user and the ID number is the same for both the user and the group.
 		</para>
 		<important><title>IMPORTANT</title>
@@ -968,38 +968,38 @@ Disabling Plugin</screen>
 				If two entries are assigned the same ID number, only the first entry is returned in a search for that ID number. However, both entries will be returned in searches for other attributes or with <command>ipa user-find --all</command>.
 			</para>
 		</important>
-	
+
 		<section id="id-ranges-at-install"><title>About ID Range Assignments During Installation</title>
 			<para>
-				The &IPA; administrator can initially define a range during server installation, using the 
-				<option>--idstart</option> and <option>--idmax</option> options with <command>ipa-server-install</command>. These options are not required, so 
+				The &IPA; administrator can initially define a range during server installation, using the
+				<option>--idstart</option> and <option>--idmax</option> options with <command>ipa-server-install</command>. These options are not required, so
 				the setup script can assign random ranges during installation.
 			</para>
 			 <para>
 				 If no range is set manually when the first &IPA; server is installed, a range of 200,000 IDs is randomly selected. There are 10,000 possible ranges. Selecting a random range from that number provides a high probability of non-conflicting IDs if two separate &IPA; domains are ever merged in the future.
 			</para>
 			 <para>
-				 With a single &IPA; server, IDs are assigned to entries in order through the range. With replicas, the initial server ID range is split and distributed. 
+				 With a single &IPA; server, IDs are assigned to entries in order through the range. With replicas, the initial server ID range is split and distributed.
 			 </para>
 			 <para>
-				 When a replica is installed, it is configured with an invalid range. It also has a directory entry (that is shared among replicas) that instructs the replica 
-				 where it can request a valid range. When the replica starts, or as its current 
-				 range is depleted so that less than 100 IDs are available, it can contact one of the available servers for a new range allotment. A special extended operation splits the range in two, 
-				 so that the original server and the replica each have half of the available range. 
+				 When a replica is installed, it is configured with an invalid range. It also has a directory entry (that is shared among replicas) that instructs the replica
+				 where it can request a valid range. When the replica starts, or as its current
+				 range is depleted so that less than 100 IDs are available, it can contact one of the available servers for a new range allotment. A special extended operation splits the range in two,
+				 so that the original server and the replica each have half of the available range.
 			</para>
 
 		</section>
-		
+
 		 <section id="Assigning_UIDs_and_GIDs-Adding_New_Ranges">
 			<title>Adding New Ranges</title>
 				 <para>
-					 If the range for the entire domain is close to depletion, a new range can be manually selected and assigned to one of the master servers. 
+					 If the range for the entire domain is close to depletion, a new range can be manually selected and assigned to one of the master servers.
 					 All replicas then request ID ranges from the master as necessary.
 				</para>
 				 <para>
 					 The changes to the range are done by editing the &DSF; configuration to change the DNA Plug-in instance. The range is defined in the <parameter>dnaNextRange</parameter> parameter. For example:
 				</para>
-				 
+
 <screen>ldapmodify -x -D "cn=Directory Manager" -W -h server.example.com -p 389
 Enter LDAP Password: *******
 dn: cn=Posix IDs,cn=Distributed Numeric Assignment Plugin,cn=plugins,cn=config
@@ -1008,22 +1008,22 @@ add: dnaNextRange
 dnaNextRange: 123400000-123500000</screen>
 				 <note><title>NOTE</title>
 					<para>
-						This command only adds the specified range of values; it does not check that the values in that range are actually available. This check is 
-						performed when an attempt is made to allocate those values. If a range is added that contains mostly values that were already allocated, 
+						This command only adds the specified range of values; it does not check that the values in that range are actually available. This check is
+						performed when an attempt is made to allocate those values. If a range is added that contains mostly values that were already allocated,
 						the system will cycle through the entire range searching for unallocated values, and then the operation ultimately fails if none are available.
 					</para>
 				</note>
 		</section>
-		
+
 
 	</section>
-	
 
-		
+
+
 		<section id="user-schema"><title>Managing User and Group Schema</title>
 			<para>
-  				When a user entry is created, it is automatically assigned certain LDAP object classes which, in turn, make available certain 
-				attributes. LDAP attributes are the way that information is stored in the directory. (This is discussed in detail in the 
+  				When a user entry is created, it is automatically assigned certain LDAP object classes which, in turn, make available certain
+				attributes. LDAP attributes are the way that information is stored in the directory. (This is discussed in detail in the
 				<citetitle>&DS; &DPG;</citetitle> and the <citetitle>&DS; Schema Reference</citetitle>.)
 			</para>
 			<table id="tab.default-objclasses"><title>Default &PROD; User Object Classes</title>
@@ -1084,9 +1084,9 @@ dnaNextRange: 123400000-123500000</screen>
 				</tgroup>
 			</table>
 			<para>
-				A number of attributes are available to user entries. Some are set manually and some are set based on defaults if a 
-				specific value is not set. There is also an option to add any attributes available in the object classes in <xref linkend="tab.default-objclasses" />, even if there is 
-				not a UI or command-line argument for that attribute. Additionally, the values generated or used by the default attributes 
+				A number of attributes are available to user entries. Some are set manually and some are set based on defaults if a
+				specific value is not set. There is also an option to add any attributes available in the object classes in <xref linkend="tab.default-objclasses" />, even if there is
+				not a UI or command-line argument for that attribute. Additionally, the values generated or used by the default attributes
 				can be configured, as in <xref linkend="Configuring_IPA_Users-Specifying_Default_User_Settings" />.
 			</para>
 			<table id="tab.default-attrs"><title>Default &PROD; User Attributes</title>
@@ -1406,7 +1406,7 @@ dnaNextRange: 123400000-123500000</screen>
 						</row>
 						<row>
 							<entry>
-								<!-- XXXXXXXXXXXXXXX FIX ME 
+								<!-- XXXXXXXXXXXXXXX FIX ME
 								No Private Group
 								-->
 							</entry>
@@ -1445,7 +1445,7 @@ dnaNextRange: 123400000-123500000</screen>
 
 		<section id="using-custom-oc"><title>About Changing the Default User and Group Schema</title>
 			<para>
-				It is possible to add or change the object classes and attributes used for user and group entries (<xref linkend="user-schema" />). 
+				It is possible to add or change the object classes and attributes used for user and group entries (<xref linkend="user-schema" />).
 			</para>
 			<para>
 				The &IPA; configuration provides some validation when object classes are changed:
@@ -1463,10 +1463,10 @@ dnaNextRange: 123400000-123500000</screen>
 				</listitem>
 			</itemizedlist>
 			<para>
-				There are limits to the &IPA; schema validation, however. Most important, 
-				the &IPA; server does not check that the defined user or group object classes 
-				contain all of the required object classes for &IPA; entries. For example, all 
-				&IPA; entries require the <command>ipaobject</command> object class. However, when 
+				There are limits to the &IPA; schema validation, however. Most important,
+				the &IPA; server does not check that the defined user or group object classes
+				contain all of the required object classes for &IPA; entries. For example, all
+				&IPA; entries require the <command>ipaobject</command> object class. However, when
 				the user or group schema is changed, the server does not check to make sure that this
 				object class is included; if the object class is accidentally deleted, then future
 				entry add operations will fail.
@@ -1479,11 +1479,11 @@ dnaNextRange: 123400000-123500000</screen>
 
 		<section id="adding-custom-objclasses"><title>Applying Custom Object Classes to New User Entries</title>
 			<para>
-				User and group accounts are created with a pre-defined set of LDAP object classes applied to the entry. Any attributes which 
-				belong to the object class can be added to the user entry. 
+				User and group accounts are created with a pre-defined set of LDAP object classes applied to the entry. Any attributes which
+				belong to the object class can be added to the user entry.
 			</para>
 			<para>
-				While the standard and &IPA;-specific LDAP object classes will cover most deployment scenarios, administrators may have custom 
+				While the standard and &IPA;-specific LDAP object classes will cover most deployment scenarios, administrators may have custom
 				object classes with custom attributes which should be applied to user entries.
 				</para>
 				<section id="adding-custom-objclasses-ui"><title>From the Web UI</title>
@@ -1539,7 +1539,7 @@ dnaNextRange: 123400000-123500000</screen>
 						</listitem>
 				</orderedlist>
 			</section>
-		
+
 			<section id="adding-custom-objclasses-cmd"><title>From the Command Line</title>
 			<orderedlist>
 				<listitem>
@@ -1549,7 +1549,7 @@ dnaNextRange: 123400000-123500000</screen>
 				</listitem>
 				<listitem>
 					<para>
-						Add the new object class to the list of object classes added to entries. The option for user object classes is <option>--userobjectclasses</option>. 
+						Add the new object class to the list of object classes added to entries. The option for user object classes is <option>--userobjectclasses</option>.
 					</para>
 						<important><title>IMPORTANT</title>
 							<para>
@@ -1565,13 +1565,13 @@ dnaNextRange: 123400000-123500000</screen>
 		</section>
 		</section>
 
-		
+
 
 		<section id="adding-custom-objclasses-groups"><title>Applying Custom Object Classes to New Group Entries</title>
 			<para>
-				As with user entries, administrators may have custom 
-				object classes with custom attributes which should be applied to group entries. These can be added automatically by adding the object classes to the 
-			       &IPA; server configuration.	
+				As with user entries, administrators may have custom
+				object classes with custom attributes which should be applied to group entries. These can be added automatically by adding the object classes to the
+			       &IPA; server configuration.
 			</para>
 
 			<section id="adding-custom-objclasses-group-ui"><title>From the Web UI</title>
@@ -1620,7 +1620,7 @@ dnaNextRange: 123400000-123500000</screen>
 						</listitem>
 				</orderedlist>
 			</section>
-		
+
 			<section id="adding-custom-objclasses-group-cmd"><title>From the Command Line</title>
 			<orderedlist>
 				<listitem>
@@ -1630,7 +1630,7 @@ dnaNextRange: 123400000-123500000</screen>
 				</listitem>
 				<listitem>
 					<para>
-						Add the new object class to the list of object classes added to entries. The option for group object classes is <option>--groupobjectclasses</option>. 
+						Add the new object class to the list of object classes added to entries. The option for group object classes is <option>--groupobjectclasses</option>.
 					</para>
 						<important><title>IMPORTANT</title>
 							<para>
@@ -1647,12 +1647,12 @@ dnaNextRange: 123400000-123500000</screen>
 	</section>
 </section>
 
-	
+
 
 
 	<section id="user-groups"><title>Managing User Groups</title>
 		<para>
-			User groups are a way of centralizing control over important management tasks, particularly access control and password policies. 
+			User groups are a way of centralizing control over important management tasks, particularly access control and password policies.
 			Three groups are created during the installation, specifically for use by &IPA; operations:
 		</para>
 		<itemizedlist>
@@ -1673,23 +1673,23 @@ dnaNextRange: 123400000-123500000</screen>
 			</listitem>
 		</itemizedlist>
 		<para>
-			All groups in &PROD; are essentially <emphasis>static</emphasis> groups, meaning that the members of the group are manually and explicitly added to the group. 
-			Tangentially, &IPA; allows <emphasis>nested groups</emphasis>, where a group is a member of another group. In that case, all of the group members of the member group 
+			All groups in &PROD; are essentially <emphasis>static</emphasis> groups, meaning that the members of the group are manually and explicitly added to the group.
+			Tangentially, &IPA; allows <emphasis>nested groups</emphasis>, where a group is a member of another group. In that case, all of the group members of the member group
 			automatically belong to the parent group, as well.
 		</para>
 		 <para>
-			Because groups are easy to create, it is possible to be very flexible in what groups to create and how they are organized. Groups can be defined around 
+			Because groups are easy to create, it is possible to be very flexible in what groups to create and how they are organized. Groups can be defined around
 			organizational divisions like departments, physical locations, or &IPA; or infrastructure usage guidelines for access controls.
 		</para>
 		 <note><title>NOTE</title>
 			<para>
-				Some operating systems limit the number of groups that can be assigned to system users. For example, Solaris and AIX systems both limit users to 
+				Some operating systems limit the number of groups that can be assigned to system users. For example, Solaris and AIX systems both limit users to
 				16 groups per user. This can be an issue when using nested groups, when a user may be automatically added to multiple groups.
 			</para>
 
 		</note>
 			<para>
-  				When a group entry is created, it is automatically assigned certain LDAP object classes. (LDAP object classes 
+  				When a group entry is created, it is automatically assigned certain LDAP object classes. (LDAP object classes
 				and attributes are discussed in detail in the <citetitle>&DS; &DPG;</citetitle> and the <citetitle>&DS; Schema Reference</citetitle>.)
 				For groups, only two attributes truly matter: the name and the description.
 			</para>
@@ -1757,9 +1757,9 @@ dnaNextRange: 123400000-123500000</screen>
 					</listitem>
 					<listitem>
 						<para>
-							Enter all of the information for the group. 
+							Enter all of the information for the group.
 						</para>
-						
+
 						<informalfigure>
 							<mediaobject>
 								<imageobject>
@@ -1785,7 +1785,7 @@ dnaNextRange: 123400000-123500000</screen>
 							</listitem>
 							<listitem>
 								<para>
-									Optionally, the GID number for the group. All Posix groups require a GID number, but &IPA; automatically assigns the GID number. 
+									Optionally, the GID number for the group. All Posix groups require a GID number, but &IPA; automatically assigns the GID number.
 								</para>
 								<para>
 									Setting a GID number is not necessary because of the risk of collisions. If a GID number is given manually, &IPA; will not override the specified GID number, even if it is not unique.
@@ -1795,7 +1795,7 @@ dnaNextRange: 123400000-123500000</screen>
 					</listitem>
 					<listitem>
 						<para>
-							Click the <guibutton>Add and Edit</guibutton> button to go immediately to the member selection page. 
+							Click the <guibutton>Add and Edit</guibutton> button to go immediately to the member selection page.
 						</para>
 					</listitem>
 					<listitem>
@@ -1811,12 +1811,12 @@ dnaNextRange: 123400000-123500000</screen>
 					New groups are created using the <command>group-add</command> command. (This adds only the group; members are added separately.)
 				</para>
 				<para>
-					Two attributes are always required: the group name and the group description. If those attributes are not given as arguments, then the 
-					script prompts for them. 
+					Two attributes are always required: the group name and the group description. If those attributes are not given as arguments, then the
+					script prompts for them.
 				</para>
 <screen>$ ipa group-add <replaceable>groupName</replaceable> --desc="<replaceable>description</replaceable>" [--nonposix]</screen>
 				<para>
-					Additionally, there is one other configuration option, <option>--nonposix</option>. (By default, all groups are created as POSIX 
+					Additionally, there is one other configuration option, <option>--nonposix</option>. (By default, all groups are created as POSIX
 					groups.)
 					To enable interoperability with Windows users and groups and programs like Samba, it is possible to create non-POSIX groups by using the <option>--nonposix</option> option. This option tells the script not to add the <command>posixGroup</command> object class to the entry.
 				</para>
@@ -1833,8 +1833,8 @@ Added group "examplegroup"
   GID: 855800010</screen>
 		<para>
 			When no arguments are used, the command prompts for the required group account information:
-		</para>	
-				 
+		</para>
+
 <screen>$ ipa group-add
 Group name: engineering
 Description: for engineers
@@ -1867,14 +1867,14 @@ Added group "engineering"
 		<section id="adding-members"><title>Adding Group Members</title>
 
 			<section id="group-members-ui"><title>With the Web UI (Group Page)</title>
-				
+
 				<note><title>NOTE</title>
 					<para>
 						This procedure adds a user to a group. User groups can contain other user groups as their members. These are <emphasis>nested</emphasis> groups.
 					</para>
-					
+
 				<para>
-					It can take up to several minutes for the members of the child group to show up as members of the parent group. 
+					It can take up to several minutes for the members of the child group to show up as members of the parent group.
 					This is especially true on virtual machines where the nested groups have more than 500 members.
 				</para>
 					<para>
@@ -1903,7 +1903,7 @@ Added group "engineering"
 						<para>
 							Click the <guilabel>Add</guilabel> link at the top of the task area.
 						</para>
-						
+
 						<informalfigure>
 							<mediaobject>
 								<imageobject>
@@ -1914,7 +1914,7 @@ Added group "engineering"
 					</listitem>
 					<listitem>
 						<para>
-							Click the checkbox by the names of the users to add, and click the right arrows button, <guibutton>>></guibutton>, to move the names 
+							Click the checkbox by the names of the users to add, and click the right arrows button, <guibutton>>></guibutton>, to move the names
 							to the selection box.
 						</para>
 						<informalfigure>
@@ -1931,17 +1931,17 @@ Added group "engineering"
 						</para>
 					</listitem>
 				</orderedlist>
-				
+
 				<para>
-					Group members can be users or other user groups. 
-					It can take up to several minutes for the members of the child group to show up as members of the parent group. 
+					Group members can be users or other user groups.
+					It can take up to several minutes for the members of the child group to show up as members of the parent group.
 					This is especially true on virtual machines where the nested groups have more than 500 members.
 				</para>
 			</section>
 
 			<section id="groups-ui-users"><title>With the Web UI (User's Page)</title>
 					<para>
-						Users can also be added to a group through the user's page. 
+						Users can also be added to a group through the user's page.
 					</para>
 				<orderedlist>
 					<listitem>
@@ -1980,7 +1980,7 @@ Added group "engineering"
 					</listitem>
 					<listitem>
 						<para>
-							Click the checkbox by the names of the groups for the user to join, and click the right arrows button, <guibutton>>></guibutton>, to move the groups 
+							Click the checkbox by the names of the groups for the user to join, and click the right arrows button, <guibutton>>></guibutton>, to move the groups
 							to the selection box.
 						</para>
 						<informalfigure>
@@ -2023,7 +2023,7 @@ Number of members added 3
 				 <para>
 					Likewise, other groups can be added as members, which creates nested groups:
 				</para>
-				 
+
 <screen>$ ipa group-add-member engineering --groups=dev,qe1,dev2
   Group name: engineering
   Description: for engineers
@@ -2046,7 +2046,7 @@ Number of members added 3
   Indirect Member users: sbeckett,acalavicci</screen>
 
 				<para>
-					It can take up to several minutes for the members of the child group to show up as members of the parent group. 
+					It can take up to several minutes for the members of the child group to show up as members of the parent group.
 					This is especially true on virtual machines where the nested groups have more than 500 members.
 				</para>
 				<note><title>NOTE</title>
@@ -2070,7 +2070,7 @@ Number of members removed 1
 
 			<section id="viewing-group-members"><title>Viewing Direct and Indirect Members of a Group</title>
 				<para>
-					User groups can contain other user groups as members. This is called a <emphasis>nested group</emphasis>. This also means that a group has two types of 
+					User groups can contain other user groups as members. This is called a <emphasis>nested group</emphasis>. This also means that a group has two types of
 					members:
 				</para>
 				<itemizedlist>
@@ -2086,7 +2086,7 @@ Number of members removed 1
 					</listitem>
 				</itemizedlist>
 				<para>
-					The &IPA; web UI has an easy way to view direct and indirect members of a group. The members list is filtered by member type, and this can be toggled by selecting 
+					The &IPA; web UI has an easy way to view direct and indirect members of a group. The members list is filtered by member type, and this can be toggled by selecting
 					the <guilabel>Direct</guilabel> and <guilabel>Indirect</guilabel> radio buttons at the top right corner of the members list.
 				</para>
 
@@ -2104,7 +2104,7 @@ Number of members removed 1
 		</section>
 
 
-		
+
 		<section id="Configuring_IPA_Groups-Deleting_IPA_Groups">
 			<title>Deleting User Groups</title>
 			 <para>
@@ -2170,11 +2170,11 @@ Number of members removed 1
 
 	<section id="searching"><title>Searching for Users and Groups</title>
 	 <para>
-		The user searches in &IPA; can be run against simple (full word) or partial search strings. The range of attributes that are searched is configured as part of the 
+		The user searches in &IPA; can be run against simple (full word) or partial search strings. The range of attributes that are searched is configured as part of the
 		default &IPA; configuration, as in <xref linkend="Configuring_IPA_Users-Specifying_Default_User_Settings" />.
 	</para>
 		<para>
-			By default, there are six attributes that are indexed for user searches and two that are indexed for group searches. These are listed in 
+			By default, there are six attributes that are indexed for user searches and two that are indexed for group searches. These are listed in
 			<xref linkend="tab.search-attrs" />. All search attributes are searched in a user/group search.
 		</para>
 		<table id="tab.search-attrs"><title>Default Search Attributes</title>
@@ -2200,7 +2200,7 @@ Number of members removed 1
 				Login ID
 						</entry>
 						<entry>
-				Job title 
+				Job title
 						</entry>
 					</row>
 					<row>
@@ -2228,13 +2228,13 @@ Number of members removed 1
 			</tgroup>
 		</table>
 		<para>
-			The attributes which are searched in user and group searches can be changed, as described in 
+			The attributes which are searched in user and group searches can be changed, as described in
 			<xref linkend="search-fields" /> and <xref linkend="search-fields-groups" />.
 		</para>
 
 		<section id="user-search-ui"><title>With the UI</title>
 			<para>
-				Both user and group main pages have a search bar in the upper right corner of the task area. This search box searches against all of the fields listed in <xref linkend="tab.search-attrs" />. 
+				Both user and group main pages have a search bar in the upper right corner of the task area. This search box searches against all of the fields listed in <xref linkend="tab.search-attrs" />.
 				Type in any string, even a single letter, and click the magnifying glass icon. The UI filters the displayed list to match the search string.
 			</para>
 			<figure id="fig.user-search"><title>User Search Box</title>
@@ -2257,7 +2257,7 @@ Number of members removed 1
 		<itemizedlist>
 			<listitem>
 				<para>
-					If there is no <emphasis>string</emphasis>, then the search returns every entry in &IPA;, up to the search limit. 
+					If there is no <emphasis>string</emphasis>, then the search returns every entry in &IPA;, up to the search limit.
 				</para>
 			</listitem>
 			<listitem>
@@ -2341,7 +2341,7 @@ Number of entries returned 2
 		</example>
 		<note><title>TIP</title>
 			 <para>
-				If the desired entry is not listed, it is possible that the search hit the preset search size limit before the entry was found. Change the 
+				If the desired entry is not listed, it is possible that the search hit the preset search size limit before the entry was found. Change the
 				search record or time limits, as in <xref linkend="search-limits" />, to allow more entries to be returned.
 			</para>
 		</note>
@@ -2355,7 +2355,7 @@ Number of entries returned 2
 			</para>
 			<para>
 				For users, the template is very specific.
-				&PROD; uses default values for several core attributes for &IPA; user accounts. These defaults can define actual values for user account attributes (such as the home directory location) 
+				&PROD; uses default values for several core attributes for &IPA; user accounts. These defaults can define actual values for user account attributes (such as the home directory location)
 				or it can define the format of attribute values, such as the username length. These settings also define the object classes assigned to users.
 			</para>
 			<para>
@@ -2557,7 +2557,7 @@ Number of entries returned 2
 						<listitem>
 							<para>
 								The complete configuration entry is shown in three sections, one for all search limits, one for user templates, and one for group templates.
-			
+
 							</para>
 							<informalfigure>
 								<mediaobject>
@@ -2571,9 +2571,9 @@ Number of entries returned 2
 				</section>
 				<section id="show-config-cmd"><title>Viewing Settings from the Command Line</title>
 			 <para>
-				The <command>config-show</command> command shows the current configuration which applies to all new user accounts. By default, only the most common attributes are displayed; use the <option>--all</option> option to show the complete configuration. 
+				The <command>config-show</command> command shows the current configuration which applies to all new user accounts. By default, only the most common attributes are displayed; use the <option>--all</option> option to show the complete configuration.
 			</para>
-			 
+
 <screen># ipa config-show --all
 
   dn: cn=ipaconfig,cn=etc,dc=example,dc=com
