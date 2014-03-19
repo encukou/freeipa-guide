@@ -1009,7 +1009,36 @@ network.negotiate-auth.gsslib: C:\Program Files\MIT\Kerberos\bin\gssapi32.dll</p
 		 </para>
 	</section>
 -->
-
+		 <section id="Logging_in_as_another_user">
+			<title>Logging in the &IPA; Web UI as Another User</title>
+			<para>
+				To log into the &IPA; web UI as another user:
+			</para>
+			<orderedlist>
+				<listitem>
+					<para>
+						Remove any Kerberos credentials.
+						<screen>kdestroy</screen>
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Log out of any existing &IPA; browser session.
+					</para>
+				</listitem>
+				<listitem>
+					<para>
+						Run the <command>kinit</command> command specifying the new user. For example:
+					</para>
+						<screen>kinit <replaceable>anotherUserName</replaceable></screen>
+				</listitem>
+				<listitem>
+					<para>
+						Log back into the &IPA; web UI.
+					</para>
+				</listitem>
+			</orderedlist>
+		 </section>
 		 <section id="Troubleshooting-UI">
 			 <title>Troubleshooting UI Connection Problems</title>
 			 <para>
