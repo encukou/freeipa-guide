@@ -328,45 +328,8 @@ negative-time-to-live   hosts           20
 		<section id="Configuring_Networking-Configuring_Networking_Services">
 			<title>Configuring Networking Services</title>
 			<para>
-				The default networking service used by &OS; is NetworkManager, and due to the way this service works, it can cause problems with &IPA; and the KDC. Consequently, it is highly recommended that you use the <systemitem>network</systemitem> service to manage the networking requirements in &IPAA; environment and disable the NetworkManager service.
+				The default networking service used by &OS; is NetworkManager and is fully supported by &IPA;. For more information on NetworkManager, see <ulink url="http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Deployment_Guide/ch-NetworkManager.html" condition="redhat">the NetworkManager chapter in the Deployment Guide</ulink><ulink url="http://docs.fedoraproject.org/en-US/Fedora/18/html/System_Administrators_Guide/ch-NetworkManager.html" condition="fedora">the NetworkManager chapter in the System Administrators Guide</ulink>.
 			</para>
-			<orderedlist>
-				<listitem>
-					<para>
-						Boot the machine into single-user mode and run the following commands:
-					</para>
-<programlisting language="Bash">[root@server ~]# chkconfig NetworkManager off; service NetworkManager stop</programlisting>
-
-				</listitem>
-				<listitem>
-					<para>
-						If <systemitem class="service">NetworkManagerDispatcher</systemitem> is installed, ensure that it is stopped and disabled:
-					</para>
-<programlisting language="Bash">[root@server ~]# chkconfig NetworkManagerDispatcher off; service NetworkManagerDispatcher stop</programlisting>
-
-				</listitem>
-				<listitem>
-					<para>
-						Then, make sure that the <systemitem>network</systemitem> service is properly started.
-<programlisting language="Bash">[root@server ~]# chkconfig network on; service network start</programlisting>
-					</para>
-				</listitem>
-				<listitem>
-					<para>
-						Ensure that static networking is correctly configured.
-					</para>
-
-				</listitem>
-				<listitem>
-					<para>
-						Restart the system.
-					</para>
-
-				</listitem>
-
-			</orderedlist>
-			
-
 		</section>
 		
 		<section id="Configuring_Networking-Configuring_the_etchosts_File">
