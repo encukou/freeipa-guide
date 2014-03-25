@@ -61,6 +61,34 @@
         <systemitem>named</systemitem>service. The configuration can be changed
         to adapt the behavior of the plug-in and, therefore, the LDAP-BIND
         interactions.</para>
+	<note>
+                <title>NOTE</title>
+                <itemizedlist>
+                        <listitem>
+                                <para>
+					When DNS is configured either by the <option>--setup-dns</option> option
+				during the intial &IPA; install or the <command>ipa-dns-install</command> command
+				after the intial &IPA; setup, the &IPA; server installer creates
+				<filename>/etc/resolv.conf</filename> with the following line:
+				<screen>nameserver 127.0.0.1</screen>
+                                </para>
+                        </listitem>
+                        <listitem>
+                                <para>
+                                        It is recommended to manually add other replicas to
+				<filename>/etc/resolv.conf</filename> as new replicas are deployed.
+                                </para>
+                        </listitem>
+                        <listitem>
+                                <para>
+                                        The maximum number of nameserver lines currently
+				allowed in <filename>/etc/resolv.conf</filename> is three (3).
+				If more information is needed, <command>man resolv.conf</command>
+				for more details.
+                                </para>
+                        </listitem>
+                </itemizedlist>
+        </note>
     </section>
     <section id="dns-file">
         <title>The &IPA;-Generated DNS File</title>
