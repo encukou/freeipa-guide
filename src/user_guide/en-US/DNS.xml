@@ -69,8 +69,8 @@
 					When DNS is configured either by the <option>--setup-dns</option> option
 				during the intial &IPA; install or the <command>ipa-dns-install</command> command
 				after the intial &IPA; setup, the &IPA; server installer creates
-				<filename>/etc/resolv.conf</filename> with the following line:
-				<screen>nameserver 127.0.0.1</screen>
+				<filename>/etc/resolv.conf</filename> with the &IPA; server's IP address. For example:
+				<screen>nameserver 192.0.2.1</screen>
                                 </para>
                         </listitem>
                         <listitem>
