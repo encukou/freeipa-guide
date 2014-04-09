@@ -89,6 +89,12 @@
                         </listitem>
                 </itemizedlist>
         </note>
+	<note>
+		<title>NOTE</title>
+		<para>
+			In &IPA; versions 3 and lower, wildcards cannot be used when configuring DNS names. Only explicit DNS domain names are supported.
+		</para>
+	</note>
     </section>
     <section id="dns-file">
         <title>The &IPA;-Generated DNS File</title>
