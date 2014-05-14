@@ -20,6 +20,8 @@
 <!ENTITY IPAA "an IdM">
 <!ENTITY IPAB "An IdM">
 <!ENTITY OS "&RHEL;">
+<!ENTITY MINUID "500">
+<!ENTITY MINSSSUID "1000">
 <!ENTITY TITLE_TPREVIEW "(TECH PREVIEW)">
 
 <!-- directory locations -->

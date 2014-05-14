@@ -18,6 +18,8 @@
 <!ENTITY IPAA "a FreeIPA">
 <!ENTITY IPAB "A FreeIPA">
 <!ENTITY OS "Fedora">
+<!ENTITY MINUID "1000">
+<!ENTITY MINSSSUID "&MINUID;">
 <!ENTITY TITLE_TPREVIEW "">
 
 <!-- directory locations -->
