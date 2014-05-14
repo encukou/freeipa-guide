@@ -1053,7 +1053,15 @@ Disabling Plugin</screen>
 				 range is depleted so that less than 100 IDs are available, it can contact one of the available servers for a new range allotment. A special extended operation splits the range in two,
 				 so that the original server and the replica each have half of the available range.
 			</para>
-
+			<note>
+				<title>NOTE</title>
+				<para>
+					It is possible for an administrator to define an ID number range — which means that it is possible for an administrator to define a <emphasis>bad</emphasis> range.
+				</para>
+				<para>
+					&OS; reserves all UID/GID numbers below &MINUID; for system use, and SSSD treats all UID/GID numbers below &MINSSSUID; as local system accounts. If an administrator sets the ID range to start at 500 to interact with a legacy application (for example), then user accounts assigned an ID number below &MINSSSUID; will be unable to log in, because their user account is not recognized by SSSD.
+				</para>
+			</note>
 		</section>
 
 		 <section id="Assigning_UIDs_and_GIDs-Adding_New_Ranges">
