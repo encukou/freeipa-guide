@@ -632,9 +632,9 @@ Added sudo rule "files-commands"
 </screen>
 
 						<para>
-							Next, add the commands to <emphasis>grant</emphasis> access to. This can be a single command, using <option>--sudocmd</option>, or a group of commands, using <option>--sudocmdgroups</option>.
+							Next, add the commands to <emphasis>grant</emphasis> access to. This can be a single command, using <option>--sudocmds</option>, or a group of commands, using <option>--sudocmdgroups</option>.
 
-<screen>$ ipa sudorule-add-allow-command --sudocmd "/usr/bin/vim" files-commands
+<screen>$ ipa sudorule-add-allow-command --sudocmds "/usr/bin/vim" files-commands
   Rule name: files-commands
   Enabled: TRUE
   sudo Commands: /usr/bin/vim
@@ -673,9 +673,9 @@ Number of members added 1
 					<para>
 						The <command>sudo</command> rule can grant access or deny access to commands. For example, this rule would allow read access to files but prevent editing:
 					</para>
-<screen>$ ipa sudorule-add-allow-command --sudocmd "/usr/bin/less" readfiles
-$ ipa sudorule-add-allow-command --sudocmd "/usr/bin/tail" readfiles
-$ ipa sudorule-add-deny-command --sudocmd "/usr/bin/vim" readfiles</screen>
+<screen>$ ipa sudorule-add-allow-command --sudocmds "/usr/bin/less" readfiles
+$ ipa sudorule-add-allow-command --sudocmds "/usr/bin/tail" readfiles
+$ ipa sudorule-add-deny-command --sudocmds "/usr/bin/vim" readfiles</screen>
 				</example>
 				<example id="Ex.sudo-options"><title>Using sudoers Options</title>
 					<para>
